@@ -1,0 +1,13 @@
+[package]
+name = "druaga-tower-board"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+
+[dependencies]
+serde = { version = "=1.0.229", features = ["derive"] }
+thiserror = "=2.0.20"
+toml = "=1.1.4"
+
+[lints]
+workspace = true

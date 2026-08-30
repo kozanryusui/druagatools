@@ -1,0 +1,22 @@
+[package]
+name = "druaga-sx32w-shim"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+build = "build.rs"
+
+[lib]
+name = "sx32w"
+crate-type = ["cdylib"]
+
+[lints]
+workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "=0.61.2", features = [
+    "Win32_Foundation",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Memory",
+    "Win32_System_SystemServices",
+    "Win32_UI_WindowsAndMessaging",
+] }

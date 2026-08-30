@@ -1,0 +1,12 @@
+pub const INDEX: &str = "/admin";
+pub const INDEX_SLASH: &str = "/admin/";
+pub const SNAPSHOT: &str = "/admin/api/snapshot";
+pub const EVENTS: &str = "/admin/api/events";
+pub const SHOP_SETTINGS: &str = "/admin/api/settings/shop";
+pub const QUEST_SETTINGS: &str = "/admin/api/settings/quests";
+pub const REWARD_SETTINGS: &str = "/admin/api/settings/rewards";
+pub const BONUS_SETTINGS: &str = "/admin/api/settings/bonuses";
+pub const CSS: &str = "/admin/assets/admin.css";
+pub const WASM_LOADER: &str = "/admin/assets/aon-net-admin.js";
+pub const WASM: &str = "/admin/assets/aon-net-admin_bg.wasm";
+pub const FALLBACK: &str = "/admin/{*path}";

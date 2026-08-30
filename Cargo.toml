@@ -1,0 +1,7 @@
+[workspace]
+members = ["crates/aon-net", "crates/sx32w-shim", "crates/tower-board", "crates/tower-hook", "crates/utils"]
+resolver = "3"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"

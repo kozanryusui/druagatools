@@ -1,0 +1,367 @@
+<!doctype html>
+<!--
+  PROTOTYPE ONLY. Do not promote this file to the production Leptos application.
+  This mock-up has separate Configuration and Logs routes in one SPA shell.
+  It uses no JavaScript. Production behavior will use Leptos and Rust.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AON.Net admin prototype</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #2a2118;
+      --paper: #e8d8af;
+      --paper-2: #f5ebd0;
+      --gold: #ae7b26;
+      --gold-2: #d6b45f;
+      --blue: #344f67;
+      --blue-dark: #1c2b36;
+      --red: #963b32;
+      --green: #536c43;
+      --line: #967846;
+      --muted: #6c6251;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #1d2424 radial-gradient(circle at 50% -20%, #4a5960 0, #1d2424 48rem) fixed;
+      font: 15px/1.45 Georgia, "Times New Roman", serif;
+    }
+    button, input, select { font: inherit; }
+    button, select, input[type="text"], input[type="search"] {
+      min-height: 38px;
+      border: 1px solid #8c744a;
+      border-radius: 3px;
+    }
+    button {
+      padding: 7px 14px;
+      color: #fff8e2;
+      background: var(--blue);
+      cursor: pointer;
+    }
+    button.secondary { color: var(--blue); background: transparent; }
+    input[type="text"], input[type="search"], select {
+      width: 100%;
+      padding: 7px 9px;
+      color: var(--ink);
+      background: #fffdf4;
+    }
+    input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
+      outline: 3px solid #f0cd76;
+      outline-offset: 2px;
+    }
+    h1, h2, p { margin-top: 0; }
+    h1, h2 { color: var(--blue); line-height: 1.16; }
+    h1 { margin-bottom: 4px; font-size: clamp(29px, 4vw, 40px); }
+    h2 { font-size: 24px; }
+    a { color: #284e68; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .prototype-note {
+      position: fixed;
+      top: 10px;
+      right: 12px;
+      z-index: 20;
+      padding: 5px 9px;
+      color: #fff3cf;
+      background: #7a2f2a;
+      border: 1px solid #e4a99f;
+      border-radius: 3px;
+      font: 11px/1.2 ui-monospace, monospace;
+      letter-spacing: .06em;
+    }
+    .shell { display: grid; grid-template-columns: 244px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 24px 16px;
+      color: #f4e9ca;
+      background: linear-gradient(180deg, #2f4a61, #1c2b36);
+      border-right: 3px solid var(--gold);
+      box-shadow: 6px 0 24px #0008;
+    }
+    .brand { margin-bottom: 19px; padding: 0 8px 17px; border-bottom: 1px solid #d6b45f66; }
+    .brand b { display: block; color: #f0cd76; font-size: 22px; letter-spacing: .04em; }
+    .brand small { color: #d8d8c8; }
+    .navigation { display: grid; gap: 4px; }
+    .navigation a {
+      padding: 11px;
+      color: #eee6cf;
+      border-left: 3px solid transparent;
+      text-decoration: none;
+    }
+    .navigation a:hover { color: #fff; background: #ffffff12; }
+    body:not(:has(.page:target)) .nav-configuration,
+    body:has(#configuration:target) .nav-configuration,
+    body:has(#logs:target) .nav-logs {
+      color: #fff;
+      background: #ffffff12;
+      border-left-color: #f0cd76;
+    }
+    .workspace { padding: 34px clamp(18px, 4vw, 54px) 70px; }
+    .page { display: none; max-width: 1450px; margin: 0 auto; }
+    .page:target { display: block; }
+    body:not(:has(.page:target)) #configuration { display: block; }
+    .page-title { margin-bottom: 22px; padding-bottom: 15px; border-bottom: 2px solid #d6b45f88; }
+    .page-title p { margin-bottom: 0; color: #e7ddc4; }
+    .eyebrow {
+      color: #d6b45f;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .page-title h1 { color: #f0cd76; }
+    .configuration-grid { display: grid; grid-template-columns: minmax(290px, .72fr) minmax(520px, 1.5fr); gap: 18px; align-items: start; }
+    .configuration-column { display: grid; gap: 18px; }
+    .panel {
+      padding: 20px;
+      background: linear-gradient(135deg, var(--paper-2), var(--paper));
+      border: 1px solid #e9ce83;
+      border-radius: 5px;
+      box-shadow: 0 10px 28px #0006;
+    }
+    .panel > header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--line);
+    }
+    .panel > header h2 { margin-bottom: 0; }
+    .field { display: grid; gap: 5px; }
+    .field + .field { margin-top: 11px; }
+    .field label {
+      color: #5f4e31;
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .field small { color: var(--muted); }
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 15px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      color: #52452f;
+      background: #ecdbad;
+      border: 1px solid #b89a5e;
+      border-radius: 999px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .pill.live { color: #fff; background: var(--green); border-color: #8fb67a; }
+    .callout { margin-top: 12px; padding: 10px 12px; color: #4e402b; background: #f0d8b2; border-left: 5px solid var(--gold); }
+    .mode-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .mode-option { position: relative; padding: 13px; background: #fff8e2aa; border: 2px solid #b99a5d; }
+    .mode-option.selected { border-color: var(--blue); box-shadow: inset 0 0 0 2px #344f6744; }
+    .mode-choice { display: block; position: relative; min-height: 27px; }
+    .mode-choice input { position: absolute; top: 2px; right: 0; }
+    .mode-choice strong { display: block; padding-right: 24px; color: var(--blue); }
+    .mode-option .field { margin-top: 10px; padding-top: 10px; border-top: 1px solid #b99a5d; }
+    .rotation-fields { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+    .percentage-input { display: grid; grid-template-columns: minmax(80px, 130px) auto; align-items: center; gap: 7px; }
+    .percentage-input span { color: var(--muted); font-weight: bold; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; background: #fff8e2aa; }
+    th { padding: 8px 9px; color: #f5e9c9; background: #2f4a61; text-align: left; white-space: nowrap; }
+    td { padding: 8px 9px; border-bottom: 1px solid #c6ae78; vertical-align: top; }
+    tbody tr:hover { background: #fffdf4; }
+    .quest-name { color: var(--blue); font-weight: bold; }
+    .quest-name small { display: block; color: var(--muted); font-weight: normal; }
+    details { margin-top: 15px; }
+    summary { color: var(--blue); cursor: pointer; font-weight: bold; }
+    details[open] summary { margin-bottom: 10px; }
+    .log-toolbar { display: grid; grid-template-columns: 150px minmax(190px, 1fr) auto auto; gap: 8px; margin-bottom: 12px; }
+    .log-window {
+      min-height: calc(100vh - 235px);
+      max-height: calc(100vh - 190px);
+      overflow: auto;
+      color: #d7e1df;
+      background: #151d1e;
+      border: 2px solid #8d6b34;
+      font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    .log-line { display: grid; grid-template-columns: 84px 47px minmax(120px, 180px) 1fr; gap: 9px; padding: 5px 9px; border-bottom: 1px solid #ffffff0e; }
+    .log-line .time { color: #93a3a1; }
+    .log-line .info { color: #75b3df; }
+    .log-line .debug { color: #9aa6a4; }
+    .log-line .warn { color: #f0cd76; }
+    .log-line .target { color: #91b79b; }
+
+    @media (max-width: 1050px) {
+      .configuration-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .prototype-note { display: none; }
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; padding: 14px; border-right: 0; border-bottom: 3px solid var(--gold); }
+      .brand { margin-bottom: 9px; padding-bottom: 10px; }
+      .navigation { grid-template-columns: 1fr 1fr; }
+      .navigation a { text-align: center; border-left: 0; border-bottom: 3px solid transparent; }
+      body:not(:has(.page:target)) .nav-configuration,
+      body:has(#configuration:target) .nav-configuration,
+      body:has(#logs:target) .nav-logs { border-left-color: transparent; border-bottom-color: #f0cd76; }
+      .workspace { padding: 20px 10px 50px; }
+      .mode-options, .rotation-fields { grid-template-columns: 1fr; }
+      .log-toolbar { grid-template-columns: 1fr 1fr; }
+      .log-window { min-height: 520px; max-height: none; }
+      .log-line { grid-template-columns: 72px 42px 1fr; }
+      .log-line .target { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="prototype-note">PROTOTYPE ONLY</div>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <b>AON.Net</b>
+      </div>
+      <nav class="navigation" aria-label="Admin navigation">
+        <a class="nav-configuration" href="#configuration">Configuration</a>
+        <a class="nav-logs" href="#logs">Logs</a>
+      </nav>
+    </aside>
+
+    <main class="workspace">
+      <section class="page" id="configuration" aria-labelledby="configuration-title">
+        <header class="page-title">
+          <h1 id="configuration-title">Configuration</h1>
+        </header>
+
+        <div class="configuration-grid">
+          <div class="configuration-column">
+            <section class="panel">
+              <header><h2>Shop name</h2></header>
+              <div class="field">
+                <label for="shop-name">Name shown by connected Stations</label>
+                <input id="shop-name" type="text" value="AON.Net Local Shop">
+              </div>
+              <div class="actions"><button type="button">Save shop name</button></div>
+            </section>
+
+            <section class="panel">
+              <header><h2>Quest rewards</h2></header>
+              <div class="table-scroll">
+                <table>
+                  <thead><tr><th>Use</th><th>Chance</th><th>Reward item</th></tr></thead>
+                  <tbody>
+                    <tr><td><input type="checkbox" checked aria-label="Enable 100 percent reward"></td><td><strong>100%</strong></td><td><select aria-label="100 percent reward item"><option value="16414">照魔のランタン</option><option value="16413">ウツロの証</option></select></td></tr>
+                    <tr><td><input type="checkbox" aria-label="Enable 50 percent reward"></td><td><strong>50%</strong></td><td><select aria-label="50 percent reward item"><option value="16414">照魔のランタン</option><option value="16413">ウツロの証</option></select></td></tr>
+                    <tr><td><input type="checkbox" aria-label="Enable 25 percent reward"></td><td><strong>25%</strong></td><td><select aria-label="25 percent reward item"><option value="16414">照魔のランタン</option><option value="16413">ウツロの証</option></select></td></tr>
+                    <tr><td><input type="checkbox" aria-label="Enable 10 percent reward"></td><td><strong>10%</strong></td><td><select aria-label="10 percent reward item"><option value="16414">照魔のランタン</option><option value="16413">ウツロの証</option></select></td></tr>
+                    <tr><td><input type="checkbox" aria-label="Enable 2 percent reward"></td><td><strong>2%</strong></td><td><select aria-label="2 percent reward item"><option value="16414">照魔のランタン</option><option value="16413">ウツロの証</option></select></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="actions"><button type="button">Save rewards</button><button type="button" class="secondary">Restore defaults</button></div>
+            </section>
+
+            <section class="panel">
+              <header><h2>Quest bonuses</h2></header>
+              <div class="table-scroll">
+                <table>
+                  <thead><tr><th>Bonus</th><th>Percentage</th></tr></thead>
+                  <tbody>
+                    <tr><td>Experience reward</td><td><div class="percentage-input"><input type="text" inputmode="numeric" value="100" aria-label="Experience reward percentage"><span>%</span></div></td></tr>
+                    <tr><td>Money reward</td><td><div class="percentage-input"><input type="text" inputmode="numeric" value="100" aria-label="Money reward percentage"><span>%</span></div></td></tr>
+                    <tr><td>Item drop rate</td><td><div class="percentage-input"><input type="text" inputmode="numeric" value="100" aria-label="Item drop rate percentage"><span>%</span></div></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="actions"><button type="button">Save bonuses</button><button type="button" class="secondary">Restore defaults</button></div>
+            </section>
+          </div>
+
+          <div class="configuration-column">
+            <section class="panel">
+              <header><h2>Quest rotation</h2></header>
+              <div class="mode-options">
+                <div class="mode-option selected">
+                  <label class="mode-choice">
+                    <input type="radio" name="quest-mode" checked>
+                    <strong>Random rotation</strong>
+                  </label>
+                  <div class="field">
+                    <label for="rotation-minutes">Rotation interval in minutes</label>
+                    <input id="rotation-minutes" type="text" inputmode="numeric" value="60">
+                  </div>
+                </div>
+                <div class="mode-option">
+                  <label class="mode-choice">
+                    <input type="radio" name="quest-mode">
+                    <strong>Temporary fixed rotation</strong>
+                  </label>
+                  <div class="field">
+                    <label for="fixed-minutes">Duration in minutes</label>
+                    <input id="fixed-minutes" type="text" inputmode="numeric" value="180">
+                  </div>
+                </div>
+              </div>
+
+              <div class="rotation-fields">
+                <div class="field"><label for="party-a">Party quest A</label><select id="party-a"><option>零下３０度の罠</option><option>聖地奪還</option></select></div>
+                <div class="field"><label for="party-b">Party quest B</label><select id="party-b"><option>国家機密を追え</option><option>眠れる竜ラパックス</option></select></div>
+                <div class="field"><label for="special">Special quest</label><select id="special"><option>死の砂漠を越えて</option><option>ザ・ナイトメア</option></select></div>
+                <div class="field"><label for="normal-quest">Normal quest</label><select id="normal-quest"><option>空の聖都ラ・ケウ</option><option>とらわれの英雄たち</option></select></div>
+                <div class="field"><label for="hard-quest">Hard quest</label><select id="hard-quest"><option>深淵にひそむ大蛇</option><option>石巨人の洞窟</option></select></div>
+              </div>
+              <div class="actions"><button type="button">Save quest rotation</button><button type="button" class="secondary">Return to random</button></div>
+            </section>
+
+            <section class="panel">
+              <header><h2>Next random quests</h2></header>
+              <div class="table-scroll">
+                <table>
+                  <thead><tr><th>Time</th><th>Party A</th><th>Party B</th><th>Special</th><th>Normal</th><th>Hard</th></tr></thead>
+                  <tbody>
+                    <tr><td><span class="pill live">Now</span> <span class="mono">17:00</span></td><td class="quest-name">零下３０度の罠</td><td class="quest-name">国家機密を追え</td><td class="quest-name">死の砂漠を越えて</td><td class="quest-name">空の聖都ラ・ケウ</td><td class="quest-name">深淵にひそむ大蛇</td></tr>
+                    <tr><td class="mono">18:00</td><td class="quest-name">熱砂の神殿</td><td class="quest-name">聖地奪還</td><td class="quest-name">女神の凱旋</td><td class="quest-name">とらわれの英雄たち</td><td class="quest-name">石巨人の洞窟</td></tr>
+                    <tr><td class="mono">19:00</td><td class="quest-name">虚ろなる魔塔</td><td class="quest-name">空の聖都ラ・ケウ</td><td class="quest-name">ザ・ナイトメア</td><td class="quest-name">魔都に眠る死霊</td><td class="quest-name">眠れる竜ラパックス</td></tr>
+                    <tr><td class="mono">20:00</td><td class="quest-name">騎士たちの試練</td><td class="quest-name">命を賭して</td><td class="quest-name">幽霊城の怪</td><td class="quest-name">国家機密を追え</td><td class="quest-name">熱砂の神殿</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="logs" aria-labelledby="logs-title">
+        <header class="page-title">
+          <h1 id="logs-title">Logs</h1>
+        </header>
+        <div class="log-toolbar">
+          <select aria-label="Minimum log level"><option>All</option><option>Info</option><option>Warning</option><option>Error</option></select>
+          <input type="search" placeholder="Filter text or target" aria-label="Filter logs">
+          <button type="button" class="secondary">Pause</button>
+          <button type="button" class="secondary">Clear view</button>
+        </div>
+        <div class="log-window" role="log" aria-label="AON.Net live logs">
+          <div class="log-line"><span class="time">17:42:08</span><span class="info">INFO</span><span class="target">aon_net::server</span><span>AON.Net is ready http_address=0.0.0.0:80</span></div>
+          <div class="log-line"><span class="time">17:42:14</span><span class="debug">DEBUG</span><span class="target">aon_net::power_on</span><span>received encoded PowerOn body</span></div>
+          <div class="log-line"><span class="time">17:42:14</span><span class="info">INFO</span><span class="target">aon_net::power_on</span><span>accepted PowerOn request serial=TD160042</span></div>
+          <div class="log-line"><span class="time">17:42:18</span><span class="info">INFO</span><span class="target">aon_net::tower</span><span>accepted Tower service connection peer=192.168.10.12:48133</span></div>
+          <div class="log-line"><span class="time">17:42:18</span><span class="info">INFO</span><span class="target">aon_net::central</span><span>accepted Tower service identity reserved=0</span></div>
+          <div class="log-line"><span class="time">17:42:19</span><span class="debug">DEBUG</span><span class="target">aon_net::central</span><span>accepted Tower database-status request</span></div>
+          <div class="log-line"><span class="time">17:42:19</span><span class="debug">DEBUG</span><span class="target">aon_net::central</span><span>accepted Tower matching-configuration request</span></div>
+          <div class="log-line"><span class="time">17:42:23</span><span class="info">INFO</span><span class="target">aon_net::matching</span><span>accepted matching-service connection peer=192.168.10.12:48138</span></div>
+          <div class="log-line"><span class="time">17:42:30</span><span class="info">INFO</span><span class="target">aon_net::matching</span><span>queued player matching_quest_index=0</span></div>
+          <div class="log-line"><span class="time">17:43:02</span><span class="warn">WARN</span><span class="target">aon_net::matching</span><span>Station matching session closed before lobby assignment</span></div>
+          <div class="log-line"><span class="time">17:43:04</span><span class="info">INFO</span><span class="target">aon_net::tower</span><span>Tower service connection closed peer=192.168.10.12:48133</span></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

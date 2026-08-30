@@ -1,0 +1,5731 @@
+{
+  "schema_version": 1,
+  "game_version": "1.60",
+  "treasure_pools": [
+    {
+      "id": "party_story_force_box",
+      "rewards": [
+        {
+          "item_id": 49181,
+          "chance_numerator": 3,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 49182,
+          "chance_numerator": 2,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 61464,
+          "chance_numerator": 2,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 45344,
+          "chance_numerator": 2,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 61716,
+          "chance_numerator": 2,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 41496,
+          "chance_numerator": 2,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 53783,
+          "chance_numerator": 2,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 49696,
+          "chance_numerator": 2,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 61970,
+          "chance_numerator": 2,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 61975,
+          "chance_numerator": 2,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 61982,
+          "chance_numerator": 2,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 54020,
+          "chance_numerator": 2,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 58131,
+          "chance_numerator": 2,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40738,
+          "chance_numerator": 4,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40741,
+          "chance_numerator": 4,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40744,
+          "chance_numerator": 4,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40747,
+          "chance_numerator": 4,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40736,
+          "chance_numerator": 3,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40739,
+          "chance_numerator": 3,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40742,
+          "chance_numerator": 3,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40745,
+          "chance_numerator": 3,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40737,
+          "chance_numerator": 1,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40740,
+          "chance_numerator": 1,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40743,
+          "chance_numerator": 1,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40746,
+          "chance_numerator": 1,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8287,
+          "chance_numerator": 10,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8223,
+          "chance_numerator": 20,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8224,
+          "chance_numerator": 20,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8225,
+          "chance_numerator": 20,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8226,
+          "chance_numerator": 29,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8271,
+          "chance_numerator": 2,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8207,
+          "chance_numerator": 1,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8208,
+          "chance_numerator": 1,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8209,
+          "chance_numerator": 1,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8210,
+          "chance_numerator": 1,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8211,
+          "chance_numerator": 1,
+          "chance_denominator": 101,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8212,
+          "chance_numerator": 1,
+          "chance_denominator": 101,
+          "selection_condition": null
+        }
+      ],
+      "money": {
+        "minimum": 200,
+        "maximum": 1000
+      }
+    },
+    {
+      "id": "shinma_clear_box",
+      "rewards": [
+        {
+          "item_id": 8307,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "P1: 2/67 (2.99%); P2: 0%; P3: 2/67 (2.99%); P4: 0%."
+        },
+        {
+          "item_id": 8298,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "P1: 5/67 (7.46%); P2: 0%; P3: 5/67 (7.46%); P4: 3/67 (4.48%)."
+        },
+        {
+          "item_id": 8299,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "P1: 6/67 (8.96%); P2: 4/67 (5.97%); P3: 6/67 (8.96%); P4: 6/67 (8.96%)."
+        },
+        {
+          "item_id": 8300,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "P1: 4/67 (5.97%); P2: 4/67 (5.97%); P3: 4/67 (5.97%); P4: 4/67 (5.97%)."
+        },
+        {
+          "item_id": 8301,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "P1: 5/67 (7.46%); P2: 5/67 (7.46%); P3: 5/67 (7.46%); P4: 5/67 (7.46%)."
+        },
+        {
+          "item_id": 8315,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "P1 to P4: 16/67 (23.88%)."
+        },
+        {
+          "item_id": 8311,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "P1: 29/67 (43.28%); P2: 38/67 (56.72%); P3: 29/67 (43.28%); P4: 33/67 (49.25%)."
+        }
+      ],
+      "money": null
+    },
+    {
+      "id": "sol-pool-15f96cd9f198668d",
+      "rewards": [
+        {
+          "item_id": 8207,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 8208,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 8209,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 8210,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 8211,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 8212,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 8223,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 8224,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 8225,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 8226,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 8286,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 8287,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 40724,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 40725,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 40726,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 40727,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 40728,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 40729,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 40730,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 40731,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 40732,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 40733,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 40734,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 40735,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 40968,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 41234,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 41478,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 41513,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 41756,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 41759,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 45077,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 45591,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49174,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49442,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49934,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49940,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53535,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53536,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53782,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 54029,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57360,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 61459,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 61718,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 61973,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        }
+      ],
+      "money": null
+    },
+    {
+      "id": "sol-pool-15ccece3a2c4808b",
+      "rewards": [
+        {
+          "item_id": 41258,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 41261,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 41262,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 45097,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 45100,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 45105,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 45118,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 45603,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 45604,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 45605,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 45607,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 45614,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49203,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49204,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49208,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49210,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49220,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49227,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49466,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49467,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49476,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49477,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49483,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49484,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49720,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49723,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49724,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49726,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49733,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49734,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49738,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49972,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49974,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49980,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 49992,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53298,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53302,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53304,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53308,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53311,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53316,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53554,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53556,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53560,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53572,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53582,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53812,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53818,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53822,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 53830,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 54061,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 54062,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 54064,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 54075,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57390,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57396,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57405,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57406,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57408,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57409,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57646,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57649,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57651,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57652,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57653,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57668,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57906,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57913,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57915,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 57921,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 58160,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 58164,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 58182,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 58183,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 58185,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 61484,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 61485,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 61490,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 61498,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 61744,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 61748,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 61749,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 61757,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 61762,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 62003,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 62006,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 62007,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 62009,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 62252,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 62256,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 62259,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        },
+        {
+          "item_id": 62261,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        }
+      ],
+      "money": null
+    },
+    {
+      "id": "sol-direct-item-202a",
+      "rewards": [
+        {
+          "item_id": 8234,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        }
+      ],
+      "money": null
+    },
+    {
+      "id": "sol-direct-item-202c",
+      "rewards": [
+        {
+          "item_id": 8236,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        }
+      ],
+      "money": null
+    },
+    {
+      "id": "sol-direct-item-2047",
+      "rewards": [
+        {
+          "item_id": 8263,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        }
+      ],
+      "money": null
+    },
+    {
+      "id": "sol-direct-item-204b",
+      "rewards": [
+        {
+          "item_id": 8267,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Possible reward from this Sol pool."
+        }
+      ],
+      "money": null
+    }
+  ],
+  "direct_reward_pools": [
+    {
+      "id": "state_secret_result",
+      "rewards": [
+        {
+          "item_id": 53263,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Blue result, Gilgamesh."
+        },
+        {
+          "item_id": 45337,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Blue result, Valkyrie."
+        },
+        {
+          "item_id": 53790,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Blue result, Young Ki."
+        },
+        {
+          "item_id": 49924,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Blue result, Xeovalga."
+        },
+        {
+          "item_id": 49167,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Red result, Gilgamesh."
+        },
+        {
+          "item_id": 49414,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Red result, Valkyrie."
+        },
+        {
+          "item_id": 57864,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Red result, Young Ki."
+        },
+        {
+          "item_id": 54039,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Red result, Xeovalga."
+        },
+        {
+          "item_id": 53309,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Silver result, Gilgamesh."
+        },
+        {
+          "item_id": 49463,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Silver result, Valkyrie."
+        },
+        {
+          "item_id": 53832,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Silver result, Young Ki."
+        },
+        {
+          "item_id": 49968,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Silver result, Xeovalga."
+        },
+        {
+          "item_id": 49216,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Gold result, Gilgamesh."
+        },
+        {
+          "item_id": 61761,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Gold result, Valkyrie."
+        },
+        {
+          "item_id": 57907,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Gold result, Young Ki."
+        },
+        {
+          "item_id": 54081,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Gold result, Xeovalga."
+        }
+      ]
+    },
+    {
+      "id": "desert_caravan",
+      "rewards": [
+        {
+          "item_id": 8219,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8288,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8289,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8220,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8291,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8292,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8221,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8294,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8295,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        }
+      ]
+    },
+    {
+      "id": "crown_result",
+      "rewards": [
+        {
+          "item_id": 8207,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8208,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8209,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8210,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8211,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8212,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8219,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8220,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8221,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8223,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8224,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8225,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8226,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8245,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8246,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8247,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8288,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8289,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8290,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8291,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8292,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8293,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8294,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8295,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8296,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40780,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        }
+      ]
+    },
+    {
+      "id": "ghost_castle_scene",
+      "rewards": [
+        {
+          "item_id": 8192,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        }
+      ]
+    },
+    {
+      "id": "classified_result",
+      "rewards": [
+        {
+          "item_id": 57388,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Blue result, Gilgamesh."
+        },
+        {
+          "item_id": 57647,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Blue result, Valkyrie."
+        },
+        {
+          "item_id": 62001,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Blue result, Young Ki."
+        },
+        {
+          "item_id": 58159,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Blue result, Xeovalga."
+        },
+        {
+          "item_id": 61483,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Red result, Gilgamesh."
+        },
+        {
+          "item_id": 53557,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Red result, Valkyrie."
+        },
+        {
+          "item_id": 57903,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Red result, Young Ki."
+        },
+        {
+          "item_id": 41781,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Red result, Xeovalga."
+        },
+        {
+          "item_id": 8308,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Silver result, all characters."
+        },
+        {
+          "item_id": 49270,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Gold result, Gilgamesh."
+        },
+        {
+          "item_id": 49480,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Gold result, Valkyrie."
+        },
+        {
+          "item_id": 53882,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Gold result, Young Ki."
+        },
+        {
+          "item_id": 41778,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Gold result, Xeovalga."
+        }
+      ]
+    },
+    {
+      "id": "wandering_sage",
+      "rewards": [
+        {
+          "item_id": 8223,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8224,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8225,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8226,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8298,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8299,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8300,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8301,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8331,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        }
+      ]
+    },
+    {
+      "id": "short_crown_result",
+      "rewards": [
+        {
+          "item_id": 8219,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8220,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8221,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8223,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8224,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8225,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8226,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8245,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8246,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8247,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8288,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 8291,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        },
+        {
+          "item_id": 40788,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": null
+        }
+      ]
+    },
+    {
+      "id": "great_king_legacy_36",
+      "rewards": [
+        {
+          "item_id": 8326,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Gilgamesh."
+        },
+        {
+          "item_id": 8327,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Valkyrie."
+        },
+        {
+          "item_id": 8328,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Young Ki."
+        },
+        {
+          "item_id": 8329,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Xeovalga."
+        },
+        {
+          "item_id": 8330,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "All characters."
+        }
+      ]
+    },
+    {
+      "id": "great_king_legacy_67",
+      "rewards": [
+        {
+          "item_id": 8326,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Gilgamesh."
+        },
+        {
+          "item_id": 8327,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Valkyrie."
+        },
+        {
+          "item_id": 8328,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Young Ki."
+        },
+        {
+          "item_id": 8329,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "Xeovalga."
+        },
+        {
+          "item_id": 8332,
+          "chance_numerator": null,
+          "chance_denominator": null,
+          "selection_condition": "All characters."
+        }
+      ]
+    }
+  ],
+  "quests": [
+    {
+      "type": "solo",
+      "chapter": 1,
+      "section": 1,
+      "character": "gilgamesh",
+      "name": "女神降臨",
+      "rewards": [
+        {
+          "item_id": 16395,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Start the quest.",
+          "repeatability": "The script does not check prior acquisition. The inventory can reject a duplicate unique item."
+        }
+      ],
+      "treasure_sources": [],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "solo",
+      "chapter": 1,
+      "section": 1,
+      "character": "young_ki",
+      "name": "時を越えて",
+      "rewards": [
+        {
+          "item_id": 16396,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Start the quest.",
+          "repeatability": "The script does not check prior acquisition. The inventory can reject a duplicate unique item."
+        }
+      ],
+      "treasure_sources": [],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "solo",
+      "chapter": 1,
+      "section": 3,
+      "character": "gilgamesh",
+      "name": "決意と約束",
+      "rewards": [
+        {
+          "item_id": 16386,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Clear the quest for the first time.",
+          "repeatability": "One time."
+        },
+        {
+          "item_id": 16385,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Clear the quest for the first time.",
+          "repeatability": "One time."
+        }
+      ],
+      "treasure_sources": [],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "solo",
+      "chapter": 1,
+      "section": 3,
+      "character": "valkyrie",
+      "name": "伝説のはじまり",
+      "rewards": [
+        {
+          "item_id": 16385,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Clear the quest for the first time.",
+          "repeatability": "One time."
+        }
+      ],
+      "treasure_sources": [],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "solo",
+      "chapter": 1,
+      "section": 3,
+      "character": "young_ki",
+      "name": "遥かなる旅路",
+      "rewards": [
+        {
+          "item_id": 16385,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Clear the quest for the first time.",
+          "repeatability": "One time."
+        }
+      ],
+      "treasure_sources": [],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "solo",
+      "chapter": 1,
+      "section": 3,
+      "character": "xeovalga",
+      "name": "ゼオの人型",
+      "rewards": [
+        {
+          "item_id": 16385,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Clear the quest for the first time.",
+          "repeatability": "One time."
+        }
+      ],
+      "treasure_sources": [],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "solo",
+      "chapter": 5,
+      "section": 1,
+      "character": "gilgamesh",
+      "name": "アヌ神の試練",
+      "rewards": [
+        {
+          "item_id": 16395,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Reach the recovery scene.",
+          "repeatability": "The story restores an item that an earlier scene removes."
+        }
+      ],
+      "treasure_sources": [],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "solo",
+      "chapter": 6,
+      "section": 1,
+      "character": "gilgamesh",
+      "name": "炎のみちびき",
+      "rewards": [
+        {
+          "item_id": 16399,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Clear the quest for the first time.",
+          "repeatability": "One time."
+        }
+      ],
+      "treasure_sources": [],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "solo",
+      "chapter": 6,
+      "section": 1,
+      "character": "valkyrie",
+      "name": "炎のみちびき",
+      "rewards": [
+        {
+          "item_id": 16399,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Clear the quest for the first time.",
+          "repeatability": "One time."
+        }
+      ],
+      "treasure_sources": [],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "solo",
+      "chapter": 6,
+      "section": 1,
+      "character": "young_ki",
+      "name": "炎のみちびき",
+      "rewards": [
+        {
+          "item_id": 16399,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Clear the quest for the first time.",
+          "repeatability": "One time."
+        }
+      ],
+      "treasure_sources": [],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "solo",
+      "chapter": 6,
+      "section": 1,
+      "character": "xeovalga",
+      "name": "炎のみちびき",
+      "rewards": [
+        {
+          "item_id": 16399,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Clear the quest for the first time.",
+          "repeatability": "One time."
+        }
+      ],
+      "treasure_sources": [],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "party",
+      "chapter": 2,
+      "section": 2,
+      "name": "クオックス",
+      "rewards": [
+        {
+          "item_id": 16397,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Reach the reward scene without this item in your inventory.",
+          "repeatability": "You can receive it again after you no longer have it."
+        }
+      ],
+      "treasure_sources": [
+        {
+          "pool_id": "party_story_force_box",
+          "acquisition": "Use Force while you stand on the hidden site that the game selected for this run.",
+          "repeatability": "One box in each quest run.",
+          "candidate_locations": [
+            [
+              460.0,
+              305.0
+            ],
+            [
+              294.0,
+              407.0
+            ],
+            [
+              604.0,
+              629.0
+            ],
+            [
+              736.0,
+              810.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "party",
+      "chapter": 3,
+      "section": 1,
+      "name": "盟約",
+      "rewards": [
+        {
+          "item_id": 16390,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Reach the reward scene.",
+          "repeatability": "The script does not check prior acquisition."
+        },
+        {
+          "item_id": 16392,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Clear the quest for the first time.",
+          "repeatability": "One time."
+        }
+      ],
+      "treasure_sources": [
+        {
+          "pool_id": "party_story_force_box",
+          "acquisition": "Use Force while you stand on the hidden site that the game selected for this run.",
+          "repeatability": "One box in each quest run.",
+          "candidate_locations": [
+            [
+              1699.0,
+              480.0
+            ],
+            [
+              2157.0,
+              619.0
+            ],
+            [
+              966.0,
+              435.0
+            ],
+            [
+              1332.0,
+              266.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "party",
+      "chapter": 4,
+      "section": 1,
+      "name": "七つを一つに",
+      "rewards": [
+        {
+          "item_id": 16390,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Reach the first-clear story scene.",
+          "repeatability": "One time."
+        },
+        {
+          "item_id": 16387,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Complete the scripted combination of the seven colored rods.",
+          "repeatability": "The story consumes the seven colored rods after it gives this item."
+        }
+      ],
+      "treasure_sources": [
+        {
+          "pool_id": "party_story_force_box",
+          "acquisition": "Use Force while you stand on the hidden site that the game selected for this run.",
+          "repeatability": "One box in each quest run.",
+          "candidate_locations": [
+            [
+              628.0,
+              435.0
+            ],
+            [
+              643.0,
+              276.0
+            ],
+            [
+              608.0,
+              952.0
+            ],
+            [
+              1172.0,
+              679.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "party",
+      "chapter": 4,
+      "section": 2,
+      "name": "吹雪を越えて",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "party_story_force_box",
+          "acquisition": "During the search phase, use Force while you stand on the hidden site that the game selected for this run.",
+          "repeatability": "One box in each quest run.",
+          "candidate_locations": [
+            [
+              2058.0,
+              413.0
+            ],
+            [
+              1778.0,
+              373.0
+            ],
+            [
+              1686.0,
+              1007.0
+            ],
+            [
+              2180.0,
+              938.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "party",
+      "chapter": 4,
+      "section": 4,
+      "name": "決戦、そして…",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "party_story_force_box",
+          "acquisition": "Use Force while you stand on the hidden site that the game selected for this run.",
+          "repeatability": "One box in each quest run.",
+          "candidate_locations": [
+            [
+              -805.0,
+              -244.0
+            ],
+            [
+              -596.0,
+              -226.0
+            ],
+            [
+              666.0,
+              0.0
+            ],
+            [
+              379.0,
+              0.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "party",
+      "chapter": 6,
+      "section": 2,
+      "name": "魔城ふたたび",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "party_story_force_box",
+          "acquisition": "Use Force while you stand on the hidden site that the game selected for this run.",
+          "repeatability": "One box in each quest run.",
+          "candidate_locations": [
+            [
+              73.0,
+              270.0
+            ],
+            [
+              255.0,
+              241.0
+            ],
+            [
+              736.0,
+              240.0
+            ],
+            [
+              372.0,
+              240.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "party",
+      "chapter": 6,
+      "section": 3,
+      "name": "野望の終焉",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "party_story_force_box",
+          "acquisition": "Use Force while you stand on the hidden site that the game selected for this run.",
+          "repeatability": "One box in each quest run.",
+          "candidate_locations": [
+            [
+              666.0,
+              0.0
+            ],
+            [
+              -822.0,
+              0.0
+            ],
+            [
+              550.0,
+              -145.0
+            ],
+            [
+              457.0,
+              -157.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "party",
+      "chapter": 6,
+      "section": 4,
+      "name": "神魔",
+      "rewards": [
+        {
+          "item_id": 16387,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Reach the reward scene before the story records the colored-rod combination.",
+          "repeatability": "The exact story-state restriction is not confirmed."
+        }
+      ],
+      "treasure_sources": [
+        {
+          "pool_id": "party_story_force_box",
+          "acquisition": "Use Force while you stand on the hidden site that the game selected for this run.",
+          "repeatability": "One box in each quest run.",
+          "candidate_locations": [
+            [
+              251.0,
+              240.0
+            ],
+            [
+              425.0,
+              240.0
+            ],
+            [
+              787.0,
+              240.0
+            ],
+            [
+              966.0,
+              240.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "shinma_clear_box",
+          "acquisition": "Defeat every enemy in the second quest area.",
+          "repeatability": "One box in each quest run.",
+          "candidate_locations": [
+            [
+              -23.0,
+              0.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled_party_clear",
+      "name": "Any scheduled party quest",
+      "rewards": [
+        {
+          "item_id": 16409,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Clear any scheduled quest after party story chapter 2, section 1 and before chapter 3, section 1.",
+          "repeatability": "The game gives it again if you lose it while this story interval is active."
+        },
+        {
+          "item_id": 16388,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Clear a scheduled quest after party story chapter 3, section 1 and before chapter 4, section 1. The game gives the first missing rod in its fixed order.",
+          "repeatability": "One Red Rod while it is absent during this story interval."
+        },
+        {
+          "item_id": 16389,
+          "required_item_ids": [
+            16388
+          ],
+          "consumed_item_ids": [],
+          "acquisition": "Clear another scheduled quest during the same story interval.",
+          "repeatability": "One Purple Rod while it is absent during this story interval."
+        },
+        {
+          "item_id": 16391,
+          "required_item_ids": [
+            16388,
+            16389
+          ],
+          "consumed_item_ids": [],
+          "acquisition": "Clear another scheduled quest during the same story interval.",
+          "repeatability": "One Blue Rod while it is absent during this story interval."
+        },
+        {
+          "item_id": 16392,
+          "required_item_ids": [
+            16388,
+            16389,
+            16391
+          ],
+          "consumed_item_ids": [],
+          "acquisition": "Clear another scheduled quest during the same story interval.",
+          "repeatability": "One Green Rod while it is absent during this story interval."
+        },
+        {
+          "item_id": 16393,
+          "required_item_ids": [
+            16388,
+            16389,
+            16391,
+            16392
+          ],
+          "consumed_item_ids": [],
+          "acquisition": "Clear another scheduled quest during the same story interval.",
+          "repeatability": "One Orange Rod while it is absent during this story interval."
+        },
+        {
+          "item_id": 16394,
+          "required_item_ids": [
+            16388,
+            16389,
+            16391,
+            16392,
+            16393
+          ],
+          "consumed_item_ids": [],
+          "acquisition": "Clear another scheduled quest during the same story interval.",
+          "repeatability": "One Yellow Rod while it is absent during this story interval."
+        },
+        {
+          "item_id": 16402,
+          "required_item_ids": [
+            16399
+          ],
+          "consumed_item_ids": [
+            16399
+          ],
+          "acquisition": "After solo story chapter 6, section 1, clear a scheduled quest without dying or continuing.",
+          "repeatability": "One transformation from the Dragon Lantern."
+        },
+        {
+          "item_id": 16405,
+          "required_item_ids": [
+            16402
+          ],
+          "consumed_item_ids": [
+            16402
+          ],
+          "acquisition": "Clear another scheduled quest without dying or continuing.",
+          "repeatability": "One transformation from the Ever Lantern."
+        },
+        {
+          "item_id": 16408,
+          "required_item_ids": [
+            16405
+          ],
+          "consumed_item_ids": [
+            16405
+          ],
+          "acquisition": "Clear another scheduled quest without dying or continuing.",
+          "repeatability": "One transformation from the Permanent Lantern."
+        }
+      ],
+      "treasure_sources": [],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 26,
+      "network_id": 36,
+      "name": "大王の遺産",
+      "rewards": [
+        {
+          "item_id": 16410,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Enter the Courage light in the final area without a Courage shine or drop.",
+          "repeatability": "One light can give or transform an item in each run."
+        },
+        {
+          "item_id": 16415,
+          "required_item_ids": [
+            16410
+          ],
+          "consumed_item_ids": [
+            16410
+          ],
+          "acquisition": "Enter the Courage light while you carry the Courage shine.",
+          "repeatability": "One transformation from each Courage shine."
+        },
+        {
+          "item_id": 16411,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Enter the Love light in the final area without a Love shine or drop.",
+          "repeatability": "One light can give or transform an item in each run."
+        },
+        {
+          "item_id": 16416,
+          "required_item_ids": [
+            16411
+          ],
+          "consumed_item_ids": [
+            16411
+          ],
+          "acquisition": "Enter the Love light while you carry the Love shine.",
+          "repeatability": "One transformation from each Love shine."
+        },
+        {
+          "item_id": 16412,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Enter the Hope light in the final area without a Hope shine or drop.",
+          "repeatability": "One light can give or transform an item in each run."
+        },
+        {
+          "item_id": 16417,
+          "required_item_ids": [
+            16412
+          ],
+          "consumed_item_ids": [
+            16412
+          ],
+          "acquisition": "Enter the Hope light while you carry the Hope shine.",
+          "repeatability": "One transformation from each Hope shine."
+        }
+      ],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              405.0,
+              182.0
+            ],
+            [
+              401.0,
+              160.0
+            ],
+            [
+              469.0,
+              159.0
+            ],
+            [
+              192.0,
+              388.0
+            ],
+            [
+              831.0,
+              295.0
+            ],
+            [
+              482.0,
+              336.0
+            ],
+            [
+              543.0,
+              719.0
+            ],
+            [
+              388.0,
+              300.0
+            ],
+            [
+              860.0,
+              595.0
+            ],
+            [
+              814.0,
+              295.0
+            ],
+            [
+              404.0,
+              368.0
+            ],
+            [
+              388.0,
+              300.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              225.0,
+              612.0
+            ],
+            [
+              525.0,
+              400.0
+            ],
+            [
+              530.0,
+              200.0
+            ],
+            [
+              225.0,
+              300.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": [
+        {
+          "pool_id": "great_king_legacy_36",
+          "acquisition": "Enter the final area while the party carries one Courage item, one Love item, and one Hope item. A shine or a drop satisfies each type.",
+          "repeatability": "The quest consumes the six possible input items after it gives the rewards. The party can obtain the inputs again."
+        }
+      ]
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 57,
+      "network_id": 67,
+      "name": "遺産（いさん）",
+      "rewards": [
+        {
+          "item_id": 16410,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Enter the Courage light in the final area without a Courage shine or drop.",
+          "repeatability": "One light can give or transform an item in each run."
+        },
+        {
+          "item_id": 16415,
+          "required_item_ids": [
+            16410
+          ],
+          "consumed_item_ids": [
+            16410
+          ],
+          "acquisition": "Enter the Courage light while you carry the Courage shine.",
+          "repeatability": "One transformation from each Courage shine."
+        },
+        {
+          "item_id": 16411,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Enter the Love light in the final area without a Love shine or drop.",
+          "repeatability": "One light can give or transform an item in each run."
+        },
+        {
+          "item_id": 16416,
+          "required_item_ids": [
+            16411
+          ],
+          "consumed_item_ids": [
+            16411
+          ],
+          "acquisition": "Enter the Love light while you carry the Love shine.",
+          "repeatability": "One transformation from each Love shine."
+        },
+        {
+          "item_id": 16412,
+          "required_item_ids": [],
+          "consumed_item_ids": [],
+          "acquisition": "Enter the Hope light in the final area without a Hope shine or drop.",
+          "repeatability": "One light can give or transform an item in each run."
+        },
+        {
+          "item_id": 16417,
+          "required_item_ids": [
+            16412
+          ],
+          "consumed_item_ids": [
+            16412
+          ],
+          "acquisition": "Enter the Hope light while you carry the Hope shine.",
+          "repeatability": "One transformation from each Hope shine."
+        }
+      ],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              405.0,
+              182.0
+            ],
+            [
+              401.0,
+              160.0
+            ],
+            [
+              469.0,
+              159.0
+            ],
+            [
+              192.0,
+              388.0
+            ],
+            [
+              831.0,
+              295.0
+            ],
+            [
+              482.0,
+              336.0
+            ],
+            [
+              543.0,
+              719.0
+            ],
+            [
+              388.0,
+              300.0
+            ],
+            [
+              860.0,
+              595.0
+            ],
+            [
+              814.0,
+              295.0
+            ],
+            [
+              404.0,
+              368.0
+            ],
+            [
+              388.0,
+              300.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              225.0,
+              612.0
+            ],
+            [
+              525.0,
+              400.0
+            ],
+            [
+              530.0,
+              200.0
+            ],
+            [
+              225.0,
+              300.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": [
+        {
+          "pool_id": "great_king_legacy_67",
+          "acquisition": "Enter the final area while the party carries one Courage item, one Love item, and one Hope item. A shine or a drop satisfies each type.",
+          "repeatability": "The quest consumes the six possible input items after it gives the rewards. The party can obtain the inputs again."
+        }
+      ]
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 8,
+      "network_id": 18,
+      "name": "国家機密を追え",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1204.0,
+              88.0
+            ],
+            [
+              624.0,
+              98.0
+            ],
+            [
+              805.0,
+              451.0
+            ],
+            [
+              -208.0,
+              5.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": [
+        {
+          "pool_id": "state_secret_result",
+          "acquisition": "Meet a direct chest-tier condition and clear the quest.",
+          "repeatability": "One result reward for each qualifying clear."
+        }
+      ]
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 21,
+      "network_id": 31,
+      "name": "死の砂漠を越えて",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              747.0,
+              360.0
+            ],
+            [
+              765.0,
+              1358.0
+            ],
+            [
+              711.0,
+              402.0
+            ],
+            [
+              446.0,
+              1678.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": [
+        {
+          "pool_id": "desert_caravan",
+          "acquisition": "Reach the caravan reward scene. The surviving caravan members select the available group. The game selects its Fire, Thunder, or Ice item at random.",
+          "repeatability": "One item for each qualifying run."
+        }
+      ]
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 52,
+      "network_id": 62,
+      "name": "死砂（しさ）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              747.0,
+              360.0
+            ],
+            [
+              765.0,
+              1358.0
+            ],
+            [
+              711.0,
+              402.0
+            ],
+            [
+              446.0,
+              1678.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": [
+        {
+          "pool_id": "desert_caravan",
+          "acquisition": "Reach the caravan reward scene. The surviving caravan members select the available group. The game selects its Fire, Thunder, or Ice item at random.",
+          "repeatability": "One item for each qualifying run."
+        }
+      ]
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 25,
+      "network_id": 35,
+      "name": "桂冠は誰の手に",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              588.0,
+              23.0
+            ],
+            [
+              593.0,
+              418.0
+            ],
+            [
+              43.0,
+              448.0
+            ],
+            [
+              560.0,
+              53.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              437.0,
+              87.0
+            ],
+            [
+              541.0,
+              52.0
+            ],
+            [
+              735.0,
+              228.0
+            ],
+            [
+              753.0,
+              122.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": [
+        {
+          "pool_id": "crown_result",
+          "acquisition": "Clear the quest. More items become available after you record more Silver and Gold results.",
+          "repeatability": "One random item for each clear."
+        }
+      ]
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 68,
+      "network_id": 79,
+      "name": "桂冠は誰の手に[並]",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              588.0,
+              23.0
+            ],
+            [
+              593.0,
+              418.0
+            ],
+            [
+              43.0,
+              448.0
+            ],
+            [
+              560.0,
+              53.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              437.0,
+              87.0
+            ],
+            [
+              541.0,
+              52.0
+            ],
+            [
+              735.0,
+              228.0
+            ],
+            [
+              753.0,
+              122.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": [
+        {
+          "pool_id": "crown_result",
+          "acquisition": "Clear the quest. More items become available after you record more Silver and Gold results.",
+          "repeatability": "One random item for each clear."
+        }
+      ]
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 31,
+      "network_id": 41,
+      "name": "幽霊城の怪",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              345.0,
+              130.0
+            ],
+            [
+              285.0,
+              185.0
+            ],
+            [
+              43.0,
+              292.0
+            ],
+            [
+              247.0,
+              14.0
+            ],
+            [
+              438.0,
+              110.0
+            ],
+            [
+              358.0,
+              240.0
+            ],
+            [
+              145.0,
+              98.0
+            ],
+            [
+              175.0,
+              225.0
+            ],
+            [
+              208.0,
+              86.0
+            ],
+            [
+              457.0,
+              212.0
+            ],
+            [
+              37.0,
+              312.0
+            ],
+            [
+              318.0,
+              208.0
+            ],
+            [
+              322.0,
+              30.0
+            ],
+            [
+              523.0,
+              154.0
+            ],
+            [
+              541.0,
+              265.0
+            ],
+            [
+              331.0,
+              248.0
+            ],
+            [
+              388.0,
+              180.0
+            ],
+            [
+              536.0,
+              309.0
+            ],
+            [
+              156.0,
+              160.0
+            ],
+            [
+              1042.0,
+              298.0
+            ],
+            [
+              318.0,
+              154.0
+            ],
+            [
+              511.0,
+              61.0
+            ],
+            [
+              54.0,
+              279.0
+            ],
+            [
+              321.0,
+              22.0
+            ],
+            [
+              106.0,
+              21.0
+            ],
+            [
+              466.0,
+              50.0
+            ],
+            [
+              530.0,
+              258.0
+            ],
+            [
+              282.0,
+              322.0
+            ],
+            [
+              181.0,
+              103.0
+            ],
+            [
+              41.0,
+              302.0
+            ],
+            [
+              247.0,
+              312.0
+            ],
+            [
+              394.0,
+              102.0
+            ],
+            [
+              37.0,
+              60.0
+            ],
+            [
+              527.0,
+              97.0
+            ],
+            [
+              461.0,
+              287.0
+            ],
+            [
+              183.0,
+              289.0
+            ],
+            [
+              46.0,
+              178.0
+            ],
+            [
+              280.0,
+              170.0
+            ],
+            [
+              513.0,
+              165.0
+            ],
+            [
+              285.0,
+              295.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": [
+        {
+          "pool_id": "ghost_castle_scene",
+          "acquisition": "Reach the ghost-castle reward scene.",
+          "repeatability": "One Potion for each qualifying run."
+        }
+      ]
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 62,
+      "network_id": 72,
+      "name": "幽霊（ゆうれい）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              345.0,
+              130.0
+            ],
+            [
+              285.0,
+              185.0
+            ],
+            [
+              43.0,
+              292.0
+            ],
+            [
+              247.0,
+              14.0
+            ],
+            [
+              438.0,
+              110.0
+            ],
+            [
+              358.0,
+              240.0
+            ],
+            [
+              145.0,
+              98.0
+            ],
+            [
+              175.0,
+              225.0
+            ],
+            [
+              208.0,
+              86.0
+            ],
+            [
+              457.0,
+              212.0
+            ],
+            [
+              37.0,
+              312.0
+            ],
+            [
+              318.0,
+              208.0
+            ],
+            [
+              322.0,
+              30.0
+            ],
+            [
+              523.0,
+              154.0
+            ],
+            [
+              541.0,
+              265.0
+            ],
+            [
+              331.0,
+              248.0
+            ],
+            [
+              388.0,
+              180.0
+            ],
+            [
+              536.0,
+              309.0
+            ],
+            [
+              156.0,
+              160.0
+            ],
+            [
+              1042.0,
+              298.0
+            ],
+            [
+              318.0,
+              154.0
+            ],
+            [
+              511.0,
+              61.0
+            ],
+            [
+              54.0,
+              279.0
+            ],
+            [
+              321.0,
+              22.0
+            ],
+            [
+              106.0,
+              21.0
+            ],
+            [
+              466.0,
+              50.0
+            ],
+            [
+              530.0,
+              258.0
+            ],
+            [
+              282.0,
+              322.0
+            ],
+            [
+              181.0,
+              103.0
+            ],
+            [
+              41.0,
+              302.0
+            ],
+            [
+              247.0,
+              312.0
+            ],
+            [
+              394.0,
+              102.0
+            ],
+            [
+              37.0,
+              60.0
+            ],
+            [
+              527.0,
+              97.0
+            ],
+            [
+              461.0,
+              287.0
+            ],
+            [
+              183.0,
+              289.0
+            ],
+            [
+              46.0,
+              178.0
+            ],
+            [
+              280.0,
+              170.0
+            ],
+            [
+              513.0,
+              165.0
+            ],
+            [
+              285.0,
+              295.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": [
+        {
+          "pool_id": "ghost_castle_scene",
+          "acquisition": "Reach the ghost-castle reward scene.",
+          "repeatability": "One Potion for each qualifying run."
+        }
+      ]
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 41,
+      "network_id": 51,
+      "name": "機密（きみつ）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1204.0,
+              88.0
+            ],
+            [
+              624.0,
+              98.0
+            ],
+            [
+              805.0,
+              451.0
+            ],
+            [
+              -208.0,
+              5.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": [
+        {
+          "pool_id": "classified_result",
+          "acquisition": "Meet a direct chest-tier condition and clear the quest.",
+          "repeatability": "One result reward for each qualifying clear."
+        }
+      ]
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 53,
+      "network_id": 63,
+      "name": "彷徨（ほうこう）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              270.0,
+              100.0
+            ],
+            [
+              454.0,
+              447.0
+            ],
+            [
+              845.0,
+              472.0
+            ],
+            [
+              596.0,
+              609.0
+            ],
+            [
+              60.0,
+              83.0
+            ],
+            [
+              580.0,
+              288.0
+            ],
+            [
+              456.0,
+              461.0
+            ],
+            [
+              272.0,
+              806.0
+            ],
+            [
+              60.0,
+              83.0
+            ],
+            [
+              448.0,
+              436.0
+            ],
+            [
+              811.0,
+              718.0
+            ],
+            [
+              311.0,
+              768.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": [
+        {
+          "pool_id": "wandering_sage",
+          "acquisition": "Reach the sage reward event.",
+          "repeatability": "One random item in each qualifying event."
+        }
+      ]
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 56,
+      "network_id": 66,
+      "name": "桂冠（けいかん）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              588.0,
+              23.0
+            ],
+            [
+              593.0,
+              418.0
+            ],
+            [
+              43.0,
+              448.0
+            ],
+            [
+              560.0,
+              53.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              437.0,
+              87.0
+            ],
+            [
+              541.0,
+              52.0
+            ],
+            [
+              735.0,
+              228.0
+            ],
+            [
+              753.0,
+              122.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": [
+        {
+          "pool_id": "short_crown_result",
+          "acquisition": "Clear the quest. More items become available after you record more Silver and Gold results.",
+          "repeatability": "One random item for each clear."
+        }
+      ]
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 73,
+      "network_id": 84,
+      "name": "桂冠（けいかん）[並]",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              588.0,
+              23.0
+            ],
+            [
+              593.0,
+              418.0
+            ],
+            [
+              43.0,
+              448.0
+            ],
+            [
+              560.0,
+              53.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              437.0,
+              87.0
+            ],
+            [
+              541.0,
+              52.0
+            ],
+            [
+              735.0,
+              228.0
+            ],
+            [
+              753.0,
+              122.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": [
+        {
+          "pool_id": "short_crown_result",
+          "acquisition": "Clear the quest. More items become available after you record more Silver and Gold results.",
+          "repeatability": "One random item for each clear."
+        }
+      ]
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 0,
+      "network_id": 10,
+      "name": "零下３０度の罠",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              676.0,
+              464.0
+            ],
+            [
+              955.0,
+              464.0
+            ],
+            [
+              1335.0,
+              134.0
+            ],
+            [
+              1897.0,
+              236.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 1,
+      "network_id": 11,
+      "name": "聖地奪還",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              30.0,
+              764.0
+            ],
+            [
+              843.0,
+              1213.0
+            ],
+            [
+              536.0,
+              1084.0
+            ],
+            [
+              1173.0,
+              468.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 2,
+      "network_id": 12,
+      "name": "空の聖都ラ・ケウ",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              213.0,
+              333.0
+            ],
+            [
+              845.0,
+              163.0
+            ],
+            [
+              273.0,
+              411.0
+            ],
+            [
+              468.0,
+              680.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 3,
+      "network_id": 13,
+      "name": "命を賭して",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              540.0,
+              48.0
+            ],
+            [
+              634.0,
+              550.0
+            ],
+            [
+              1160.0,
+              515.0
+            ],
+            [
+              1751.0,
+              395.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 4,
+      "network_id": 14,
+      "name": "とらわれの英雄たち",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              926.0,
+              303.0
+            ],
+            [
+              963.0,
+              367.0
+            ],
+            [
+              963.0,
+              463.0
+            ],
+            [
+              929.0,
+              533.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 5,
+      "network_id": 15,
+      "name": "魔都に眠る死霊",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              297.0,
+              196.0
+            ],
+            [
+              646.0,
+              194.0
+            ],
+            [
+              826.0,
+              225.0
+            ],
+            [
+              1452.0,
+              420.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 6,
+      "network_id": 16,
+      "name": "騎士たちの試練",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              276.0,
+              265.0
+            ],
+            [
+              70.0,
+              248.0
+            ],
+            [
+              65.0,
+              474.0
+            ],
+            [
+              286.0,
+              469.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 7,
+      "network_id": 17,
+      "name": "石巨人の洞窟",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1184.0,
+              439.0
+            ],
+            [
+              1331.0,
+              1183.0
+            ],
+            [
+              781.0,
+              640.0
+            ],
+            [
+              269.0,
+              89.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 9,
+      "network_id": 19,
+      "name": "眠れる竜ラパックス",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              446.0,
+              1534.0
+            ],
+            [
+              670.0,
+              1377.0
+            ],
+            [
+              764.0,
+              1548.0
+            ],
+            [
+              987.0,
+              1608.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 10,
+      "network_id": 20,
+      "name": "深淵にひそむ大蛇",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1712.0,
+              281.0
+            ],
+            [
+              1746.0,
+              413.0
+            ],
+            [
+              -195.0,
+              -1.0
+            ],
+            [
+              -27.0,
+              -90.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 11,
+      "network_id": 21,
+      "name": "熱砂の神殿",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              459.0,
+              391.0
+            ],
+            [
+              655.0,
+              614.0
+            ],
+            [
+              800.0,
+              1166.0
+            ],
+            [
+              261.0,
+              1169.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 12,
+      "network_id": 22,
+      "name": "虚ろなる魔塔",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              321.0,
+              309.0
+            ],
+            [
+              610.0,
+              299.0
+            ],
+            [
+              390.0,
+              19.0
+            ],
+            [
+              112.0,
+              101.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 13,
+      "network_id": 25,
+      "name": "絶対零度の罠",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              2053.0,
+              416.0
+            ],
+            [
+              1669.0,
+              362.0
+            ],
+            [
+              2668.0,
+              1677.0
+            ],
+            [
+              2371.0,
+              1122.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 14,
+      "network_id": 26,
+      "name": "飛沫をかけて",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              -153.0,
+              708.0
+            ],
+            [
+              -22.0,
+              959.0
+            ],
+            [
+              240.0,
+              1078.0
+            ],
+            [
+              641.0,
+              677.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 15,
+      "network_id": 27,
+      "name": "魔神の地下要塞",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1827.0,
+              813.0
+            ],
+            [
+              1718.0,
+              1211.0
+            ],
+            [
+              1540.0,
+              1520.0
+            ],
+            [
+              1349.0,
+              975.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 16,
+      "network_id": 28,
+      "name": "怒れる竜ラパックス",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              2076.0,
+              3138.0
+            ],
+            [
+              2260.0,
+              2773.0
+            ],
+            [
+              2070.0,
+              2158.0
+            ],
+            [
+              2070.0,
+              986.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 17,
+      "network_id": 29,
+      "name": "魔都に降りた天使",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              622.0,
+              505.0
+            ],
+            [
+              786.0,
+              365.0
+            ],
+            [
+              1071.0,
+              468.0
+            ],
+            [
+              1244.0,
+              435.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 18,
+      "network_id": 30,
+      "name": "盗賊砦の秘密",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              806.0,
+              815.0
+            ],
+            [
+              996.0,
+              970.0
+            ],
+            [
+              814.0,
+              1169.0
+            ],
+            [
+              638.0,
+              991.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 22,
+      "network_id": 32,
+      "name": "彷徨える賢者達",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              60.0,
+              83.0
+            ],
+            [
+              454.0,
+              447.0
+            ],
+            [
+              845.0,
+              472.0
+            ],
+            [
+              596.0,
+              609.0
+            ],
+            [
+              60.0,
+              83.0
+            ],
+            [
+              491.0,
+              114.0
+            ],
+            [
+              281.0,
+              599.0
+            ],
+            [
+              272.0,
+              806.0
+            ],
+            [
+              60.0,
+              83.0
+            ],
+            [
+              714.0,
+              368.0
+            ],
+            [
+              811.0,
+              718.0
+            ],
+            [
+              311.0,
+              768.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 23,
+      "network_id": 33,
+      "name": "謎の鉄仮面",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              90.0,
+              110.0
+            ],
+            [
+              244.0,
+              60.0
+            ],
+            [
+              943.0,
+              251.0
+            ],
+            [
+              1213.0,
+              285.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              106.0,
+              444.0
+            ],
+            [
+              1350.0,
+              115.0
+            ],
+            [
+              662.0,
+              450.0
+            ],
+            [
+              630.0,
+              55.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 24,
+      "network_id": 34,
+      "name": "ザ・ナイトメア",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              441.0,
+              385.0
+            ],
+            [
+              336.0,
+              430.0
+            ],
+            [
+              419.0,
+              462.0
+            ],
+            [
+              580.0,
+              532.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              128.0,
+              415.0
+            ],
+            [
+              670.0,
+              443.0
+            ],
+            [
+              290.0,
+              247.0
+            ],
+            [
+              386.0,
+              434.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 28,
+      "network_id": 38,
+      "name": "女神の凱旋",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-direct-item-202a",
+          "acquisition": "Use Force at the selected Gold Sol location in the hidden chest guide.",
+          "repeatability": "One Gold Sol in each quest run.",
+          "candidate_locations": [
+            [
+              77.0,
+              280.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-direct-item-202c",
+          "acquisition": "Use Force at the selected Gold Sol location in the hidden chest guide.",
+          "repeatability": "One Gold Sol in each quest run.",
+          "candidate_locations": [
+            [
+              580.0,
+              45.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-direct-item-2047",
+          "acquisition": "Use Force at the selected Gold Sol location in the hidden chest guide.",
+          "repeatability": "One Gold Sol in each quest run.",
+          "candidate_locations": [
+            [
+              573.0,
+              20.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-direct-item-204b",
+          "acquisition": "Use Force at the selected Gold Sol location in the hidden chest guide.",
+          "repeatability": "One Gold Sol in each quest run.",
+          "candidate_locations": [
+            [
+              195.0,
+              135.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Gold Sol location in the hidden chest guide.",
+          "repeatability": "One Gold Sol in each quest run.",
+          "candidate_locations": [
+            [
+              315.0,
+              140.0
+            ],
+            [
+              570.0,
+              20.0
+            ],
+            [
+              150.0,
+              45.0
+            ],
+            [
+              145.0,
+              25.0
+            ],
+            [
+              52.5,
+              175.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 30,
+      "network_id": 40,
+      "name": "もうひとつの悪魔",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1666.0,
+              272.0
+            ],
+            [
+              1334.0,
+              171.0
+            ],
+            [
+              1378.0,
+              274.0
+            ],
+            [
+              1032.0,
+              114.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 32,
+      "network_id": 42,
+      "name": "戦乙女の記憶",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              73.0,
+              536.0
+            ],
+            [
+              2018.0,
+              428.0
+            ],
+            [
+              904.0,
+              453.0
+            ],
+            [
+              545.0,
+              35.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 33,
+      "network_id": 43,
+      "name": "零下（れいか）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              676.0,
+              464.0
+            ],
+            [
+              955.0,
+              464.0
+            ],
+            [
+              1335.0,
+              134.0
+            ],
+            [
+              1897.0,
+              236.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 34,
+      "network_id": 44,
+      "name": "奪還（だっかん）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              30.0,
+              764.0
+            ],
+            [
+              843.0,
+              1213.0
+            ],
+            [
+              536.0,
+              1084.0
+            ],
+            [
+              1173.0,
+              468.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 35,
+      "network_id": 45,
+      "name": "聖都（せいと）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              213.0,
+              333.0
+            ],
+            [
+              845.0,
+              163.0
+            ],
+            [
+              273.0,
+              411.0
+            ],
+            [
+              468.0,
+              680.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 36,
+      "network_id": 46,
+      "name": "賭命（とめい）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              540.0,
+              48.0
+            ],
+            [
+              634.0,
+              550.0
+            ],
+            [
+              1160.0,
+              515.0
+            ],
+            [
+              1751.0,
+              395.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 37,
+      "network_id": 47,
+      "name": "英雄（えいゆう）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              926.0,
+              303.0
+            ],
+            [
+              963.0,
+              367.0
+            ],
+            [
+              963.0,
+              463.0
+            ],
+            [
+              929.0,
+              533.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 38,
+      "network_id": 48,
+      "name": "魔都（まと）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              297.0,
+              196.0
+            ],
+            [
+              646.0,
+              194.0
+            ],
+            [
+              826.0,
+              225.0
+            ],
+            [
+              1452.0,
+              420.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 39,
+      "network_id": 49,
+      "name": "騎士（きし）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              276.0,
+              265.0
+            ],
+            [
+              70.0,
+              248.0
+            ],
+            [
+              65.0,
+              474.0
+            ],
+            [
+              286.0,
+              469.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 40,
+      "network_id": 50,
+      "name": "巨人（きょじん）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1184.0,
+              439.0
+            ],
+            [
+              1331.0,
+              1183.0
+            ],
+            [
+              781.0,
+              640.0
+            ],
+            [
+              269.0,
+              89.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 42,
+      "network_id": 52,
+      "name": "眠竜（みんりゅう）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              446.0,
+              1534.0
+            ],
+            [
+              670.0,
+              1377.0
+            ],
+            [
+              764.0,
+              1548.0
+            ],
+            [
+              987.0,
+              1608.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 43,
+      "network_id": 53,
+      "name": "深淵（しんえん）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1712.0,
+              281.0
+            ],
+            [
+              1746.0,
+              413.0
+            ],
+            [
+              -195.0,
+              -1.0
+            ],
+            [
+              -27.0,
+              -90.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 44,
+      "network_id": 54,
+      "name": "熱砂（ねっさ）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              543.0,
+              945.0
+            ],
+            [
+              1053.0,
+              788.0
+            ],
+            [
+              975.0,
+              1236.0
+            ],
+            [
+              792.0,
+              471.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 45,
+      "network_id": 55,
+      "name": "魔塔（まとう）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              321.0,
+              309.0
+            ],
+            [
+              610.0,
+              299.0
+            ],
+            [
+              390.0,
+              19.0
+            ],
+            [
+              112.0,
+              101.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 46,
+      "network_id": 56,
+      "name": "零度（れいど）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              2053.0,
+              416.0
+            ],
+            [
+              1669.0,
+              362.0
+            ],
+            [
+              2668.0,
+              1677.0
+            ],
+            [
+              2371.0,
+              1122.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 47,
+      "network_id": 57,
+      "name": "飛沫（しぶき）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              -153.0,
+              708.0
+            ],
+            [
+              -22.0,
+              959.0
+            ],
+            [
+              240.0,
+              1078.0
+            ],
+            [
+              641.0,
+              677.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 48,
+      "network_id": 58,
+      "name": "要塞（ようさい）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1827.0,
+              813.0
+            ],
+            [
+              1718.0,
+              1211.0
+            ],
+            [
+              1540.0,
+              1520.0
+            ],
+            [
+              1349.0,
+              975.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 49,
+      "network_id": 59,
+      "name": "怒竜（どりゅう）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              2076.0,
+              3138.0
+            ],
+            [
+              2260.0,
+              2773.0
+            ],
+            [
+              2070.0,
+              2158.0
+            ],
+            [
+              2070.0,
+              986.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 50,
+      "network_id": 60,
+      "name": "天使（てんし）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              622.0,
+              505.0
+            ],
+            [
+              786.0,
+              365.0
+            ],
+            [
+              1071.0,
+              468.0
+            ],
+            [
+              1244.0,
+              435.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 51,
+      "network_id": 61,
+      "name": "盗賊（とうぞく）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              806.0,
+              815.0
+            ],
+            [
+              996.0,
+              970.0
+            ],
+            [
+              814.0,
+              1169.0
+            ],
+            [
+              638.0,
+              991.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 54,
+      "network_id": 64,
+      "name": "仮面（かめん）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              90.0,
+              110.0
+            ],
+            [
+              244.0,
+              60.0
+            ],
+            [
+              943.0,
+              251.0
+            ],
+            [
+              1213.0,
+              285.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              106.0,
+              444.0
+            ],
+            [
+              1350.0,
+              115.0
+            ],
+            [
+              662.0,
+              450.0
+            ],
+            [
+              630.0,
+              55.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 55,
+      "network_id": 65,
+      "name": "悪夢（あくむ）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              441.0,
+              385.0
+            ],
+            [
+              336.0,
+              430.0
+            ],
+            [
+              419.0,
+              462.0
+            ],
+            [
+              580.0,
+              532.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              128.0,
+              415.0
+            ],
+            [
+              670.0,
+              443.0
+            ],
+            [
+              290.0,
+              247.0
+            ],
+            [
+              386.0,
+              434.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 59,
+      "network_id": 69,
+      "name": "女神（めがみ）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-direct-item-202a",
+          "acquisition": "Use Force at the selected Gold Sol location in the hidden chest guide.",
+          "repeatability": "One Gold Sol in each quest run.",
+          "candidate_locations": [
+            [
+              77.0,
+              280.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              315.0,
+              140.0
+            ],
+            [
+              570.0,
+              20.0
+            ],
+            [
+              150.0,
+              45.0
+            ],
+            [
+              145.0,
+              25.0
+            ],
+            [
+              87.0,
+              11.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 60,
+      "network_id": 70,
+      "name": "疾風（しっぷう）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1380.0,
+              474.0
+            ],
+            [
+              768.0,
+              351.0
+            ],
+            [
+              1008.0,
+              72.0
+            ],
+            [
+              1698.0,
+              587.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1763.0,
+              149.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 61,
+      "network_id": 71,
+      "name": "悪魔（あくま）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1666.0,
+              272.0
+            ],
+            [
+              1334.0,
+              171.0
+            ],
+            [
+              1378.0,
+              274.0
+            ],
+            [
+              1032.0,
+              114.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 63,
+      "network_id": 73,
+      "name": "追憶（ついおく）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              588.0,
+              337.0
+            ],
+            [
+              1147.0,
+              823.0
+            ],
+            [
+              1882.0,
+              638.0
+            ],
+            [
+              410.0,
+              298.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 64,
+      "network_id": 74,
+      "name": "天と地を繋ぐもの",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-direct-item-202a",
+          "acquisition": "Use Force at the selected Gold Sol location in the hidden chest guide.",
+          "repeatability": "One Gold Sol in each quest run.",
+          "candidate_locations": [
+            [
+              77.0,
+              280.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              315.0,
+              140.0
+            ],
+            [
+              570.0,
+              20.0
+            ],
+            [
+              150.0,
+              45.0
+            ],
+            [
+              145.0,
+              25.0
+            ],
+            [
+              87.0,
+              11.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 65,
+      "network_id": 76,
+      "name": "天地（てんち）",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-direct-item-202a",
+          "acquisition": "Use Force at the selected Gold Sol location in the hidden chest guide.",
+          "repeatability": "One Gold Sol in each quest run.",
+          "candidate_locations": [
+            [
+              77.0,
+              280.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              315.0,
+              140.0
+            ],
+            [
+              570.0,
+              20.0
+            ],
+            [
+              150.0,
+              45.0
+            ],
+            [
+              145.0,
+              25.0
+            ],
+            [
+              87.0,
+              11.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 66,
+      "network_id": 77,
+      "name": "『驚愕の未来』",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-direct-item-202a",
+          "acquisition": "Use Force at the selected Gold Sol location in the hidden chest guide.",
+          "repeatability": "One Gold Sol in each quest run.",
+          "candidate_locations": [
+            [
+              77.0,
+              280.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 67,
+      "network_id": 78,
+      "name": "ザ・ナイトメア[並]",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              441.0,
+              385.0
+            ],
+            [
+              336.0,
+              430.0
+            ],
+            [
+              419.0,
+              462.0
+            ],
+            [
+              580.0,
+              532.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              128.0,
+              415.0
+            ],
+            [
+              670.0,
+              443.0
+            ],
+            [
+              290.0,
+              247.0
+            ],
+            [
+              386.0,
+              434.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 70,
+      "network_id": 81,
+      "name": "戦乙女の記憶[並]",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              73.0,
+              536.0
+            ],
+            [
+              2018.0,
+              428.0
+            ],
+            [
+              904.0,
+              453.0
+            ],
+            [
+              545.0,
+              35.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 71,
+      "network_id": 82,
+      "name": "要塞（ようさい）[並]",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1827.0,
+              813.0
+            ],
+            [
+              1718.0,
+              1211.0
+            ],
+            [
+              1540.0,
+              1520.0
+            ],
+            [
+              1349.0,
+              975.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 72,
+      "network_id": 83,
+      "name": "悪夢（あくむ）[並]",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15ccece3a2c4808b",
+          "acquisition": "Use Force at the selected Silver Sol location in the hidden chest guide.",
+          "repeatability": "One Silver Sol in each quest run.",
+          "candidate_locations": [
+            [
+              441.0,
+              385.0
+            ],
+            [
+              336.0,
+              430.0
+            ],
+            [
+              419.0,
+              462.0
+            ],
+            [
+              580.0,
+              532.0
+            ]
+          ]
+        },
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              128.0,
+              415.0
+            ],
+            [
+              670.0,
+              443.0
+            ],
+            [
+              290.0,
+              247.0
+            ],
+            [
+              386.0,
+              434.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 75,
+      "network_id": 86,
+      "name": "悪魔（あくま）[並]",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              1666.0,
+              272.0
+            ],
+            [
+              1334.0,
+              171.0
+            ],
+            [
+              1378.0,
+              274.0
+            ],
+            [
+              1032.0,
+              114.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 76,
+      "network_id": 87,
+      "name": "追憶（ついおく）[並]",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-pool-15f96cd9f198668d",
+          "acquisition": "Use Force at the selected Sol location in the hidden chest guide.",
+          "repeatability": "One Sol in each quest run.",
+          "candidate_locations": [
+            [
+              588.0,
+              337.0
+            ],
+            [
+              1147.0,
+              823.0
+            ],
+            [
+              1882.0,
+              638.0
+            ],
+            [
+              410.0,
+              298.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    },
+    {
+      "type": "scheduled",
+      "guide_quest_id": 77,
+      "network_id": 88,
+      "name": "『驚愕の未来』[並]",
+      "rewards": [],
+      "treasure_sources": [
+        {
+          "pool_id": "sol-direct-item-202a",
+          "acquisition": "Use Force at the selected Gold Sol location in the hidden chest guide.",
+          "repeatability": "One Gold Sol in each quest run.",
+          "candidate_locations": [
+            [
+              77.0,
+              280.0
+            ]
+          ]
+        }
+      ],
+      "direct_reward_sources": []
+    }
+  ]
+}

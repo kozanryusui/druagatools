@@ -1,0 +1,48 @@
+[display]
+# "windowed" uses the hook display path. "original" keeps Tower behavior.
+mode = "windowed"
+
+[startup]
+# Skip the ten-second legal notice and its cosmetic progress bar.
+skip-notice = true
+# Skip the Namco and Arika logo sequence.
+skip-logos = true
+
+[cards]
+# A relative path starts at the directory that contains this file.
+directory = "cards"
+# Keep the card usage count unchanged by default.
+reset-usage-count = false
+
+[logging]
+# Log serial traffic for each emulated device to DRUAGA_SX32W_LOG.
+io_board = false
+left_reader = false
+right_reader = false
+
+[network]
+# "dynamic" uses current host adapter values. "original" uses Tower lookup.
+adapter = "dynamic"
+
+# Wine cannot create the raw ICMP sockets that the original checks require.
+# Use "original" on a compatible Windows installation.
+router-checks = "emulated"
+
+# Permit online use during the original daily maintenance window.
+disable-maintenance-window = true
+
+# AON.Net uses the original PowerOn port 80 by default.
+# power-on-port = 8080
+
+# Use "domain" for another host name. Use "ip" for a fixed IPv4 address.
+[[network.dns-overrides]]
+source = "tenporouter.loc"
+domain = "localhost"
+
+[[network.dns-overrides]]
+source = "naominet.jp"
+domain = "localhost"
+
+[[network.dns-overrides]]
+source = "gameservers.aonnet"
+domain = "localhost"

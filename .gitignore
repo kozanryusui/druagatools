@@ -1,0 +1,12 @@
+dongle/
+iso/
+pcsx2x6/
+.planning/research/.cache/
+work/
+target/
+crates/aon-net/admin/dist/
+pcsx2x6-pr-worktrees/
+captures/
+/aon-net.db
+.planning/
+config/

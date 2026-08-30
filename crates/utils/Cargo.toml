@@ -1,0 +1,36 @@
+[package]
+name = "druaga-utils"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+
+[[bin]]
+name = "artifact-catalog"
+path = "src/bin/artifact-catalog.rs"
+
+[[bin]]
+name = "game-resource-extractor"
+path = "src/bin/game-resource-extractor.rs"
+
+[[bin]]
+name = "gsm2-extract"
+path = "src/bin/gsm2-extract.rs"
+
+[[bin]]
+name = "item-database-builder"
+path = "src/bin/item-database-builder.rs"
+
+[dependencies]
+base64 = "0.23.1"
+binrw = "=0.15.2"
+encoding_rs = "=0.8.35"
+png = "0.17.16"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.145"
+csv = "1.4.0"
+thiserror = "2.0.20"
+toml = "1.1.4"
+zenravif = "0.1.3"
+
+[lints]
+workspace = true

@@ -1,0 +1,48 @@
+[server]
+# The Station uses TCP port 80 for PowerOn.
+listen = "0.0.0.0:80"
+database-path = "aon-net.db"
+
+# Tower and Station binary services.
+game-listen = "0.0.0.0:33437"
+matching-listen = "0.0.0.0:33438"
+relay-listen = ["0.0.0.0:33439", "0.0.0.0:33440", "0.0.0.0:33441"]
+
+# AON.Net listens on gameplay-listen. It sends the advertised endpoint to
+# matched Stations. Change the advertised host when clients run on other hosts.
+gameplay-listen = "0.0.0.0:33442"
+gameplay-advertise-host = "gameservers.aonnet"
+gameplay-advertise-port = 33442
+
+# AON.Net makes a party when this number of compatible players is waiting.
+# The permitted range is 2 through 4.
+matching-player-count = 2
+
+# The Tower returns this value in its second binary-service handshake request. Do not change.
+game-session-id = 1
+
+[power-on]
+# The Tower requires both fields before the game service is available. Do not change.
+uri = "/"
+host = "aonnet"
+
+# AON.Net reads UTF-8 and encodes these values as Shift_JIS on the wire.
+shop-name = "AON.Net Local Shop"
+shop-nickname = "AON"
+region-code = "0"
+region-name-0 = "Local"
+region-name-1 = "Local"
+region-name-2 = "Local"
+region-name-3 = "Local"
+place-id = "AON0001"
+
+# Keep this empty until for now.
+setting = ""
+
+# AON.Net sends announcements in start-time order. Add at most 16 entries.
+# The Tower can show a future announcement early. Do not add it before its start.
+# [[announcements]]
+# start = "2009-08-03 12:30"
+# end = "2009-08-04 23:59"
+# sub-minute = 0
+# text = "Announcement text"

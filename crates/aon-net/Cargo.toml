@@ -1,0 +1,51 @@
+[package]
+name = "aon-net"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+
+[features]
+admin-ui = []
+
+[[bin]]
+name = "aon-net-admin"
+path = "src/bin/aon-net-admin.rs"
+required-features = ["admin-ui"]
+test = false
+bench = false
+
+[dependencies]
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.149"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+axum = "=0.8.9"
+base64 = "=0.23.1"
+binrw = "=0.15.2"
+encoding_rs = "=0.8.35"
+fastrand = "=2.5.0"
+flate2 = "=1.1.9"
+jiff = "=0.2.35"
+native_db = "=0.8.2"
+native_model = "=0.4.20"
+thiserror = "=2.0.20"
+tokio = { version = "=1.53.1", features = ["io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+tokio-stream = { version = "=0.1.18", features = ["sync"] }
+toml = "=1.1.4"
+tracing = "=0.1.44"
+tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+gloo-net = { version = "=0.7.0", features = ["http", "json"] }
+leptos = { version = "=0.8.20", features = ["csr"] }
+wasm-bindgen = "=0.2.126"
+web-sys = { version = "=0.3.103", features = ["EventSource", "HashChangeEvent", "HtmlElement", "HtmlInputElement", "HtmlSelectElement", "MessageEvent", "Window"] }
+
+[build-dependencies]
+flate2 = "=1.1.9"
+
+[dev-dependencies]
+tempfile = "=3.27.0"
+
+[lints]
+workspace = true
