@@ -88,6 +88,12 @@ pub(crate) struct RelayBatch {
     pub dropped_records: usize,
 }
 
+impl RelayBatch {
+    pub(crate) fn leaves_one_player(&self) -> bool {
+        self.flags & 1 != 0 && (self.flags & 0b0001_1110).count_ones() == 1
+    }
+}
+
 #[derive(Debug, Error)]
 pub(crate) enum OnlineError {
     #[error("online state lock is poisoned")]
@@ -736,7 +742,30 @@ mod tests {
         )?;
         assert_eq!(batch.flags & 1, 1);
         assert_eq!(batch.flags & (1 << 3), 0);
+        assert!(!batch.leaves_one_player());
+
+        state.leave_relay(owner_key, PartySlot::new(2)?, 22)?;
+        let batch = state.relay_blob(
+            owner_key,
+            PartySlot::new(1)?,
+            11,
+            GameplayBlob::new(vec![0x13, 1])?,
+        )?;
+        assert!(batch.leaves_one_player());
         Ok(())
+    }
+
+    #[test]
+    fn relay_batch_leaves_one_player_only_after_a_roster_change() {
+        let batch = |flags| RelayBatch {
+            flags,
+            records: Vec::new(),
+            dropped_records: 0,
+        };
+
+        assert!(!batch(1 << 1).leaves_one_player());
+        assert!(batch(1 | (1 << 1)).leaves_one_player());
+        assert!(!batch(1 | (1 << 1) | (1 << 2)).leaves_one_player());
     }
 
     #[test]

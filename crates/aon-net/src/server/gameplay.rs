@@ -168,6 +168,7 @@ async fn handle_connection(
                         flags = batch.flags,
                         "relayed gameplay record"
                     );
+                    let leaves_one_player = batch.leaves_one_player();
                     stream
                         .write_all(
                             &GameplayResponse::Envelope {
@@ -177,6 +178,14 @@ async fn handle_connection(
                             .serialize()?,
                         )
                         .await?;
+                    if leaves_one_player {
+                        info!(
+                            owner_key = %binding.owner_key,
+                            party_slot = %binding.party_slot,
+                            "closing gameplay relay for sole surviving Station"
+                        );
+                        break;
+                    }
                 }
                 GameplayRequest::ActionRecord {
                     value_18,
