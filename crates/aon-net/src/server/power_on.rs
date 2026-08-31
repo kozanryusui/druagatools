@@ -98,7 +98,7 @@ fn response_from_config(config: &PowerOnConfig, shop_name: String) -> PowerOnRes
         region_name_2: config.region_name_2.clone(),
         region_name_3: config.region_name_3.clone(),
         place_id: config.place_id.clone(),
-        setting: config.setting.clone(),
+        setting: String::new(),
         time: PowerOnTime {
             year: now.year(),
             month: now.month(),

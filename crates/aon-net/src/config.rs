@@ -44,7 +44,6 @@ pub(crate) struct PowerOnConfig {
     pub(crate) region_name_2: String,
     pub(crate) region_name_3: String,
     pub(crate) place_id: String,
-    pub(crate) setting: String,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -93,7 +92,6 @@ struct RawPowerOnConfig {
     region_name_2: String,
     region_name_3: String,
     place_id: String,
-    setting: String,
 }
 
 #[derive(Deserialize)]
@@ -193,7 +191,6 @@ impl RawAonNetConfig {
                 region_name_2: self.power_on.region_name_2,
                 region_name_3: self.power_on.region_name_3,
                 place_id: self.power_on.place_id,
-                setting: self.power_on.setting,
             },
             announcements,
         })
@@ -264,12 +261,11 @@ fn validate_power_on(power_on: &RawPowerOnConfig) -> Result<(), ConfigError> {
         ("region-name-2", power_on.region_name_2.as_str()),
         ("region-name-3", power_on.region_name_3.as_str()),
         ("place-id", power_on.place_id.as_str()),
-        ("setting", power_on.setting.as_str()),
     ] {
         if value.contains(['&', '\0', '\r', '\n']) {
             return Err(ConfigError::ReservedCharacter { field });
         }
-        if field != "setting" && value.is_empty() {
+        if value.is_empty() {
             return Err(ConfigError::EmptyField { field });
         }
         if SHIFT_JIS.encode(value).2 {
