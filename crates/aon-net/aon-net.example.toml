@@ -19,8 +19,6 @@ gameplay-advertise-port = 33442
 # The permitted range is 2 through 4.
 matching-player-count = 2
 
-# The Tower returns this value in its second binary-service handshake request. Do not change.
-game-session-id = 1
 
 [power-on]
 # The Tower requires both fields before the game service is available. Do not change.

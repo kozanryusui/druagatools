@@ -20,6 +20,7 @@ mod tower;
 mod transport;
 
 static NEXT_CONNECTION_ID: AtomicU64 = AtomicU64::new(1);
+const GAME_SESSION_ID: u32 = 1;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum SessionPhase {
@@ -66,7 +67,6 @@ pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(),
     let relay_2_address = SocketAddr::new(bind_ip, relay_2_port);
     let relay_3_address = SocketAddr::new(bind_ip, relay_3_port);
     let gameplay_address = SocketAddr::new(bind_ip, config.server.gameplay_port);
-    let game_session_id = config.server.game_session_id;
     let storage = Arc::new(Storage::open(&config.server.database_path)?);
     let settings = Arc::new(RuntimeSettings::new(
         Arc::clone(&storage),
@@ -79,7 +79,7 @@ pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(),
         config.server.gameplay_advertise_port.get(),
     ));
     let central = Arc::new(central::CentralServices::new(
-        game_session_id,
+        GAME_SESSION_ID,
         storage,
         Arc::clone(&settings),
         Arc::clone(&online),
@@ -136,7 +136,7 @@ pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(),
         tower::ServiceKind::RelayControl("relay-3"),
         central,
     );
-    let gameplay_server = gameplay::serve_connections(gameplay_listener, game_session_id, online);
+    let gameplay_server = gameplay::serve_connections(gameplay_listener, GAME_SESSION_ID, online);
     tokio::try_join!(
         http_server,
         database_server,

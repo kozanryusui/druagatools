@@ -30,7 +30,6 @@ pub(crate) struct ServerConfig {
     pub(crate) gameplay_advertise_host: EndpointHost,
     pub(crate) gameplay_advertise_port: NonZeroU16,
     pub(crate) matching_player_count: MatchingPlayerCount,
-    pub(crate) game_session_id: u32,
 }
 
 #[derive(Clone, Debug)]
@@ -79,7 +78,6 @@ struct RawServerConfig {
     gameplay_advertise_host: String,
     gameplay_advertise_port: u16,
     matching_player_count: u8,
-    game_session_id: u32,
 }
 
 #[derive(Deserialize)]
@@ -183,7 +181,6 @@ impl RawAonNetConfig {
                 gameplay_advertise_host,
                 gameplay_advertise_port,
                 matching_player_count: MatchingPlayerCount(self.server.matching_player_count),
-                game_session_id: self.server.game_session_id,
             },
             power_on: PowerOnConfig {
                 uri: self.power_on.uri,
