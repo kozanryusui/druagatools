@@ -14,18 +14,14 @@ pub const MAX_ENVELOPE_RECORDS: usize = 6;
 pub struct GameplayEnvelopeFlags(u8);
 
 impl GameplayEnvelopeFlags {
-    const ROSTER_CHANGED: u8 = 1;
+    const ROSTER_READY: u8 = 1;
     const ACTIVE_SLOTS: u8 = 0b0001_1110;
 
     pub fn from_active_slots(
         active_slots: impl IntoIterator<Item = PartySlot>,
-        roster_changed: bool,
+        roster_ready: bool,
     ) -> Self {
-        let mut bits = if roster_changed {
-            Self::ROSTER_CHANGED
-        } else {
-            0
-        };
+        let mut bits = if roster_ready { Self::ROSTER_READY } else { 0 };
         for slot in active_slots {
             bits |= 1 << slot.get();
         }
@@ -36,8 +32,8 @@ impl GameplayEnvelopeFlags {
         self.0
     }
 
-    pub const fn roster_changed(self) -> bool {
-        self.0 & Self::ROSTER_CHANGED != 0
+    pub const fn roster_ready(self) -> bool {
+        self.0 & Self::ROSTER_READY != 0
     }
 
     pub const fn active_player_count(self) -> u32 {
@@ -45,7 +41,7 @@ impl GameplayEnvelopeFlags {
     }
 
     pub const fn has_sole_survivor(self) -> bool {
-        self.roster_changed() && self.active_player_count() == 1
+        self.roster_ready() && self.active_player_count() == 1
     }
 }
 

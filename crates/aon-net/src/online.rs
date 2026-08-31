@@ -545,9 +545,7 @@ fn active_flags(party: &RelayParty) -> GameplayEnvelopeFlags {
         .iter()
         .zip(PartySlot::ALL)
         .filter_map(|(connection, slot)| connection.map(|_| slot));
-    let roster_changed =
-        party.started && party.live_connections.iter().flatten().count() < party.members.len();
-    GameplayEnvelopeFlags::from_active_slots(active_slots, roster_changed)
+    GameplayEnvelopeFlags::from_active_slots(active_slots, party.started)
 }
 
 #[cfg(test)]
@@ -805,6 +803,8 @@ mod tests {
             GameplayBlob::new(vec![0x13, 1])?,
         )?;
         assert!(source.records.is_empty());
+        assert!(source.flags.roster_ready());
+        assert_eq!(source.flags.bits(), 0x07);
         let destination = state.relay_blob(
             owner_key,
             PartySlot::new(2)?,
@@ -826,7 +826,7 @@ mod tests {
     }
 
     #[test]
-    fn relay_announces_the_first_departure_from_a_started_party()
+    fn relay_keeps_the_ready_flag_after_a_started_party_loses_a_player()
     -> Result<(), Box<dyn std::error::Error>> {
         let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
         let (tx_a, _rx_a) = mpsc::unbounded_channel();
@@ -852,7 +852,7 @@ mod tests {
             11,
             GameplayBlob::new(vec![0x13, 1])?,
         )?;
-        assert!(batch.flags.roster_changed());
+        assert!(batch.flags.roster_ready());
         assert_eq!(batch.flags.active_player_count(), 2);
         assert!(!batch.flags.has_sole_survivor());
 
@@ -868,7 +868,7 @@ mod tests {
     }
 
     #[test]
-    fn envelope_flags_report_a_sole_survivor_only_after_a_roster_change()
+    fn envelope_flags_report_a_sole_survivor_only_after_roster_is_ready()
     -> Result<(), StationProtocolError> {
         let slot_1 = PartySlot::new(1)?;
         let slot_2 = PartySlot::new(2)?;
