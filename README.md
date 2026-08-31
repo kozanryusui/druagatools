@@ -13,9 +13,9 @@ Start AON.Net before you start the Tower or Station clients.
 
 ## Player guide and databases
 
-The [Druaga Online guide and database](crates/aon-net/html/index.html) contains the hidden treasure chest guide, item database, crafting database, enemy database, quest item sources, and Tower item sources.
+The [Druaga Online guide and database](https://github.com/kozanryusui/druaga-guide) contains the hidden treasure chest guide, item database, crafting database, enemy database, quest item sources, and Tower item sources.
 
-Clone or download the repository, then open `crates/aon-net/html/index.html` in a web browser.
+Clone or download the guide repository, then open its `index.html` file in a web browser.
 
 ## Components
 
