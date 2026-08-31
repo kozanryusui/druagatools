@@ -28,8 +28,8 @@ pub struct LobbyRegistration {
 #[derive(BinRead, Clone, Debug, Eq, PartialEq)]
 #[br(big)]
 pub struct LobbyLookup {
-    pub wait_window: u16,
-    pub lobby_value: u16,
+    pub elapsed_wait_seconds: u16,
+    pub remaining_wait_seconds: u16,
     pub player_or_lobby_key: PlayerIdentity,
 }
 

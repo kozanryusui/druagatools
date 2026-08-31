@@ -14,7 +14,7 @@ const MAX_PLAYER_QUEUE: usize = 128;
 const MAX_PARTY_PLAYERS: usize = 4;
 const UNCLAIMED_PARTY_LIFETIME: Duration = Duration::from_secs(300);
 const NETWORK_CHECK_QUEST_ID: u16 = 75;
-const NETWORK_CHECK_WAIT_WINDOW: u16 = 5;
+const NETWORK_CHECK_ELAPSED_WAIT_SECONDS: u16 = 5;
 const ALTERNATE_QUEST_INDEX_MODE: u16 = 9;
 
 pub(crate) struct OnlineState {
@@ -179,7 +179,7 @@ impl OnlineState {
         let should_finalize = {
             let party = &inner.assembling[party_index];
             party.members.len() == MAX_PARTY_PLAYERS
-                || lookup.wait_window == 0
+                || lookup.remaining_wait_seconds == 0
                 || is_network_check(&party.members[0].registration, &lookup)
         };
         if should_finalize {
@@ -451,8 +451,8 @@ fn compatible(left: &LobbyRegistration, right: &LobbyRegistration) -> bool {
 fn is_network_check(registration: &LobbyRegistration, lookup: &LobbyLookup) -> bool {
     registration.matching_quest_index == NETWORK_CHECK_QUEST_ID
         && registration.record_id == 0
-        && lookup.wait_window == NETWORK_CHECK_WAIT_WINDOW
-        && lookup.lobby_value == 0
+        && lookup.elapsed_wait_seconds == NETWORK_CHECK_ELAPSED_WAIT_SECONDS
+        && lookup.remaining_wait_seconds == 0
 }
 
 fn active_flags(party: &RelayParty) -> u8 {
@@ -502,8 +502,8 @@ mod tests {
 
     fn lookup() -> LobbyLookup {
         LobbyLookup {
-            wait_window: 0x10,
-            lobby_value: 0,
+            elapsed_wait_seconds: 16,
+            remaining_wait_seconds: 19,
             player_or_lobby_key: crate::protocol::station::PlayerIdentity([0; 32]),
         }
     }
@@ -573,7 +573,7 @@ mod tests {
     }
 
     #[test]
-    fn expired_wait_finalizes_the_partial_party_and_late_players_start_a_new_one()
+    fn one_expired_member_finalizes_the_partial_party_and_late_players_start_a_new_one()
     -> Result<(), Box<dyn std::error::Error>> {
         let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
         let (tx_a, mut rx_a) = mpsc::unbounded_channel();
@@ -583,7 +583,8 @@ mod tests {
         state.queue_match(2, registration(200, 0x22)?, lookup(), tx_b)?;
 
         let mut expired = lookup();
-        expired.wait_window = 0;
+        expired.elapsed_wait_seconds = 35;
+        expired.remaining_wait_seconds = 0;
         let outcome = state.queue_match(1, registration(100, 0x11)?, expired, tx_a)?;
         let MatchOutcome::PartyCreated {
             owner_key,
@@ -671,7 +672,8 @@ mod tests {
         let (tx_b, _rx_b) = mpsc::unbounded_channel();
         state.queue_match(1, registration(100, 0x11)?, lookup(), tx_a)?;
         let mut expired = lookup();
-        expired.wait_window = 0;
+        expired.elapsed_wait_seconds = 35;
+        expired.remaining_wait_seconds = 0;
         let outcome = state.queue_match(2, registration(200, 0x22)?, expired, tx_b)?;
         let MatchOutcome::PartyCreated { owner_key, .. } = outcome else {
             return Err("party was not created".into());
@@ -715,7 +717,8 @@ mod tests {
         state.queue_match(1, registration(100, 0x11)?, lookup(), tx_a)?;
         state.queue_match(2, registration(200, 0x22)?, lookup(), tx_b)?;
         let mut expired = lookup();
-        expired.wait_window = 0;
+        expired.elapsed_wait_seconds = 35;
+        expired.remaining_wait_seconds = 0;
         let outcome = state.queue_match(3, registration(300, 0x33)?, expired, tx_c)?;
         let MatchOutcome::PartyCreated { owner_key, .. } = outcome else {
             return Err("party was not created".into());
@@ -744,8 +747,8 @@ mod tests {
         let mut registration = registration(0, 0)?;
         registration.matching_quest_index = NETWORK_CHECK_QUEST_ID;
         let lookup = LobbyLookup {
-            wait_window: NETWORK_CHECK_WAIT_WINDOW,
-            lobby_value: 0,
+            elapsed_wait_seconds: NETWORK_CHECK_ELAPSED_WAIT_SECONDS,
+            remaining_wait_seconds: 0,
             player_or_lobby_key: crate::protocol::station::PlayerIdentity([0; 32]),
         };
 

@@ -182,8 +182,8 @@ async fn handle_connection(
                                     info!(
                                         %peer,
                                         connection_id,
-                                        wait_window = lookup.wait_window,
-                                        lobby_value = lookup.lobby_value,
+                                        elapsed_wait_seconds = lookup.elapsed_wait_seconds,
+                                        remaining_wait_seconds = lookup.remaining_wait_seconds,
                                         waiting_count,
                                         player_count,
                                         "sent partial gameplay party assignment"

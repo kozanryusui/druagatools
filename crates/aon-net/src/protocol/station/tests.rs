@@ -22,6 +22,19 @@ fn matching_activation_has_one_reserved_byte() -> Result<(), Box<dyn std::error:
 }
 
 #[test]
+fn lobby_lookup_has_elapsed_and_remaining_wait_seconds() -> Result<(), Box<dyn std::error::Error>> {
+    let mut frame = vec![0x00, 0x0b, 0x00, 0x24, 0x00, 0x0c, 0x00, 0x17];
+    frame.extend([0; 32]);
+
+    let MatchingRequest::LobbyLookup(lookup) = deserialize_matching_request(&frame)? else {
+        return Err("frame was not decoded as a lobby lookup".into());
+    };
+    assert_eq!(lookup.elapsed_wait_seconds, 12);
+    assert_eq!(lookup.remaining_wait_seconds, 23);
+    Ok(())
+}
+
+#[test]
 fn ignored_acknowledgment_bytes_are_not_in_the_public_model()
 -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(
