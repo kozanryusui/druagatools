@@ -57,7 +57,7 @@ pub struct LobbyRegistration {
     pub matching_quest_index: u16,
     pub alternate_quest_index: u16,
     pub lobby_values: [u16; 2],
-    pub player_identity: PlayerIdentity,
+    pub participant_record: ParticipantRecord,
     pub player_controls: [u8; 4],
     pub record_id: u32,
     pub shop_name: FixedText<40>,
@@ -69,7 +69,7 @@ pub struct LobbyRegistration {
 pub struct LobbyLookup {
     pub elapsed_wait_seconds: u16,
     pub remaining_wait_seconds: u16,
-    pub player_or_lobby_key: PlayerIdentity,
+    pub participant_or_lobby_key: ParticipantRecord,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -94,7 +94,19 @@ pub struct PlayerRecord {
 }
 
 #[derive(BinRead, BinWrite, Clone, Copy, Debug, Eq, PartialEq)]
-pub struct PlayerIdentity(pub [u8; 32]);
+pub struct ParticipantRecord([u8; 32]);
+
+impl ParticipantRecord {
+    pub fn with_party_slot(mut self, party_slot: PartySlot) -> Self {
+        self.0[0] = party_slot.get();
+        self
+    }
+
+    #[cfg(test)]
+    pub(crate) const fn from_bytes(bytes: [u8; 32]) -> Self {
+        Self(bytes)
+    }
+}
 
 #[derive(BinRead, BinWrite, Clone, Debug, Eq, PartialEq)]
 #[br(try_map = Self::from_wire)]
@@ -247,10 +259,10 @@ impl fmt::Display for EndpointHost {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct PartyRoster(Vec<PlayerIdentity>);
+pub struct PartyRoster(Vec<ParticipantRecord>);
 
 impl PartyRoster {
-    pub fn new(value: Vec<PlayerIdentity>) -> Result<Self, StationProtocolError> {
+    pub fn new(value: Vec<ParticipantRecord>) -> Result<Self, StationProtocolError> {
         if value.is_empty() || value.len() > 4 {
             Err(StationProtocolError::PartyRoster {
                 actual: value.len(),
@@ -260,7 +272,7 @@ impl PartyRoster {
         }
     }
 
-    pub fn as_slice(&self) -> &[PlayerIdentity] {
+    pub fn as_slice(&self) -> &[ParticipantRecord] {
         &self.0
     }
 }

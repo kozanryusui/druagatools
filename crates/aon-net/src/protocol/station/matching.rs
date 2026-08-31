@@ -7,8 +7,8 @@ use crate::protocol::tower::{TowerRequest, TowerResponse, serialize_tower_respon
 
 use super::event::{MatchingActivationConfiguration, MatchingActivationConfigurationWire};
 use super::types::{
-    EndpointAssignment, EndpointHost, LobbyLookup, LobbyRegistration, OwnerKey, PartySlot,
-    PlayerIdentity, StationProtocolError,
+    EndpointAssignment, EndpointHost, LobbyLookup, LobbyRegistration, OwnerKey, ParticipantRecord,
+    PartySlot, StationProtocolError,
 };
 
 #[derive(BinRead, BinWrite, Clone, Copy, Debug, Eq, PartialEq)]
@@ -41,7 +41,7 @@ pub(super) struct EndpointAssignmentWire {
     reserved_32: [u8; 2],
     #[br(count = participant_count, pad_size_to = 0x80)]
     #[bw(pad_size_to = 0x80)]
-    pub(super) participants: Vec<PlayerIdentity>,
+    pub(super) participants: Vec<ParticipantRecord>,
 }
 
 impl From<&EndpointAssignment> for EndpointAssignmentWire {
@@ -51,11 +51,7 @@ impl From<&EndpointAssignment> for EndpointAssignmentWire {
             .as_slice()
             .iter()
             .enumerate()
-            .map(|(index, identity)| {
-                let mut identity = *identity;
-                identity.0[0] = (index + 1) as u8;
-                identity
-            })
+            .map(|(index, participant)| participant.with_party_slot(PartySlot::ALL[index]))
             .collect();
 
         Self {

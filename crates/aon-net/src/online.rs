@@ -209,7 +209,7 @@ impl OnlineState {
             party
                 .members
                 .iter()
-                .map(|member| member.registration.player_identity)
+                .map(|member| member.registration.participant_record)
                 .collect(),
         )?;
         Ok(EndpointAssignment {
@@ -486,7 +486,9 @@ mod tests {
             matching_quest_index: 10,
             alternate_quest_index: 3,
             lobby_values: [4, 5],
-            player_identity: crate::protocol::station::PlayerIdentity([identity; 32]),
+            participant_record: crate::protocol::station::ParticipantRecord::from_bytes(
+                [identity; 32],
+            ),
             player_controls: [0; 4],
             record_id,
             shop_name: empty_text()?,
@@ -503,7 +505,9 @@ mod tests {
         LobbyLookup {
             elapsed_wait_seconds: 16,
             remaining_wait_seconds: 19,
-            player_or_lobby_key: crate::protocol::station::PlayerIdentity([0; 32]),
+            participant_or_lobby_key: crate::protocol::station::ParticipantRecord::from_bytes(
+                [0; 32],
+            ),
         }
     }
 
@@ -772,7 +776,9 @@ mod tests {
         let lookup = LobbyLookup {
             elapsed_wait_seconds: NETWORK_CHECK_ELAPSED_WAIT_SECONDS,
             remaining_wait_seconds: 0,
-            player_or_lobby_key: crate::protocol::station::PlayerIdentity([0; 32]),
+            participant_or_lobby_key: crate::protocol::station::ParticipantRecord::from_bytes(
+                [0; 32],
+            ),
         };
 
         assert!(matches!(

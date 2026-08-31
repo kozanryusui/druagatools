@@ -19,7 +19,7 @@ use event::{
 };
 
 #[cfg(test)]
-pub use types::{FixedText, PlayerIdentity};
+pub use types::{FixedText, ParticipantRecord};
 
 #[cfg(test)]
 mod tests;

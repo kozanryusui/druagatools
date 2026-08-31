@@ -9,7 +9,7 @@ use crate::protocol::tower::{PartyQuestId, SpecialQuestId};
 
 use super::event::MatchingActivationConfigurationWire;
 use super::matching::{AssignmentReady, ConnectionRole, EndpointAssignmentWire};
-use super::types::{FixedText, MAX_GAMEPLAY_BLOB_SIZE, PlayerIdentity};
+use super::types::{FixedText, MAX_GAMEPLAY_BLOB_SIZE, ParticipantRecord};
 use super::*;
 
 #[test]
@@ -275,8 +275,8 @@ fn endpoint_assignment_has_confirmed_wire_layout() -> Result<(), Box<dyn std::er
         local_slot: PartySlot::new(2)?,
         matching_quest_index: 25,
         participants: PartyRoster::new(vec![
-            PlayerIdentity([0x11; 32]),
-            PlayerIdentity([0x22; 32]),
+            ParticipantRecord::from_bytes([0x11; 32]),
+            ParticipantRecord::from_bytes([0x22; 32]),
         ])?,
     };
     let frame = MatchingResponse::EndpointAssignment(assignment.clone()).serialize()?;
@@ -305,8 +305,8 @@ fn endpoint_assignment_has_confirmed_wire_layout() -> Result<(), Box<dyn std::er
     assert_eq!(
         decoded.participants,
         vec![
-            PlayerIdentity(first_participant),
-            PlayerIdentity(second_participant)
+            ParticipantRecord::from_bytes(first_participant),
+            ParticipantRecord::from_bytes(second_participant)
         ]
     );
     Ok(())
@@ -322,7 +322,7 @@ fn partial_endpoint_assignment_keeps_the_station_in_matching()
         ready: false,
         local_slot: PartySlot::new(1)?,
         matching_quest_index: 10,
-        participants: PartyRoster::new(vec![PlayerIdentity([0x11; 32])])?,
+        participants: PartyRoster::new(vec![ParticipantRecord::from_bytes([0x11; 32])])?,
     };
 
     let frame = MatchingResponse::EndpointAssignment(assignment).serialize()?;
