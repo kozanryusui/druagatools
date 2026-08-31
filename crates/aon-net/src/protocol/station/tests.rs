@@ -354,7 +354,7 @@ fn envelope_keeps_slot_and_blob_boundaries() -> Result<(), StationProtocolError>
     let frame = GameplayResponse::Envelope {
         flags: GameplayEnvelopeFlags::from_active_slots(
             [PartySlot::new(1)?, PartySlot::new(3)?],
-            false,
+            RosterReadiness::Waiting,
         ),
         records: vec![PlayerRecord {
             party_slot: PartySlot::new(3)?,

@@ -11,7 +11,7 @@ pub(crate) use types::PlayerIdentity;
 pub use types::{
     EndpointAssignment, EndpointHost, GameplayBlob, GameplayEnvelopeFlags, LobbyLookup,
     LobbyRegistration, MAX_ENVELOPE_RECORDS, OwnerKey, ParticipantRecord, PartyRoster, PartySlot,
-    PlayerRecord, StationProtocolError,
+    PlayerRecord, RosterReadiness, StationProtocolError,
 };
 
 #[cfg(test)]

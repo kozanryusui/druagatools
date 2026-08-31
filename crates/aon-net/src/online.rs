@@ -8,7 +8,7 @@ use tokio::sync::mpsc;
 use crate::protocol::station::{
     EndpointAssignment, EndpointHost, GameplayBlob, GameplayEnvelopeFlags, LobbyLookup,
     LobbyRegistration, MAX_ENVELOPE_RECORDS, OwnerKey, ParticipantRecord, PartyRoster, PartySlot,
-    PlayerIdentity, PlayerRecord, StationProtocolError,
+    PlayerIdentity, PlayerRecord, RosterReadiness, StationProtocolError,
 };
 
 const MAX_PLAYER_QUEUE: usize = 128;
@@ -52,20 +52,19 @@ struct AssemblingParty {
 }
 
 struct RelayParty {
-    members: Vec<PartyMember>,
+    members: Vec<RelayMember>,
     matching_quest_index: u16,
-    matching_records: Vec<ParticipantRecord>,
-    matching_queues: [[VecDeque<ParticipantRecord>; MAX_PARTY_PLAYERS]; MAX_PARTY_PLAYERS],
-    live_connections: [Option<u64>; 4],
-    queues: [VecDeque<PlayerRecord>; 4],
-    started: bool,
+    roster_readiness: RosterReadiness,
     last_activity: Instant,
 }
 
-#[derive(Clone)]
-struct PartyMember {
+struct RelayMember {
     record_id: u32,
     matching_connection_id: u64,
+    matching_record: ParticipantRecord,
+    matching_queues: [VecDeque<ParticipantRecord>; MAX_PARTY_PLAYERS],
+    gameplay_connection_id: Option<u64>,
+    gameplay_queue: VecDeque<PlayerRecord>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -257,20 +256,17 @@ impl OnlineState {
         let members = party
             .members
             .iter()
-            .map(|member| PartyMember {
+            .enumerate()
+            .map(|(index, member)| RelayMember {
                 record_id: member.registration.record_id,
                 matching_connection_id: member.connection_id,
-            })
-            .collect();
-        let matching_records = party
-            .members
-            .iter()
-            .enumerate()
-            .map(|(index, member)| {
-                ParticipantRecord::from_player_identity(
+                matching_record: ParticipantRecord::from_player_identity(
                     PartySlot::ALL[index],
                     member.registration.player_identity,
-                )
+                ),
+                matching_queues: std::array::from_fn(|_| VecDeque::new()),
+                gameplay_connection_id: None,
+                gameplay_queue: VecDeque::new(),
             })
             .collect();
         let player_count = party.members.len();
@@ -279,11 +275,7 @@ impl OnlineState {
             RelayParty {
                 members,
                 matching_quest_index: party.members[0].registration.matching_quest_index,
-                matching_records,
-                matching_queues: std::array::from_fn(|_| std::array::from_fn(|_| VecDeque::new())),
-                live_connections: [None; MAX_PARTY_PLAYERS],
-                queues: std::array::from_fn(|_| VecDeque::new()),
-                started: false,
+                roster_readiness: RosterReadiness::Waiting,
                 last_activity: Instant::now(),
             },
         );
@@ -326,24 +318,32 @@ impl OnlineState {
             .ok_or(OnlineError::UnknownMatchingConnection { connection_id })?;
         let record =
             ParticipantRecord::from_player_identity(PartySlot::ALL[local_index], player_record);
-        party.matching_records[local_index] = record;
-        for destination in 0..party.members.len() {
-            if destination == local_index {
+        party.members[local_index].matching_record = record;
+        for (destination_index, destination) in party.members.iter_mut().enumerate() {
+            if destination_index == local_index {
                 continue;
             }
-            let queue = &mut party.matching_queues[destination][local_index];
+            let queue = &mut destination.matching_queues[local_index];
             if queue.len() == MAX_PLAYER_QUEUE {
                 queue.pop_front();
             }
             queue.push_back(record);
         }
 
+        let latest_records = party
+            .members
+            .iter()
+            .map(|member| member.matching_record)
+            .collect::<Vec<_>>();
+        let local_member = &mut party.members[local_index];
         let participants = PartyRoster::new(
-            (0..party.members.len())
-                .map(|source| {
-                    party.matching_queues[local_index][source]
+            latest_records
+                .into_iter()
+                .enumerate()
+                .map(|(source, latest_record)| {
+                    local_member.matching_queues[source]
                         .pop_front()
-                        .unwrap_or(party.matching_records[source])
+                        .unwrap_or(latest_record)
                 })
                 .collect(),
         )?;
@@ -397,13 +397,17 @@ impl OnlineState {
                 party_slot,
             });
         }
-        if party.live_connections[slot].is_some() {
+        if member.gameplay_connection_id.is_some() {
             return Err(OnlineError::SlotOccupied { party_slot });
         }
-        party.live_connections[slot] = Some(connection_id);
+        party.members[slot].gameplay_connection_id = Some(connection_id);
         party.last_activity = Instant::now();
-        if party.live_connections.iter().flatten().count() == party.members.len() {
-            party.started = true;
+        if party
+            .members
+            .iter()
+            .all(|member| member.gameplay_connection_id.is_some())
+        {
+            party.roster_readiness = RosterReadiness::Ready;
         }
         Ok(active_flags(party))
     }
@@ -421,17 +425,17 @@ impl OnlineState {
             .parties
             .get_mut(&owner_key)
             .ok_or(OnlineError::UnknownParty { owner_key })?;
-        if party.live_connections[source] != Some(connection_id) {
+        if party.members[source].gameplay_connection_id != Some(connection_id) {
             return Err(OnlineError::Connection);
         }
         party.last_activity = Instant::now();
 
         let mut dropped_records = 0;
-        for destination in 0..party.members.len() {
-            if destination == source || party.live_connections[destination].is_none() {
+        for (destination_index, destination) in party.members.iter_mut().enumerate() {
+            if destination_index == source || destination.gameplay_connection_id.is_none() {
                 continue;
             }
-            let queue = &mut party.queues[destination];
+            let queue = &mut destination.gameplay_queue;
             if queue.len() == MAX_PLAYER_QUEUE {
                 queue.pop_front();
                 dropped_records += 1;
@@ -441,8 +445,9 @@ impl OnlineState {
                 blob: blob.clone(),
             });
         }
-        let records = party.queues[source]
-            .drain(..party.queues[source].len().min(MAX_ENVELOPE_RECORDS))
+        let source_queue = &mut party.members[source].gameplay_queue;
+        let records = source_queue
+            .drain(..source_queue.len().min(MAX_ENVELOPE_RECORDS))
             .collect();
         Ok(RelayBatch {
             flags: active_flags(party),
@@ -460,12 +465,16 @@ impl OnlineState {
         let slot = party_slot.index();
         let mut inner = self.lock()?;
         let remove_party = if let Some(party) = inner.parties.get_mut(&owner_key) {
-            if party.live_connections[slot] == Some(connection_id) {
-                party.live_connections[slot] = None;
-                party.queues[slot].clear();
+            if party.members[slot].gameplay_connection_id == Some(connection_id) {
+                party.members[slot].gameplay_connection_id = None;
+                party.members[slot].gameplay_queue.clear();
                 party.last_activity = Instant::now();
             }
-            party.started && party.live_connections.iter().all(Option::is_none)
+            party.roster_readiness == RosterReadiness::Ready
+                && party
+                    .members
+                    .iter()
+                    .all(|member| member.gameplay_connection_id.is_none())
         } else {
             false
         };
@@ -483,7 +492,13 @@ impl OnlineState {
             player_count: inner
                 .parties
                 .values()
-                .map(|party| party.live_connections.iter().flatten().count())
+                .map(|party| {
+                    party
+                        .members
+                        .iter()
+                        .filter(|member| member.gameplay_connection_id.is_some())
+                        .count()
+                })
                 .sum::<usize>()
                 .min(u16::MAX as usize) as u16,
         })
@@ -521,7 +536,10 @@ fn purge_closed_assembling_members(inner: &mut OnlineInner) {
 
 fn purge_expired_parties(inner: &mut OnlineInner) {
     inner.parties.retain(|_, party| {
-        party.live_connections.iter().any(Option::is_some)
+        party
+            .members
+            .iter()
+            .any(|member| member.gameplay_connection_id.is_some())
             || party.last_activity.elapsed() < UNCLAIMED_PARTY_LIFETIME
     });
 }
@@ -541,11 +559,11 @@ fn is_network_check(registration: &LobbyRegistration, lookup: &LobbyLookup) -> b
 
 fn active_flags(party: &RelayParty) -> GameplayEnvelopeFlags {
     let active_slots = party
-        .live_connections
+        .members
         .iter()
         .zip(PartySlot::ALL)
-        .filter_map(|(connection, slot)| connection.map(|_| slot));
-    GameplayEnvelopeFlags::from_active_slots(active_slots, party.started)
+        .filter_map(|(member, slot)| member.gameplay_connection_id.map(|_| slot));
+    GameplayEnvelopeFlags::from_active_slots(active_slots, party.roster_readiness)
 }
 
 #[cfg(test)]
@@ -873,10 +891,17 @@ mod tests {
         let slot_1 = PartySlot::new(1)?;
         let slot_2 = PartySlot::new(2)?;
 
-        assert!(!GameplayEnvelopeFlags::from_active_slots([slot_1], false).has_sole_survivor());
-        assert!(GameplayEnvelopeFlags::from_active_slots([slot_1], true).has_sole_survivor());
         assert!(
-            !GameplayEnvelopeFlags::from_active_slots([slot_1, slot_2], true).has_sole_survivor()
+            !GameplayEnvelopeFlags::from_active_slots([slot_1], RosterReadiness::Waiting)
+                .has_sole_survivor()
+        );
+        assert!(
+            GameplayEnvelopeFlags::from_active_slots([slot_1], RosterReadiness::Ready)
+                .has_sole_survivor()
+        );
+        assert!(
+            !GameplayEnvelopeFlags::from_active_slots([slot_1, slot_2], RosterReadiness::Ready)
+                .has_sole_survivor()
         );
         Ok(())
     }

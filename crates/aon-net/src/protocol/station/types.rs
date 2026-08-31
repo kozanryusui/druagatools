@@ -13,15 +13,24 @@ pub const MAX_ENVELOPE_RECORDS: usize = 6;
 #[derive(BinWrite, Clone, Copy, Debug, Eq, PartialEq)]
 pub struct GameplayEnvelopeFlags(u8);
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum RosterReadiness {
+    Waiting,
+    Ready,
+}
+
 impl GameplayEnvelopeFlags {
     const ROSTER_READY: u8 = 1;
     const ACTIVE_SLOTS: u8 = 0b0001_1110;
 
     pub fn from_active_slots(
         active_slots: impl IntoIterator<Item = PartySlot>,
-        roster_ready: bool,
+        roster_readiness: RosterReadiness,
     ) -> Self {
-        let mut bits = if roster_ready { Self::ROSTER_READY } else { 0 };
+        let mut bits = match roster_readiness {
+            RosterReadiness::Waiting => 0,
+            RosterReadiness::Ready => Self::ROSTER_READY,
+        };
         for slot in active_slots {
             bits |= 1 << slot.get();
         }
