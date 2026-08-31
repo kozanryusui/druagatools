@@ -6,7 +6,7 @@ use thiserror::Error;
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc;
-use tokio::time::timeout;
+use tokio::time::{Instant, timeout_at};
 use tracing::{debug, info, warn};
 
 use super::central::{CentralServiceError, CentralServices};
@@ -20,7 +20,7 @@ use crate::protocol::station::{
 };
 use crate::protocol::tower::{TowerProtocolError, TowerRequest};
 
-const FINAL_LOOKUP_DRAIN_TIMEOUT: Duration = Duration::from_millis(100);
+const MATCHING_HANDOFF_GRACE_PERIOD: Duration = Duration::from_secs(1);
 
 #[derive(Debug, Error)]
 enum MatchingConnectionError {
@@ -89,7 +89,7 @@ async fn handle_connection(
                             .write_all(&MatchingResponse::EndpointAssignment(assignment).serialize()?)
                             .await?;
                         info!(%peer, connection_id, "sent Station gameplay endpoint assignment");
-                        drain_final_lookup(&mut stream, peer, connection_id, session_phase).await?;
+                        drain_matching_handoff(&mut stream, peer, connection_id, session_phase).await?;
                         break;
                     }
                 }
@@ -218,28 +218,30 @@ async fn handle_connection(
     result
 }
 
-async fn drain_final_lookup(
+async fn drain_matching_handoff(
     stream: &mut TcpStream,
     peer: SocketAddr,
     connection_id: u64,
     session_phase: SessionPhase,
 ) -> Result<(), MatchingConnectionError> {
-    let Ok(input) = timeout(FINAL_LOOKUP_DRAIN_TIMEOUT, read_frame(stream)).await else {
-        debug!(%peer, connection_id, "closed matching handoff without a pending final lookup");
-        return Ok(());
-    };
-    let Some(input) = input? else {
-        return Ok(());
-    };
-    let request = deserialize_matching_request(&input)?;
-    if matches!(request, MatchingRequest::LobbyLookup(_)) {
-        debug!(%peer, connection_id, "drained final Station lobby lookup before handoff close");
-        Ok(())
-    } else {
-        Err(MatchingConnectionError::Unexpected {
-            request,
-            state: session_phase.name(),
-        })
+    let deadline = Instant::now() + MATCHING_HANDOFF_GRACE_PERIOD;
+    loop {
+        let Ok(input) = timeout_at(deadline, read_frame(stream)).await else {
+            debug!(%peer, connection_id, "completed Station matching handoff grace period");
+            return Ok(());
+        };
+        let Some(input) = input? else {
+            return Ok(());
+        };
+        let request = deserialize_matching_request(&input)?;
+        if matches!(request, MatchingRequest::LobbyLookup(_)) {
+            debug!(%peer, connection_id, "drained Station lobby lookup during handoff grace period");
+        } else {
+            return Err(MatchingConnectionError::Unexpected {
+                request,
+                state: session_phase.name(),
+            });
+        }
     }
 }
 
@@ -301,7 +303,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn endpoint_assignment_precedes_the_final_lookup_and_bounded_close()
+    async fn endpoint_assignment_keeps_the_handoff_open_for_one_lookup_cycle()
     -> Result<(), Box<dyn std::error::Error>> {
         let listener = TcpListener::bind("127.0.0.1:0").await?;
         let address = listener.local_addr()?;
@@ -351,7 +353,11 @@ mod tests {
         client.write_all(&lookup).await?;
         assert_eq!(read_message_type(&mut client).await?, 0x0c);
 
-        let close = timeout(Duration::from_millis(250), read_frame(&mut client)).await;
+        let early_close =
+            tokio::time::timeout(Duration::from_millis(250), read_frame(&mut client)).await;
+        assert!(early_close.is_err());
+
+        let close = tokio::time::timeout(Duration::from_secs(2), read_frame(&mut client)).await;
         assert!(matches!(close, Ok(Ok(None))));
         server_task.await??;
         Ok(())
