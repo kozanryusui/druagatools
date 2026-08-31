@@ -50,8 +50,10 @@ sudo setcap cap_net_bind_service+ep target/release/aon-net
 Start the server from the directory that contains `aon-net.toml`:
 
 ```bash
-RUST_LOG=aon_net=info target/release/aon-net aon-net.toml
+target/release/aon-net aon-net.toml
 ```
+
+AON.Net uses the `INFO` log level by default. Set `RUST_LOG` to select a different log filter.
 
 ## Configure client discovery
 

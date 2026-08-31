@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use tracing::error;
 use tracing_subscriber::EnvFilter;
+use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
@@ -11,7 +12,11 @@ use tracing_subscriber::util::SubscriberInitExt;
 async fn main() -> ExitCode {
     let admin_hub = Arc::new(aon_net::AdminHub::new(2_000));
     tracing_subscriber::registry()
-        .with(EnvFilter::from_default_env())
+        .with(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
         .with(tracing_subscriber::fmt::layer())
         .with(admin_hub.log_layer())
         .init();
