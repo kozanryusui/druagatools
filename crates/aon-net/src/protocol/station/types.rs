@@ -57,7 +57,7 @@ pub struct LobbyRegistration {
     pub matching_quest_index: u16,
     pub alternate_quest_index: u16,
     pub lobby_values: [u16; 2],
-    pub participant_record: ParticipantRecord,
+    pub player_identity: PlayerIdentity,
     pub player_controls: [u8; 4],
     pub record_id: u32,
     pub shop_name: FixedText<40>,
@@ -69,7 +69,7 @@ pub struct LobbyRegistration {
 pub struct LobbyLookup {
     pub elapsed_wait_seconds: u16,
     pub remaining_wait_seconds: u16,
-    pub participant_or_lobby_key: ParticipantRecord,
+    pub player_or_lobby_key: PlayerIdentity,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -93,18 +93,43 @@ pub struct PlayerRecord {
     pub blob: GameplayBlob,
 }
 
-#[derive(BinRead, BinWrite, Clone, Copy, Debug, Eq, PartialEq)]
-pub struct ParticipantRecord([u8; 32]);
+#[derive(BinRead, Clone, Copy, Debug, Eq, PartialEq)]
+pub struct PlayerIdentity {
+    pub marker: u8,
+    identity: [u8; 31],
+}
 
-impl ParticipantRecord {
-    pub fn with_party_slot(mut self, party_slot: PartySlot) -> Self {
-        self.0[0] = party_slot.get();
-        self
-    }
-
+impl PlayerIdentity {
     #[cfg(test)]
     pub(crate) const fn from_bytes(bytes: [u8; 32]) -> Self {
-        Self(bytes)
+        let mut identity = [0; 31];
+        let mut index = 0;
+        while index < identity.len() {
+            identity[index] = bytes[index + 1];
+            index += 1;
+        }
+        Self {
+            marker: bytes[0],
+            identity,
+        }
+    }
+}
+
+#[derive(BinRead, BinWrite, Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ParticipantRecord {
+    pub party_slot: PartySlot,
+    identity: [u8; 31],
+}
+
+impl ParticipantRecord {
+    pub const fn from_player_identity(
+        party_slot: PartySlot,
+        player_identity: PlayerIdentity,
+    ) -> Self {
+        Self {
+            party_slot,
+            identity: player_identity.identity,
+        }
     }
 }
 

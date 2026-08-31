@@ -7,8 +7,8 @@ use tokio::sync::mpsc;
 
 use crate::protocol::station::{
     EndpointAssignment, EndpointHost, GameplayBlob, GameplayEnvelopeFlags, LobbyLookup,
-    LobbyRegistration, MAX_ENVELOPE_RECORDS, OwnerKey, PartyRoster, PartySlot, PlayerRecord,
-    StationProtocolError,
+    LobbyRegistration, MAX_ENVELOPE_RECORDS, OwnerKey, ParticipantRecord, PartyRoster, PartySlot,
+    PlayerRecord, StationProtocolError,
 };
 
 const MAX_PLAYER_QUEUE: usize = 128;
@@ -209,7 +209,13 @@ impl OnlineState {
             party
                 .members
                 .iter()
-                .map(|member| member.registration.participant_record)
+                .enumerate()
+                .map(|(index, member)| {
+                    ParticipantRecord::from_player_identity(
+                        PartySlot::ALL[index],
+                        member.registration.player_identity,
+                    )
+                })
                 .collect(),
         )?;
         Ok(EndpointAssignment {
@@ -486,9 +492,7 @@ mod tests {
             matching_quest_index: 10,
             alternate_quest_index: 3,
             lobby_values: [4, 5],
-            participant_record: crate::protocol::station::ParticipantRecord::from_bytes(
-                [identity; 32],
-            ),
+            player_identity: crate::protocol::station::PlayerIdentity::from_bytes([identity; 32]),
             player_controls: [0; 4],
             record_id,
             shop_name: empty_text()?,
@@ -505,9 +509,7 @@ mod tests {
         LobbyLookup {
             elapsed_wait_seconds: 16,
             remaining_wait_seconds: 19,
-            participant_or_lobby_key: crate::protocol::station::ParticipantRecord::from_bytes(
-                [0; 32],
-            ),
+            player_or_lobby_key: crate::protocol::station::PlayerIdentity::from_bytes([0; 32]),
         }
     }
 
@@ -776,9 +778,7 @@ mod tests {
         let lookup = LobbyLookup {
             elapsed_wait_seconds: NETWORK_CHECK_ELAPSED_WAIT_SECONDS,
             remaining_wait_seconds: 0,
-            participant_or_lobby_key: crate::protocol::station::ParticipantRecord::from_bytes(
-                [0; 32],
-            ),
+            player_or_lobby_key: crate::protocol::station::PlayerIdentity::from_bytes([0; 32]),
         };
 
         assert!(matches!(

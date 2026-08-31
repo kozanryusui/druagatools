@@ -46,13 +46,7 @@ pub(super) struct EndpointAssignmentWire {
 
 impl From<&EndpointAssignment> for EndpointAssignmentWire {
     fn from(assignment: &EndpointAssignment) -> Self {
-        let participants: Vec<_> = assignment
-            .participants
-            .as_slice()
-            .iter()
-            .enumerate()
-            .map(|(index, participant)| participant.with_party_slot(PartySlot::ALL[index]))
-            .collect();
+        let participants = assignment.participants.as_slice().to_vec();
 
         Self {
             connection_role: ConnectionRole::GameRelay,
