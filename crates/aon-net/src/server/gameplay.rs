@@ -246,11 +246,7 @@ mod tests {
         request.extend_from_slice(&session_id.to_be_bytes());
         client.write_all(&request).await?;
         client.shutdown().await?;
-        let online = OnlineState::new(
-            2,
-            EndpointHost::new("gameservers.aonnet".to_owned())?,
-            33442,
-        );
+        let online = OnlineState::new(EndpointHost::new("gameservers.aonnet".to_owned())?, 33442);
 
         let result = handle_connection(server, peer, 1, session_id, &online).await;
 

@@ -168,14 +168,27 @@ async fn handle_connection(
                                 assignment_tx.clone(),
                             )?;
                             match outcome {
-                                MatchOutcome::Waiting { waiting_count } => info!(
-                                    %peer,
-                                    connection_id,
-                                    wait_window = lookup.wait_window,
-                                    lobby_value = lookup.lobby_value,
+                                MatchOutcome::Assembling {
+                                    assignment,
                                     waiting_count,
-                                    "Station is waiting for compatible players"
-                                ),
+                                } => {
+                                    let player_count = assignment.participants.as_slice().len();
+                                    stream
+                                        .write_all(
+                                            &MatchingResponse::EndpointAssignment(assignment)
+                                                .serialize()?,
+                                        )
+                                        .await?;
+                                    info!(
+                                        %peer,
+                                        connection_id,
+                                        wait_window = lookup.wait_window,
+                                        lobby_value = lookup.lobby_value,
+                                        waiting_count,
+                                        player_count,
+                                        "sent partial gameplay party assignment"
+                                    );
+                                }
                                 MatchOutcome::PartyCreated { owner_key, player_count } => {
                                     info!(
                                         %peer,
@@ -268,7 +281,6 @@ mod tests {
         client.shutdown().await?;
         let directory = tempfile::tempdir()?;
         let online = Arc::new(OnlineState::new(
-            2,
             EndpointHost::new("gameservers.aonnet".to_owned())?,
             33442,
         ));
@@ -299,7 +311,6 @@ mod tests {
         let session_id = 0x1234_5678_u32;
         let directory = tempfile::tempdir()?;
         let online = Arc::new(OnlineState::new(
-            2,
             EndpointHost::new("gameservers.aonnet".to_owned())?,
             33442,
         ));

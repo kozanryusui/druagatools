@@ -11,13 +11,13 @@ use crate::protocol::station::{
 };
 
 const MAX_PLAYER_QUEUE: usize = 128;
+const MAX_PARTY_PLAYERS: usize = 4;
 const UNCLAIMED_PARTY_LIFETIME: Duration = Duration::from_secs(300);
 const NETWORK_CHECK_QUEST_ID: u16 = 75;
 const NETWORK_CHECK_WAIT_WINDOW: u16 = 5;
 const ALTERNATE_QUEST_INDEX_MODE: u16 = 9;
 
 pub(crate) struct OnlineState {
-    matching_player_count: usize,
     gameplay_host: EndpointHost,
     gameplay_port: u16,
     inner: Mutex<OnlineInner>,
@@ -25,7 +25,7 @@ pub(crate) struct OnlineState {
 
 struct OnlineInner {
     next_owner_key: u32,
-    waiting: Vec<WaitingPlayer>,
+    assembling: Vec<AssemblingParty>,
     parties: HashMap<OwnerKey, RelayParty>,
 }
 
@@ -33,16 +33,21 @@ impl Default for OnlineInner {
     fn default() -> Self {
         Self {
             next_owner_key: 1,
-            waiting: Vec::new(),
+            assembling: Vec::new(),
             parties: HashMap::new(),
         }
     }
 }
 
-struct WaitingPlayer {
+struct AssemblingMember {
     connection_id: u64,
     registration: LobbyRegistration,
     assignment_tx: mpsc::UnboundedSender<EndpointAssignment>,
+}
+
+struct AssemblingParty {
+    owner_key: OwnerKey,
+    members: Vec<AssemblingMember>,
 }
 
 struct RelayParty {
@@ -64,9 +69,10 @@ pub(crate) struct ServiceCounts {
     pub player_count: u16,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum MatchOutcome {
-    Waiting {
+    Assembling {
+        assignment: EndpointAssignment,
         waiting_count: usize,
     },
     PartyCreated {
@@ -109,13 +115,8 @@ pub(crate) enum OnlineError {
 }
 
 impl OnlineState {
-    pub(crate) fn new(
-        matching_player_count: u8,
-        gameplay_host: EndpointHost,
-        gameplay_port: u16,
-    ) -> Self {
+    pub(crate) fn new(gameplay_host: EndpointHost, gameplay_port: u16) -> Self {
         Self {
-            matching_player_count: usize::from(matching_player_count),
             gameplay_host,
             gameplay_port,
             inner: Mutex::new(OnlineInner::default()),
@@ -134,92 +135,132 @@ impl OnlineState {
         }
         let mut inner = self.lock()?;
         purge_expired_parties(&mut inner);
-        inner
-            .waiting
-            .retain(|player| !player.assignment_tx.is_closed());
-        inner
-            .waiting
-            .retain(|player| player.connection_id != connection_id);
-        let required_player_count = if is_network_check(&registration, &lookup) {
-            1
-        } else {
-            self.matching_player_count
-        };
-        let compatible_indices: Vec<usize> = inner
-            .waiting
+        purge_closed_assembling_members(&mut inner);
+
+        let (party_index, local_index) = if let Some((party_index, member_index)) = inner
+            .assembling
             .iter()
             .enumerate()
-            .filter(|(_, player)| compatible(&player.registration, &registration))
-            .map(|(index, _)| index)
-            .take(required_player_count - 1)
-            .collect();
-
-        if compatible_indices.len() + 1 < required_player_count {
-            inner.waiting.push(WaitingPlayer {
+            .find_map(|(party_index, party)| {
+                party
+                    .members
+                    .iter()
+                    .position(|member| member.connection_id == connection_id)
+                    .map(|member_index| (party_index, member_index))
+            }) {
+            let member = &mut inner.assembling[party_index].members[member_index];
+            member.registration = registration;
+            member.assignment_tx = assignment_tx;
+            (party_index, member_index)
+        } else if let Some(index) = inner.assembling.iter().position(|party| {
+            party.members.len() < MAX_PARTY_PLAYERS
+                && compatible(&party.members[0].registration, &registration)
+        }) {
+            let member_index = inner.assembling[index].members.len();
+            inner.assembling[index].members.push(AssemblingMember {
                 connection_id,
                 registration,
                 assignment_tx,
             });
-            return Ok(MatchOutcome::Waiting {
-                waiting_count: inner.waiting.len(),
+            (index, member_index)
+        } else {
+            let owner_key = allocate_owner_key(&mut inner)?;
+            inner.assembling.push(AssemblingParty {
+                owner_key,
+                members: vec![AssemblingMember {
+                    connection_id,
+                    registration,
+                    assignment_tx,
+                }],
             });
+            (inner.assembling.len() - 1, 0)
+        };
+
+        let should_finalize = {
+            let party = &inner.assembling[party_index];
+            party.members.len() == MAX_PARTY_PLAYERS
+                || lookup.wait_window == 0
+                || is_network_check(&party.members[0].registration, &lookup)
+        };
+        if should_finalize {
+            return self.finalize_party(inner, party_index);
         }
 
-        let mut players = Vec::with_capacity(required_player_count);
-        for index in compatible_indices.into_iter().rev() {
-            players.push(inner.waiting.remove(index));
-        }
-        players.reverse();
-        players.push(WaitingPlayer {
-            connection_id,
-            registration,
-            assignment_tx,
-        });
-
-        let owner_key = allocate_owner_key(&mut inner)?;
-        let participants = players
+        let assignment = self.assignment_for(&inner.assembling[party_index], local_index, false)?;
+        let waiting_count = inner
+            .assembling
             .iter()
-            .map(|player| player.registration.player_identity)
-            .collect();
-        let members = players
-            .iter()
-            .map(|player| PartyMember {
-                record_id: player.registration.record_id,
-            })
-            .collect();
-        let participants = PartyRoster::new(participants)?;
-        let matching_quest_index = players[0].registration.matching_quest_index;
+            .map(|party| party.members.len())
+            .sum();
+        Ok(MatchOutcome::Assembling {
+            assignment,
+            waiting_count,
+        })
+    }
 
-        let assignments = players
+    fn assignment_for(
+        &self,
+        party: &AssemblingParty,
+        local_index: usize,
+        ready: bool,
+    ) -> Result<EndpointAssignment, StationProtocolError> {
+        let participants = PartyRoster::new(
+            party
+                .members
+                .iter()
+                .map(|member| member.registration.player_identity)
+                .collect(),
+        )?;
+        Ok(EndpointAssignment {
+            host: self.gameplay_host.clone(),
+            port: self.gameplay_port,
+            owner_key: party.owner_key,
+            ready,
+            local_slot: PartySlot::new((local_index + 1) as u8)?,
+            matching_quest_index: party.members[0].registration.matching_quest_index,
+            participants,
+        })
+    }
+
+    fn finalize_party(
+        &self,
+        mut inner: MutexGuard<'_, OnlineInner>,
+        party_index: usize,
+    ) -> Result<MatchOutcome, OnlineError> {
+        let party = inner.assembling.remove(party_index);
+        let owner_key = party.owner_key;
+        let assignments = party
+            .members
             .iter()
             .enumerate()
-            .map(|(index, player)| {
+            .map(|(local_index, member)| {
                 Ok((
-                    player.connection_id,
-                    player.assignment_tx.clone(),
-                    EndpointAssignment {
-                        host: self.gameplay_host.clone(),
-                        port: self.gameplay_port,
-                        owner_key,
-                        local_slot: PartySlot::new((index + 1) as u8)?,
-                        matching_quest_index,
-                        participants: participants.clone(),
-                    },
+                    member.connection_id,
+                    member.assignment_tx.clone(),
+                    self.assignment_for(&party, local_index, true)?,
                 ))
             })
             .collect::<Result<Vec<_>, StationProtocolError>>()?;
-        let player_count = players.len();
+        let members = party
+            .members
+            .iter()
+            .map(|member| PartyMember {
+                record_id: member.registration.record_id,
+            })
+            .collect();
+        let player_count = party.members.len();
         inner.parties.insert(
             owner_key,
             RelayParty {
                 members,
-                live_connections: [None; 4],
+                live_connections: [None; MAX_PARTY_PLAYERS],
                 queues: std::array::from_fn(|_| VecDeque::new()),
                 started: false,
                 last_activity: Instant::now(),
             },
         );
         drop(inner);
+
         for (assignment_connection_id, assignment_tx, assignment) in assignments {
             if assignment_tx.send(assignment).is_err() {
                 self.lock()?.parties.remove(&owner_key);
@@ -235,9 +276,13 @@ impl OnlineState {
     }
 
     pub(crate) fn remove_waiter(&self, connection_id: u64) -> Result<(), OnlineError> {
-        self.lock()?
-            .waiting
-            .retain(|player| player.connection_id != connection_id);
+        let mut inner = self.lock()?;
+        for party in &mut inner.assembling {
+            party
+                .members
+                .retain(|member| member.connection_id != connection_id);
+        }
+        inner.assembling.retain(|party| !party.members.is_empty());
         Ok(())
     }
 
@@ -370,10 +415,24 @@ fn allocate_owner_key(inner: &mut OnlineInner) -> Result<OwnerKey, StationProtoc
         let candidate = inner.next_owner_key;
         inner.next_owner_key = inner.next_owner_key.wrapping_add(1).max(1);
         let owner_key = OwnerKey::new(candidate)?;
-        if !inner.parties.contains_key(&owner_key) {
+        if !inner.parties.contains_key(&owner_key)
+            && inner
+                .assembling
+                .iter()
+                .all(|party| party.owner_key != owner_key)
+        {
             return Ok(owner_key);
         }
     }
+}
+
+fn purge_closed_assembling_members(inner: &mut OnlineInner) {
+    for party in &mut inner.assembling {
+        party
+            .members
+            .retain(|member| !member.assignment_tx.is_closed());
+    }
+    inner.assembling.retain(|party| !party.members.is_empty());
 }
 
 fn purge_expired_parties(inner: &mut OnlineInner) {
@@ -450,37 +509,106 @@ mod tests {
     }
 
     #[test]
-    fn matching_assigns_one_owner_and_distinct_slots() -> Result<(), Box<dyn std::error::Error>> {
-        let state = OnlineState::new(2, EndpointHost::new("gameservers.aonnet".into())?, 33442);
+    fn matching_updates_partial_roster_until_the_party_is_full()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
         let (tx_a, mut rx_a) = mpsc::unbounded_channel();
         let (tx_b, mut rx_b) = mpsc::unbounded_channel();
-        assert_eq!(
-            state.queue_match(1, registration(100, 0x11)?, lookup(), tx_a)?,
-            MatchOutcome::Waiting { waiting_count: 1 }
-        );
+        let (tx_c, mut rx_c) = mpsc::unbounded_channel();
+        let (tx_d, mut rx_d) = mpsc::unbounded_channel();
+        let MatchOutcome::Assembling {
+            assignment: first,
+            waiting_count: 1,
+        } = state.queue_match(1, registration(100, 0x11)?, lookup(), tx_a.clone())?
+        else {
+            return Err("first player did not start an assembling party".into());
+        };
+        assert!(!first.ready);
+        assert_eq!(first.local_slot, PartySlot::new(1)?);
+        assert_eq!(first.participants.as_slice().len(), 1);
+
         let mut second_registration = registration(200, 0x22)?;
         second_registration.lobby_values = [40, 50];
-        let mut second_lookup = lookup();
-        second_lookup.wait_window = 12;
+        let MatchOutcome::Assembling {
+            assignment: second,
+            waiting_count: 2,
+        } = state.queue_match(2, second_registration, lookup(), tx_b)?
+        else {
+            return Err("second player did not join the assembling party".into());
+        };
+        assert_eq!(first.owner_key, second.owner_key);
+        assert_eq!(second.local_slot, PartySlot::new(2)?);
+        assert_eq!(second.participants.as_slice().len(), 2);
+
+        let MatchOutcome::Assembling {
+            assignment: first_update,
+            ..
+        } = state.queue_match(1, registration(100, 0x11)?, lookup(), tx_a)?
+        else {
+            return Err("first player did not receive an updated partial roster".into());
+        };
+        assert_eq!(first_update.local_slot, PartySlot::new(1)?);
+        assert_eq!(first_update.participants.as_slice().len(), 2);
+
+        state.queue_match(3, registration(300, 0x33)?, lookup(), tx_c)?;
+        let outcome = state.queue_match(4, registration(400, 0x44)?, lookup(), tx_d)?;
         assert!(matches!(
-            state.queue_match(2, second_registration, second_lookup, tx_b)?,
+            outcome,
             MatchOutcome::PartyCreated {
-                player_count: 2,
+                player_count: 4,
                 ..
             }
         ));
         let a = rx_a.try_recv()?;
         let b = rx_b.try_recv()?;
-        assert_eq!(a.owner_key, b.owner_key);
+        let c = rx_c.try_recv()?;
+        let d = rx_d.try_recv()?;
+        assert!(a.ready && b.ready && c.ready && d.ready);
         assert_eq!(a.local_slot, PartySlot::new(1)?);
         assert_eq!(b.local_slot, PartySlot::new(2)?);
+        assert_eq!(c.local_slot, PartySlot::new(3)?);
+        assert_eq!(d.local_slot, PartySlot::new(4)?);
+        assert_eq!(a.participants.as_slice().len(), 4);
+        Ok(())
+    }
+
+    #[test]
+    fn expired_wait_finalizes_the_partial_party_and_late_players_start_a_new_one()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
+        let (tx_a, mut rx_a) = mpsc::unbounded_channel();
+        let (tx_b, mut rx_b) = mpsc::unbounded_channel();
+        let (tx_c, _rx_c) = mpsc::unbounded_channel();
+        state.queue_match(1, registration(100, 0x11)?, lookup(), tx_a.clone())?;
+        state.queue_match(2, registration(200, 0x22)?, lookup(), tx_b)?;
+
+        let mut expired = lookup();
+        expired.wait_window = 0;
+        let outcome = state.queue_match(1, registration(100, 0x11)?, expired, tx_a)?;
+        let MatchOutcome::PartyCreated {
+            owner_key,
+            player_count: 2,
+        } = outcome
+        else {
+            return Err("expired wait did not finalize the two-player party".into());
+        };
+        assert!(rx_a.try_recv()?.ready);
+        assert!(rx_b.try_recv()?.ready);
+
+        let MatchOutcome::Assembling { assignment, .. } =
+            state.queue_match(3, registration(300, 0x33)?, lookup(), tx_c)?
+        else {
+            return Err("late player did not start a new assembling party".into());
+        };
+        assert_ne!(assignment.owner_key, owner_key);
+        assert_eq!(assignment.participants.as_slice().len(), 1);
         Ok(())
     }
 
     #[test]
     fn matching_does_not_create_a_party_with_a_closed_assignment_receiver()
     -> Result<(), Box<dyn std::error::Error>> {
-        let state = OnlineState::new(2, EndpointHost::new("gameservers.aonnet".into())?, 33442);
+        let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
         let (tx_a, mut rx_a) = mpsc::unbounded_channel();
         let (tx_b, rx_b) = mpsc::unbounded_channel();
         state.queue_match(1, registration(100, 0x11)?, lookup(), tx_a)?;
@@ -508,7 +636,7 @@ mod tests {
     #[test]
     fn alternate_quest_mode_keeps_different_quests_apart() -> Result<(), Box<dyn std::error::Error>>
     {
-        let state = OnlineState::new(2, EndpointHost::new("gameservers.aonnet".into())?, 33442);
+        let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
         let (tx_a, _rx_a) = mpsc::unbounded_channel();
         let (tx_b, _rx_b) = mpsc::unbounded_channel();
         let mut first = registration(100, 0x11)?;
@@ -518,24 +646,33 @@ mod tests {
         second.matching_quest_index = ALTERNATE_QUEST_INDEX_MODE;
         second.alternate_quest_index = 11;
 
-        assert!(matches!(
-            state.queue_match(1, first, lookup(), tx_a)?,
-            MatchOutcome::Waiting { waiting_count: 1 }
-        ));
-        assert!(matches!(
-            state.queue_match(2, second, lookup(), tx_b)?,
-            MatchOutcome::Waiting { waiting_count: 2 }
-        ));
+        let MatchOutcome::Assembling {
+            assignment: first_assignment,
+            waiting_count: 1,
+        } = state.queue_match(1, first, lookup(), tx_a)?
+        else {
+            return Err("first quest did not start an assembling party".into());
+        };
+        let MatchOutcome::Assembling {
+            assignment: second_assignment,
+            waiting_count: 2,
+        } = state.queue_match(2, second, lookup(), tx_b)?
+        else {
+            return Err("second quest did not start a separate assembling party".into());
+        };
+        assert_ne!(first_assignment.owner_key, second_assignment.owner_key);
         Ok(())
     }
 
     #[test]
     fn relay_isolated_party_queues_and_does_not_echo() -> Result<(), Box<dyn std::error::Error>> {
-        let state = OnlineState::new(2, EndpointHost::new("gameservers.aonnet".into())?, 33442);
+        let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
         let (tx_a, _rx_a) = mpsc::unbounded_channel();
         let (tx_b, _rx_b) = mpsc::unbounded_channel();
         state.queue_match(1, registration(100, 0x11)?, lookup(), tx_a)?;
-        let outcome = state.queue_match(2, registration(200, 0x22)?, lookup(), tx_b)?;
+        let mut expired = lookup();
+        expired.wait_window = 0;
+        let outcome = state.queue_match(2, registration(200, 0x22)?, expired, tx_b)?;
         let MatchOutcome::PartyCreated { owner_key, .. } = outcome else {
             return Err("party was not created".into());
         };
@@ -571,13 +708,15 @@ mod tests {
     #[test]
     fn relay_announces_the_first_departure_from_a_started_party()
     -> Result<(), Box<dyn std::error::Error>> {
-        let state = OnlineState::new(3, EndpointHost::new("gameservers.aonnet".into())?, 33442);
+        let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
         let (tx_a, _rx_a) = mpsc::unbounded_channel();
         let (tx_b, _rx_b) = mpsc::unbounded_channel();
         let (tx_c, _rx_c) = mpsc::unbounded_channel();
         state.queue_match(1, registration(100, 0x11)?, lookup(), tx_a)?;
         state.queue_match(2, registration(200, 0x22)?, lookup(), tx_b)?;
-        let outcome = state.queue_match(3, registration(300, 0x33)?, lookup(), tx_c)?;
+        let mut expired = lookup();
+        expired.wait_window = 0;
+        let outcome = state.queue_match(3, registration(300, 0x33)?, expired, tx_c)?;
         let MatchOutcome::PartyCreated { owner_key, .. } = outcome else {
             return Err("party was not created".into());
         };
@@ -600,7 +739,7 @@ mod tests {
     #[test]
     fn network_check_gets_an_immediate_single_station_assignment()
     -> Result<(), Box<dyn std::error::Error>> {
-        let state = OnlineState::new(2, EndpointHost::new("gameservers.aonnet".into())?, 33442);
+        let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
         let (assignment_tx, mut assignment_rx) = mpsc::unbounded_channel();
         let mut registration = registration(0, 0)?;
         registration.matching_quest_index = NETWORK_CHECK_QUEST_ID;
@@ -618,6 +757,7 @@ mod tests {
             }
         ));
         let assignment = assignment_rx.try_recv()?;
+        assert!(assignment.ready);
         assert_eq!(assignment.local_slot, PartySlot::new(1)?);
         assert_eq!(assignment.participants.as_slice().len(), 1);
         Ok(())

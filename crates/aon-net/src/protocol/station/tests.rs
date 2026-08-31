@@ -258,6 +258,7 @@ fn endpoint_assignment_has_confirmed_wire_layout() -> Result<(), Box<dyn std::er
         host: EndpointHost::new("gameservers.aonnet".into())?,
         port: 33442,
         owner_key: OwnerKey::new(0x1234_5678)?,
+        ready: true,
         local_slot: PartySlot::new(2)?,
         matching_quest_index: 25,
         participants: PartyRoster::new(vec![
@@ -295,6 +296,28 @@ fn endpoint_assignment_has_confirmed_wire_layout() -> Result<(), Box<dyn std::er
             PlayerIdentity(second_participant)
         ]
     );
+    Ok(())
+}
+
+#[test]
+fn partial_endpoint_assignment_keeps_the_station_in_matching()
+-> Result<(), Box<dyn std::error::Error>> {
+    let assignment = EndpointAssignment {
+        host: EndpointHost::new("gameservers.aonnet".into())?,
+        port: 33442,
+        owner_key: OwnerKey::new(1)?,
+        ready: false,
+        local_slot: PartySlot::new(1)?,
+        matching_quest_index: 10,
+        participants: PartyRoster::new(vec![PlayerIdentity([0x11; 32])])?,
+    };
+
+    let frame = MatchingResponse::EndpointAssignment(assignment).serialize()?;
+    let wire = Frame::from_bytes(&frame)?;
+    assert_eq!(&wire.payload[0x2c..0x30], &[0, 0b0001, 1, 1]);
+    let decoded = EndpointAssignmentWire::read_be(&mut Cursor::new(&wire.payload))
+        .map_err(|error| StationProtocolError::Binrw(error.to_string()))?;
+    assert_eq!(decoded.ready, AssignmentReady::Waiting);
     Ok(())
 }
 

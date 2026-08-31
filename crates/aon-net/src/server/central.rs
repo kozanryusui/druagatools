@@ -254,7 +254,6 @@ mod tests {
         let directory = tempfile::tempdir()?;
         let storage = Arc::new(Storage::open(&directory.path().join("aon-net.db"))?);
         let online = Arc::new(OnlineState::new(
-            1,
             EndpointHost::new("gameservers.aonnet".into())?,
             33442,
         ));
@@ -275,7 +274,6 @@ mod tests {
         let directory = tempfile::tempdir()?;
         let storage = Arc::new(Storage::open(&directory.path().join("aon-net.db"))?);
         let online = Arc::new(OnlineState::new(
-            1,
             EndpointHost::new("gameservers.aonnet".into())?,
             33442,
         ));
@@ -319,7 +317,6 @@ mod tests {
         let directory = tempfile::tempdir()?;
         let storage = Arc::new(Storage::open(&directory.path().join("aon-net.db"))?);
         let online = Arc::new(OnlineState::new(
-            1,
             EndpointHost::new("gameservers.aonnet".into())?,
             33442,
         ));

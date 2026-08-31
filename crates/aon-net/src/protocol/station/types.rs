@@ -38,6 +38,7 @@ pub struct EndpointAssignment {
     pub host: EndpointHost,
     pub port: u16,
     pub owner_key: OwnerKey,
+    pub ready: bool,
     pub local_slot: PartySlot,
     pub matching_quest_index: u16,
     pub participants: PartyRoster,

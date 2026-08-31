@@ -74,7 +74,6 @@ pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(),
         config.power_on.shop_name.clone(),
     )?);
     let online = Arc::new(crate::online::OnlineState::new(
-        config.server.matching_player_count.get(),
         config.server.gameplay_advertise_host.clone(),
         config.server.gameplay_advertise_port.get(),
     ));
@@ -105,7 +104,6 @@ pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(),
         %gameplay_address,
         gameplay_advertise_host = %config.server.gameplay_advertise_host,
         gameplay_advertise_port = config.server.gameplay_advertise_port.get(),
-        matching_player_count = config.server.matching_player_count.get(),
         "AON.Net is ready"
     );
 

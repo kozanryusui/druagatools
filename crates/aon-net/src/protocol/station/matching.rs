@@ -20,6 +20,7 @@ pub(super) enum ConnectionRole {
 #[derive(BinRead, BinWrite, Clone, Copy, Debug, Eq, PartialEq)]
 #[brw(repr = u8)]
 pub(super) enum AssignmentReady {
+    Waiting = 0,
     Ready = 1,
 }
 
@@ -63,7 +64,11 @@ impl From<&EndpointAssignment> for EndpointAssignmentWire {
             port: assignment.port,
             host: assignment.host.clone(),
             owner_key: assignment.owner_key,
-            ready: AssignmentReady::Ready,
+            ready: if assignment.ready {
+                AssignmentReady::Ready
+            } else {
+                AssignmentReady::Waiting
+            },
             active_slot_mask: ((1_u16 << participants.len()) - 1) as u8,
             local_slot: assignment.local_slot,
             participant_count: participants.len() as u8,

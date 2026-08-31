@@ -29,7 +29,6 @@ pub(crate) struct ServerConfig {
     pub(crate) gameplay_port: u16,
     pub(crate) gameplay_advertise_host: EndpointHost,
     pub(crate) gameplay_advertise_port: NonZeroU16,
-    pub(crate) matching_player_count: MatchingPlayerCount,
 }
 
 #[derive(Clone, Debug)]
@@ -44,15 +43,6 @@ pub(crate) struct PowerOnConfig {
     pub(crate) region_name_2: String,
     pub(crate) region_name_3: String,
     pub(crate) place_id: String,
-}
-
-#[derive(Clone, Copy, Debug)]
-pub(crate) struct MatchingPlayerCount(u8);
-
-impl MatchingPlayerCount {
-    pub(crate) const fn get(self) -> u8 {
-        self.0
-    }
 }
 
 #[derive(Deserialize)]
@@ -76,7 +66,6 @@ struct RawServerConfig {
     gameplay_port: u16,
     gameplay_advertise_host: String,
     gameplay_advertise_port: u16,
-    matching_player_count: u8,
 }
 
 #[derive(Deserialize)]
@@ -127,8 +116,6 @@ pub enum ConfigError {
     GameplayHost,
     #[error("gameplay-advertise-port must not be zero")]
     GameplayPort,
-    #[error("matching-player-count must be in the range 2 through 4")]
-    MatchingPlayerCount,
     #[error("announcement {index} has an invalid {field}; use YYYY-MM-DD HH:MM")]
     AnnouncementTime { index: usize, field: &'static str },
     #[error("announcement {index} is invalid: {source}")]
@@ -162,10 +149,6 @@ impl RawAonNetConfig {
             .map_err(|_| ConfigError::GameplayHost)?;
         let gameplay_advertise_port = NonZeroU16::new(self.server.gameplay_advertise_port)
             .ok_or(ConfigError::GameplayPort)?;
-        if !(2..=4).contains(&self.server.matching_player_count) {
-            return Err(ConfigError::MatchingPlayerCount);
-        }
-
         let announcements = validate_announcements(self.announcements)?;
         Ok(AonNetConfig {
             server: ServerConfig {
@@ -178,7 +161,6 @@ impl RawAonNetConfig {
                 gameplay_port: self.server.gameplay_port,
                 gameplay_advertise_host,
                 gameplay_advertise_port,
-                matching_player_count: MatchingPlayerCount(self.server.matching_player_count),
             },
             power_on: PowerOnConfig {
                 uri: self.power_on.uri,
@@ -291,7 +273,6 @@ mod tests {
         });
 
         assert_eq!(config.server.gameplay_advertise_port.get(), 33442);
-        assert_eq!(config.server.matching_player_count.get(), 2);
         assert_eq!(
             config.server.gameplay_advertise_host.to_string(),
             "gameservers.aonnet"
@@ -303,13 +284,6 @@ mod tests {
         let mut raw = supplied_config();
         raw.server.gameplay_advertise_port = 0;
         assert!(matches!(raw.validate(), Err(ConfigError::GameplayPort)));
-
-        let mut raw = supplied_config();
-        raw.server.matching_player_count = 1;
-        assert!(matches!(
-            raw.validate(),
-            Err(ConfigError::MatchingPlayerCount)
-        ));
 
         let mut raw = supplied_config();
         raw.server.gameplay_advertise_host = "not an endpoint host because it is too long".into();

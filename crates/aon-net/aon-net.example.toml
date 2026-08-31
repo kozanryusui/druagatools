@@ -15,9 +15,6 @@ gameplay-port = 33442
 gameplay-advertise-host = "gameservers.aonnet"
 gameplay-advertise-port = 33442
 
-# AON.Net makes a party when this number of compatible players is waiting.
-# The permitted range is 2 through 4.
-matching-player-count = 2
 
 
 [power-on]

@@ -55,6 +55,8 @@ target/release/aon-net aon-net.toml
 
 AON.Net uses the `INFO` log level by default. Set `RUST_LOG` to select a different log filter.
 
+AON.Net adds compatible Stations to a party until the party has four players. If the matching wait expires first, AON.Net starts the current partial party. A Station cannot join a party after it starts.
+
 ## Configure client discovery
 
 The Tower hook can redirect the required host names. In `tower-hook.toml`, map these names to the AON.Net host:
@@ -89,7 +91,6 @@ The administration interface has no login. Permit access only from a trusted net
 
 ## Configuration notes
 
-- `matching-player-count` accepts values from 2 through 4.
 - `uri` and `host` supply required PowerOn response fields.
 - The region fields and `place-id` supply the cabinet location.
 - PowerOn text must be representable in Shift_JIS. It must not contain `&`, a null byte, or a line break.
