@@ -95,7 +95,7 @@ pub struct PlayerRecord {
 
 #[derive(BinRead, Clone, Copy, Debug, Eq, PartialEq)]
 pub struct PlayerIdentity {
-    pub marker: u8,
+    pub party_slot_placeholder: u8,
     identity: [u8; 31],
 }
 
@@ -109,7 +109,7 @@ impl PlayerIdentity {
             index += 1;
         }
         Self {
-            marker: bytes[0],
+            party_slot_placeholder: bytes[0],
             identity,
         }
     }
