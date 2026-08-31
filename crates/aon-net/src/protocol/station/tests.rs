@@ -337,7 +337,10 @@ fn partial_endpoint_assignment_keeps_the_station_in_matching()
 #[test]
 fn envelope_keeps_slot_and_blob_boundaries() -> Result<(), StationProtocolError> {
     let frame = GameplayResponse::Envelope {
-        flags: 0x0a,
+        flags: GameplayEnvelopeFlags::from_active_slots(
+            [PartySlot::new(1)?, PartySlot::new(3)?],
+            false,
+        ),
         records: vec![PlayerRecord {
             party_slot: PartySlot::new(3)?,
             blob: GameplayBlob::new(vec![0x10, 0x20, 0x30])?,

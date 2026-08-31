@@ -6,8 +6,9 @@ use thiserror::Error;
 use tokio::sync::mpsc;
 
 use crate::protocol::station::{
-    EndpointAssignment, EndpointHost, GameplayBlob, LobbyLookup, LobbyRegistration,
-    MAX_ENVELOPE_RECORDS, OwnerKey, PartyRoster, PartySlot, PlayerRecord, StationProtocolError,
+    EndpointAssignment, EndpointHost, GameplayBlob, GameplayEnvelopeFlags, LobbyLookup,
+    LobbyRegistration, MAX_ENVELOPE_RECORDS, OwnerKey, PartyRoster, PartySlot, PlayerRecord,
+    StationProtocolError,
 };
 
 const MAX_PLAYER_QUEUE: usize = 128;
@@ -83,15 +84,9 @@ pub(crate) enum MatchOutcome {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct RelayBatch {
-    pub flags: u8,
+    pub flags: GameplayEnvelopeFlags,
     pub records: Vec<PlayerRecord>,
     pub dropped_records: usize,
-}
-
-impl RelayBatch {
-    pub(crate) fn leaves_one_player(&self) -> bool {
-        self.flags & 1 != 0 && (self.flags & 0b0001_1110).count_ones() == 1
-    }
 }
 
 #[derive(Debug, Error)]
@@ -298,7 +293,7 @@ impl OnlineState {
         party_slot: PartySlot,
         record_id: u32,
         connection_id: u64,
-    ) -> Result<u8, OnlineError> {
+    ) -> Result<GameplayEnvelopeFlags, OnlineError> {
         let slot = party_slot.index();
         let mut inner = self.lock()?;
         purge_expired_parties(&mut inner);
@@ -461,17 +456,15 @@ fn is_network_check(registration: &LobbyRegistration, lookup: &LobbyLookup) -> b
         && lookup.remaining_wait_seconds == 0
 }
 
-fn active_flags(party: &RelayParty) -> u8 {
-    let mut flags = 0;
-    for (index, connection) in party.live_connections.iter().enumerate() {
-        if connection.is_some() {
-            flags |= 1 << (index + 1);
-        }
-    }
-    if party.started && party.live_connections.iter().flatten().count() < party.members.len() {
-        flags |= 1;
-    }
-    flags
+fn active_flags(party: &RelayParty) -> GameplayEnvelopeFlags {
+    let active_slots = party
+        .live_connections
+        .iter()
+        .zip(PartySlot::ALL)
+        .filter_map(|(connection, slot)| connection.map(|_| slot));
+    let roster_changed =
+        party.started && party.live_connections.iter().flatten().count() < party.members.len();
+    GameplayEnvelopeFlags::from_active_slots(active_slots, roster_changed)
 }
 
 #[cfg(test)]
@@ -740,9 +733,9 @@ mod tests {
             11,
             GameplayBlob::new(vec![0x13, 1])?,
         )?;
-        assert_eq!(batch.flags & 1, 1);
-        assert_eq!(batch.flags & (1 << 3), 0);
-        assert!(!batch.leaves_one_player());
+        assert!(batch.flags.roster_changed());
+        assert_eq!(batch.flags.active_player_count(), 2);
+        assert!(!batch.flags.has_sole_survivor());
 
         state.leave_relay(owner_key, PartySlot::new(2)?, 22)?;
         let batch = state.relay_blob(
@@ -751,21 +744,22 @@ mod tests {
             11,
             GameplayBlob::new(vec![0x13, 1])?,
         )?;
-        assert!(batch.leaves_one_player());
+        assert!(batch.flags.has_sole_survivor());
         Ok(())
     }
 
     #[test]
-    fn relay_batch_leaves_one_player_only_after_a_roster_change() {
-        let batch = |flags| RelayBatch {
-            flags,
-            records: Vec::new(),
-            dropped_records: 0,
-        };
+    fn envelope_flags_report_a_sole_survivor_only_after_a_roster_change()
+    -> Result<(), StationProtocolError> {
+        let slot_1 = PartySlot::new(1)?;
+        let slot_2 = PartySlot::new(2)?;
 
-        assert!(!batch(1 << 1).leaves_one_player());
-        assert!(batch(1 | (1 << 1)).leaves_one_player());
-        assert!(!batch(1 | (1 << 1) | (1 << 2)).leaves_one_player());
+        assert!(!GameplayEnvelopeFlags::from_active_slots([slot_1], false).has_sole_survivor());
+        assert!(GameplayEnvelopeFlags::from_active_slots([slot_1], true).has_sole_survivor());
+        assert!(
+            !GameplayEnvelopeFlags::from_active_slots([slot_1, slot_2], true).has_sole_survivor()
+        );
+        Ok(())
     }
 
     #[test]

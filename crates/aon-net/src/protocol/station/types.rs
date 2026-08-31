@@ -10,6 +10,45 @@ use crate::protocol::tower::TowerProtocolError;
 pub const MAX_GAMEPLAY_BLOB_SIZE: usize = 0x50;
 pub const MAX_ENVELOPE_RECORDS: usize = 6;
 
+#[derive(BinWrite, Clone, Copy, Debug, Eq, PartialEq)]
+pub struct GameplayEnvelopeFlags(u8);
+
+impl GameplayEnvelopeFlags {
+    const ROSTER_CHANGED: u8 = 1;
+    const ACTIVE_SLOTS: u8 = 0b0001_1110;
+
+    pub fn from_active_slots(
+        active_slots: impl IntoIterator<Item = PartySlot>,
+        roster_changed: bool,
+    ) -> Self {
+        let mut bits = if roster_changed {
+            Self::ROSTER_CHANGED
+        } else {
+            0
+        };
+        for slot in active_slots {
+            bits |= 1 << slot.get();
+        }
+        Self(bits)
+    }
+
+    pub const fn bits(self) -> u8 {
+        self.0
+    }
+
+    pub const fn roster_changed(self) -> bool {
+        self.0 & Self::ROSTER_CHANGED != 0
+    }
+
+    pub const fn active_player_count(self) -> u32 {
+        (self.0 & Self::ACTIVE_SLOTS).count_ones()
+    }
+
+    pub const fn has_sole_survivor(self) -> bool {
+        self.roster_changed() && self.active_player_count() == 1
+    }
+}
+
 #[derive(BinRead, Clone, Debug, Eq, PartialEq)]
 #[br(big)]
 pub struct LobbyRegistration {
@@ -127,6 +166,8 @@ pub struct PartySlot(
 );
 
 impl PartySlot {
+    pub(crate) const ALL: [Self; 4] = [Self(1), Self(2), Self(3), Self(4)];
+
     pub fn new(value: u8) -> Result<Self, StationProtocolError> {
         if (1..=4).contains(&value) {
             Ok(Self(value))

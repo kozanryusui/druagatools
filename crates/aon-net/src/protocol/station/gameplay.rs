@@ -5,8 +5,8 @@ use binrw::{BinWrite, binread, binwrite};
 use crate::protocol::frame;
 
 use super::types::{
-    FixedText, GameplayBlob, MAX_ENVELOPE_RECORDS, OwnerKey, PartySlot, PlayerRecord,
-    StationProtocolError,
+    FixedText, GameplayBlob, GameplayEnvelopeFlags, MAX_ENVELOPE_RECORDS, OwnerKey, PartySlot,
+    PlayerRecord, StationProtocolError,
 };
 
 #[binread]
@@ -82,7 +82,7 @@ pub enum GameplayResponse {
     Envelope {
         #[bw(try_calc = envelope_payload_length(records))]
         payload_length: u16,
-        flags: u8,
+        flags: GameplayEnvelopeFlags,
         #[bw(try_calc = u8::try_from(records.len().min(MAX_ENVELOPE_RECORDS)))]
         record_count: u8,
         #[bw(map = |records| &records[..records.len().min(MAX_ENVELOPE_RECORDS)])]

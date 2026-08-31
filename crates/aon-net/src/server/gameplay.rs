@@ -132,7 +132,7 @@ async fn handle_connection(
                                 owner_key = %owner_key,
                                 party_slot = %party_slot,
                                 record_id,
-                                active_flags = flags,
+                                active_flags = flags.bits(),
                                 "Station joined gameplay party"
                             );
                         }
@@ -165,10 +165,10 @@ async fn handle_connection(
                         party_slot = %binding.party_slot,
                         input_bytes = blob.as_bytes().len(),
                         output_records = batch.records.len(),
-                        flags = batch.flags,
+                        flags = batch.flags.bits(),
                         "relayed gameplay record"
                     );
-                    let leaves_one_player = batch.leaves_one_player();
+                    let has_sole_survivor = batch.flags.has_sole_survivor();
                     stream
                         .write_all(
                             &GameplayResponse::Envelope {
@@ -178,7 +178,7 @@ async fn handle_connection(
                             .serialize()?,
                         )
                         .await?;
-                    if leaves_one_player {
+                    if has_sole_survivor {
                         info!(
                             owner_key = %binding.owner_key,
                             party_slot = %binding.party_slot,
