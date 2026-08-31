@@ -100,6 +100,10 @@ pub struct PlayerIdentity {
 }
 
 impl PlayerIdentity {
+    pub(crate) const fn participant_marker(self) -> u8 {
+        self.identity[0]
+    }
+
     #[cfg(test)]
     pub(crate) const fn from_bytes(bytes: [u8; 32]) -> Self {
         let mut identity = [0; 31];
@@ -130,6 +134,11 @@ impl ParticipantRecord {
             party_slot,
             identity: player_identity.identity,
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) const fn participant_marker(self) -> u8 {
+        self.identity[0]
     }
 }
 

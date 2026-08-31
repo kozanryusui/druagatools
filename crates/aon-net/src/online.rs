@@ -8,7 +8,7 @@ use tokio::sync::mpsc;
 use crate::protocol::station::{
     EndpointAssignment, EndpointHost, GameplayBlob, GameplayEnvelopeFlags, LobbyLookup,
     LobbyRegistration, MAX_ENVELOPE_RECORDS, OwnerKey, ParticipantRecord, PartyRoster, PartySlot,
-    PlayerRecord, StationProtocolError,
+    PlayerIdentity, PlayerRecord, StationProtocolError,
 };
 
 const MAX_PLAYER_QUEUE: usize = 128;
@@ -53,6 +53,9 @@ struct AssemblingParty {
 
 struct RelayParty {
     members: Vec<PartyMember>,
+    matching_quest_index: u16,
+    matching_records: Vec<ParticipantRecord>,
+    matching_queues: [[VecDeque<ParticipantRecord>; MAX_PARTY_PLAYERS]; MAX_PARTY_PLAYERS],
     live_connections: [Option<u64>; 4],
     queues: [VecDeque<PlayerRecord>; 4],
     started: bool,
@@ -62,6 +65,7 @@ struct RelayParty {
 #[derive(Clone)]
 struct PartyMember {
     record_id: u32,
+    matching_connection_id: u64,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -113,6 +117,8 @@ pub(crate) enum OnlineError {
     Connection,
     #[error("matching connection {connection_id} closed before endpoint assignment")]
     AssignmentClosed { connection_id: u64 },
+    #[error("matching connection {connection_id} is not bound to an active party")]
+    UnknownMatchingConnection { connection_id: u64 },
 }
 
 impl OnlineState {
@@ -253,6 +259,18 @@ impl OnlineState {
             .iter()
             .map(|member| PartyMember {
                 record_id: member.registration.record_id,
+                matching_connection_id: member.connection_id,
+            })
+            .collect();
+        let matching_records = party
+            .members
+            .iter()
+            .enumerate()
+            .map(|(index, member)| {
+                ParticipantRecord::from_player_identity(
+                    PartySlot::ALL[index],
+                    member.registration.player_identity,
+                )
             })
             .collect();
         let player_count = party.members.len();
@@ -260,6 +278,9 @@ impl OnlineState {
             owner_key,
             RelayParty {
                 members,
+                matching_quest_index: party.members[0].registration.matching_quest_index,
+                matching_records,
+                matching_queues: std::array::from_fn(|_| std::array::from_fn(|_| VecDeque::new())),
                 live_connections: [None; MAX_PARTY_PLAYERS],
                 queues: std::array::from_fn(|_| VecDeque::new()),
                 started: false,
@@ -279,6 +300,62 @@ impl OnlineState {
         Ok(MatchOutcome::PartyCreated {
             owner_key,
             player_count,
+        })
+    }
+
+    pub(crate) fn exchange_participant_record(
+        &self,
+        connection_id: u64,
+        player_record: PlayerIdentity,
+    ) -> Result<EndpointAssignment, OnlineError> {
+        let mut inner = self.lock()?;
+        let (owner_key, party) = inner
+            .parties
+            .iter_mut()
+            .find(|(_, party)| {
+                party
+                    .members
+                    .iter()
+                    .any(|member| member.matching_connection_id == connection_id)
+            })
+            .ok_or(OnlineError::UnknownMatchingConnection { connection_id })?;
+        let local_index = party
+            .members
+            .iter()
+            .position(|member| member.matching_connection_id == connection_id)
+            .ok_or(OnlineError::UnknownMatchingConnection { connection_id })?;
+        let record =
+            ParticipantRecord::from_player_identity(PartySlot::ALL[local_index], player_record);
+        party.matching_records[local_index] = record;
+        for destination in 0..party.members.len() {
+            if destination == local_index {
+                continue;
+            }
+            let queue = &mut party.matching_queues[destination][local_index];
+            if queue.len() == MAX_PLAYER_QUEUE {
+                queue.pop_front();
+            }
+            queue.push_back(record);
+        }
+
+        let participants = PartyRoster::new(
+            (0..party.members.len())
+                .map(|source| {
+                    party.matching_queues[local_index][source]
+                        .pop_front()
+                        .unwrap_or(party.matching_records[source])
+                })
+                .collect(),
+        )?;
+        party.last_activity = Instant::now();
+        Ok(EndpointAssignment {
+            host: self.gameplay_host.clone(),
+            port: self.gameplay_port,
+            owner_key: *owner_key,
+            ready: true,
+            local_slot: PartySlot::ALL[local_index],
+            matching_quest_index: party.matching_quest_index,
+            participants,
         })
     }
 
@@ -513,6 +590,12 @@ mod tests {
         }
     }
 
+    fn participant_identity(marker: u8) -> PlayerIdentity {
+        let mut bytes = [0; 32];
+        bytes[1] = marker;
+        PlayerIdentity::from_bytes(bytes)
+    }
+
     #[test]
     fn matching_updates_partial_roster_until_the_party_is_full()
     -> Result<(), Box<dyn std::error::Error>> {
@@ -608,6 +691,36 @@ mod tests {
         };
         assert_ne!(assignment.owner_key, owner_key);
         assert_eq!(assignment.participants.as_slice().len(), 1);
+        Ok(())
+    }
+
+    #[test]
+    fn matching_relays_each_participant_record_in_order() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
+        let (tx_a, mut rx_a) = mpsc::unbounded_channel();
+        let (tx_b, mut rx_b) = mpsc::unbounded_channel();
+        state.queue_match(1, registration(100, 0x11)?, lookup(), tx_a.clone())?;
+        state.queue_match(2, registration(200, 0x22)?, lookup(), tx_b)?;
+        let mut expired = lookup();
+        expired.elapsed_wait_seconds = 35;
+        expired.remaining_wait_seconds = 0;
+        state.queue_match(1, registration(100, 0x11)?, expired, tx_a)?;
+        rx_a.try_recv()?;
+        rx_b.try_recv()?;
+
+        state.exchange_participant_record(1, participant_identity(0x10))?;
+        let first = state.exchange_participant_record(2, participant_identity(0x13))?;
+        assert_eq!(first.participants.as_slice()[0].participant_marker(), 0x10);
+
+        state.exchange_participant_record(1, participant_identity(0x11))?;
+        state.exchange_participant_record(1, participant_identity(0x12))?;
+        let second = state.exchange_participant_record(2, participant_identity(0x1d))?;
+        let third = state.exchange_participant_record(2, participant_identity(0x16))?;
+        assert_eq!(second.participants.as_slice()[0].participant_marker(), 0x11);
+        assert_eq!(third.participants.as_slice()[0].participant_marker(), 0x12);
+        assert_eq!(third.local_slot, PartySlot::new(2)?);
+        assert_eq!(third.matching_quest_index, 10);
         Ok(())
     }
 

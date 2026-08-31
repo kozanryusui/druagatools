@@ -1,12 +1,9 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
-use std::time::Duration;
-
 use thiserror::Error;
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc;
-use tokio::time::{Instant, timeout_at};
 use tracing::{debug, info, warn};
 
 use super::central::{CentralServiceError, CentralServices};
@@ -19,8 +16,6 @@ use crate::protocol::station::{
     deserialize_matching_request,
 };
 use crate::protocol::tower::{TowerProtocolError, TowerRequest};
-
-const MATCHING_HANDOFF_GRACE_PERIOD: Duration = Duration::from_secs(1);
 
 #[derive(Debug, Error)]
 enum MatchingConnectionError {
@@ -79,6 +74,7 @@ async fn handle_connection(
     let (assignment_tx, mut assignment_rx) = mpsc::unbounded_channel();
     let mut session_phase = SessionPhase::Identity;
     let mut registration: Option<LobbyRegistration> = None;
+    let mut endpoint_assigned = false;
     let result = async {
         loop {
             tokio::select! {
@@ -89,8 +85,7 @@ async fn handle_connection(
                             .write_all(&MatchingResponse::EndpointAssignment(assignment).serialize()?)
                             .await?;
                         info!(%peer, connection_id, "sent Station gameplay endpoint assignment");
-                        drain_matching_handoff(&mut stream, peer, connection_id, session_phase).await?;
-                        break;
+                        endpoint_assigned = true;
                     }
                 }
 				input = read_frame(&mut stream) => {
@@ -160,6 +155,26 @@ async fn handle_connection(
                         MatchingRequest::LobbyLookup(lookup)
                             if session_phase == SessionPhase::Confirmed =>
                         {
+                            if endpoint_assigned {
+                                let marker = lookup.player_or_lobby_key.participant_marker();
+                                let assignment = online.exchange_participant_record(
+                                    connection_id,
+                                    lookup.player_or_lobby_key,
+                                )?;
+                                stream
+                                    .write_all(
+                                        &MatchingResponse::EndpointAssignment(assignment)
+                                            .serialize()?,
+                                    )
+                                    .await?;
+                                debug!(
+                                    %peer,
+                                    connection_id,
+                                    marker = format_args!("0x{marker:02X}"),
+                                    "relayed Station participant exchange record"
+                                );
+                                continue;
+                            }
                             let registration = registration.clone().ok_or(MatchingConnectionError::Registration)?;
                             let outcome = online.queue_match(
                                 connection_id,
@@ -218,33 +233,6 @@ async fn handle_connection(
     result
 }
 
-async fn drain_matching_handoff(
-    stream: &mut TcpStream,
-    peer: SocketAddr,
-    connection_id: u64,
-    session_phase: SessionPhase,
-) -> Result<(), MatchingConnectionError> {
-    let deadline = Instant::now() + MATCHING_HANDOFF_GRACE_PERIOD;
-    loop {
-        let Ok(input) = timeout_at(deadline, read_frame(stream)).await else {
-            debug!(%peer, connection_id, "completed Station matching handoff grace period");
-            return Ok(());
-        };
-        let Some(input) = input? else {
-            return Ok(());
-        };
-        let request = deserialize_matching_request(&input)?;
-        if matches!(request, MatchingRequest::LobbyLookup(_)) {
-            debug!(%peer, connection_id, "drained Station lobby lookup during handoff grace period");
-        } else {
-            return Err(MatchingConnectionError::Unexpected {
-                request,
-                state: session_phase.name(),
-            });
-        }
-    }
-}
-
 fn hex_payload(payload: &[u8]) -> String {
     use std::fmt::Write;
 
@@ -257,6 +245,8 @@ fn hex_payload(payload: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use super::*;
     use crate::protocol::station::EndpointHost;
     use crate::storage::Storage;
@@ -303,7 +293,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn endpoint_assignment_keeps_the_handoff_open_for_one_lookup_cycle()
+    async fn endpoint_assignment_continues_the_participant_exchange()
     -> Result<(), Box<dyn std::error::Error>> {
         let listener = TcpListener::bind("127.0.0.1:0").await?;
         let address = listener.local_addr()?;
@@ -352,13 +342,13 @@ mod tests {
         client.write_all(&lookup).await?;
         client.write_all(&lookup).await?;
         assert_eq!(read_message_type(&mut client).await?, 0x0c);
+        assert_eq!(read_message_type(&mut client).await?, 0x0c);
 
         let early_close =
             tokio::time::timeout(Duration::from_millis(250), read_frame(&mut client)).await;
         assert!(early_close.is_err());
 
-        let close = tokio::time::timeout(Duration::from_secs(2), read_frame(&mut client)).await;
-        assert!(matches!(close, Ok(Ok(None))));
+        client.shutdown().await?;
         server_task.await??;
         Ok(())
     }

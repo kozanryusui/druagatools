@@ -7,6 +7,7 @@ pub(crate) use event::{ItemId, PresentChance, QuestModifier};
 pub use event::{MatchingActivationConfiguration, QuestEventConfiguration};
 pub use gameplay::{GameplayRequest, GameplayResponse, deserialize_gameplay_request};
 pub use matching::{MatchingRequest, MatchingResponse, deserialize_matching_request};
+pub(crate) use types::PlayerIdentity;
 pub use types::{
     EndpointAssignment, EndpointHost, GameplayBlob, GameplayEnvelopeFlags, LobbyLookup,
     LobbyRegistration, MAX_ENVELOPE_RECORDS, OwnerKey, ParticipantRecord, PartyRoster, PartySlot,
@@ -19,7 +20,7 @@ use event::{
 };
 
 #[cfg(test)]
-pub use types::{FixedText, PlayerIdentity};
+pub use types::FixedText;
 
 #[cfg(test)]
 mod tests;
