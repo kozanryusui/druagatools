@@ -222,8 +222,8 @@ impl SerialDispatch {
 
     /// Mount a numbered card in the selected reader.
     ///
-    /// Each numbered key has one fixed reader. A mounted identifier still has
-    /// one owner, which prevents the same card from being in both slots.
+    /// The keyboard modifier selects the reader. A mounted identifier still
+    /// has one owner, which prevents the same card from being in both slots.
     pub fn mount_card(
         &mut self,
         side: ReaderSide,

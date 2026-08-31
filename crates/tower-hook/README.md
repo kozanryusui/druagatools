@@ -80,8 +80,8 @@ The hook creates the configured card directory when you select a card that does 
 | Up and Down | Select an item |
 | Space | Confirm an item |
 | Backspace | Insert a coin |
-| `1` through `5` | Mount `card1.bin` through `card5.bin` in the left reader |
-| `6` through `9`, then `0` | Mount the matching card file in the right reader |
+| `0` through `9` | Mount the matching card file in the left reader |
+| Shift+`0` through Shift+`9` | Mount the matching card file in the right reader |
 
 ## Configuration notes
 
