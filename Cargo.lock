@@ -54,7 +54,7 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "aon-net"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "axum",
  "base64 0.23.1",
@@ -695,14 +695,14 @@ checksum = "669a445ee724c5c69b1b06fe0b63e70a1c84bc9bb7d9696cd4f4e3ec45050408"
 
 [[package]]
 name = "druaga-sx32w-shim"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "windows-sys",
 ]
 
 [[package]]
 name = "druaga-tower-board"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde",
  "thiserror 2.0.20",
@@ -711,7 +711,7 @@ dependencies = [
 
 [[package]]
 name = "druaga-tower-hook"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "blowfish",
  "druaga-tower-board",
@@ -727,7 +727,7 @@ dependencies = [
 
 [[package]]
 name = "druaga-utils"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "base64 0.23.1",
  "binrw",
