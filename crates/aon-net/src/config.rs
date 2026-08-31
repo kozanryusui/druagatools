@@ -1,4 +1,4 @@
-use std::net::SocketAddr;
+use std::net::IpAddr;
 use std::num::NonZeroU16;
 use std::path::{Path, PathBuf};
 
@@ -20,12 +20,13 @@ pub struct AonNetConfig {
 
 #[derive(Debug)]
 pub(crate) struct ServerConfig {
-    pub(crate) listen: SocketAddr,
+    pub(crate) bind_ip: IpAddr,
+    pub(crate) http_port: u16,
     pub(crate) database_path: PathBuf,
-    pub(crate) game_listen: SocketAddr,
-    pub(crate) matching_listen: SocketAddr,
-    pub(crate) relay_listen: [SocketAddr; 3],
-    pub(crate) gameplay_listen: SocketAddr,
+    pub(crate) game_port: u16,
+    pub(crate) matching_port: u16,
+    pub(crate) relay_ports: [u16; 3],
+    pub(crate) gameplay_port: u16,
     pub(crate) gameplay_advertise_host: EndpointHost,
     pub(crate) gameplay_advertise_port: NonZeroU16,
     pub(crate) matching_player_count: MatchingPlayerCount,
@@ -68,12 +69,13 @@ struct RawAonNetConfig {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "kebab-case")]
 struct RawServerConfig {
-    listen: SocketAddr,
+    bind_ip: IpAddr,
+    http_port: u16,
     database_path: PathBuf,
-    game_listen: SocketAddr,
-    matching_listen: SocketAddr,
-    relay_listen: [SocketAddr; 3],
-    gameplay_listen: SocketAddr,
+    game_port: u16,
+    matching_port: u16,
+    relay_ports: [u16; 3],
+    gameplay_port: u16,
     gameplay_advertise_host: String,
     gameplay_advertise_port: u16,
     matching_player_count: u8,
@@ -171,12 +173,13 @@ impl RawAonNetConfig {
         let announcements = validate_announcements(self.announcements)?;
         Ok(AonNetConfig {
             server: ServerConfig {
-                listen: self.server.listen,
+                bind_ip: self.server.bind_ip,
+                http_port: self.server.http_port,
                 database_path: self.server.database_path,
-                game_listen: self.server.game_listen,
-                matching_listen: self.server.matching_listen,
-                relay_listen: self.server.relay_listen,
-                gameplay_listen: self.server.gameplay_listen,
+                game_port: self.server.game_port,
+                matching_port: self.server.matching_port,
+                relay_ports: self.server.relay_ports,
+                gameplay_port: self.server.gameplay_port,
                 gameplay_advertise_host,
                 gameplay_advertise_port,
                 matching_player_count: MatchingPlayerCount(self.server.matching_player_count),

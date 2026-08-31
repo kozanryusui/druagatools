@@ -1,3 +1,4 @@
+use std::net::SocketAddr;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -56,11 +57,15 @@ pub enum ServerError {
 }
 
 pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(), ServerError> {
-    let http_address = config.server.listen;
-    let database_address = config.server.game_listen;
-    let matching_address = config.server.matching_listen;
-    let [relay_1_address, relay_2_address, relay_3_address] = config.server.relay_listen;
-    let gameplay_address = config.server.gameplay_listen;
+    let bind_ip = config.server.bind_ip;
+    let http_address = SocketAddr::new(bind_ip, config.server.http_port);
+    let database_address = SocketAddr::new(bind_ip, config.server.game_port);
+    let matching_address = SocketAddr::new(bind_ip, config.server.matching_port);
+    let [relay_1_port, relay_2_port, relay_3_port] = config.server.relay_ports;
+    let relay_1_address = SocketAddr::new(bind_ip, relay_1_port);
+    let relay_2_address = SocketAddr::new(bind_ip, relay_2_port);
+    let relay_3_address = SocketAddr::new(bind_ip, relay_3_port);
+    let gameplay_address = SocketAddr::new(bind_ip, config.server.gameplay_port);
     let game_session_id = config.server.game_session_id;
     let storage = Arc::new(Storage::open(&config.server.database_path)?);
     let settings = Arc::new(RuntimeSettings::new(

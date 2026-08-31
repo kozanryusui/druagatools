@@ -29,7 +29,7 @@ cp crates/aon-net/aon-net.example.toml aon-net.toml
 
 Edit `aon-net.toml` before you make the server available on a network.
 
-The `listen`, `game-listen`, `matching-listen`, `relay-listen`, and `gameplay-listen` fields select local bind addresses. The `gameplay-advertise-host` and `gameplay-advertise-port` fields select the address that AON.Net sends to matched Stations. Stations must be able to resolve and reach this advertised address.
+The `bind-ip` field selects the local Internet Protocol (IP) address for all services. The `http-port`, `game-port`, `matching-port`, `relay-ports`, and `gameplay-port` fields select their TCP ports. The `gameplay-advertise-host` and `gameplay-advertise-port` fields select the address that AON.Net sends to matched Stations. Stations must be able to resolve and reach this advertised address.
 
 A relative `database-path` starts at the server working directory. AON.Net creates this database when it starts. The database stores card data backups, server settings, and changes from the administration interface.
 

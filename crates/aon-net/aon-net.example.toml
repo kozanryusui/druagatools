@@ -1,16 +1,17 @@
 [server]
 # The Station uses TCP port 80 for PowerOn.
-listen = "0.0.0.0:80"
+bind-ip = "0.0.0.0"
+http-port = 80
 database-path = "aon-net.db"
 
 # Tower and Station binary services.
-game-listen = "0.0.0.0:33437"
-matching-listen = "0.0.0.0:33438"
-relay-listen = ["0.0.0.0:33439", "0.0.0.0:33440", "0.0.0.0:33441"]
+game-port = 33437
+matching-port = 33438
+relay-ports = [33439, 33440, 33441]
 
-# AON.Net listens on gameplay-listen. It sends the advertised endpoint to
+# AON.Net listens on gameplay-port. It sends the advertised endpoint to
 # matched Stations. Change the advertised host when clients run on other hosts.
-gameplay-listen = "0.0.0.0:33442"
+gameplay-port = 33442
 gameplay-advertise-host = "gameservers.aonnet"
 gameplay-advertise-port = 33442
 
