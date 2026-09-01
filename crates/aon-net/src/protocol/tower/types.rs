@@ -1,5 +1,6 @@
 use binrw::binread;
 use encoding_rs::SHIFT_JIS;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 const MAX_DISABLED_ITEMS: usize = 32;
@@ -140,7 +141,7 @@ impl ServiceTime {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct AnnouncementTime {
     pub(crate) year: u16,
     pub(crate) month: u8,
@@ -176,7 +177,7 @@ impl AnnouncementTime {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct AnnouncementCursor {
     pub(crate) time: AnnouncementTime,
     pub(crate) sub_minute: u8,
@@ -191,7 +192,7 @@ impl AnnouncementCursor {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct AnnouncementRecord {
     pub(crate) start: AnnouncementCursor,
     pub(crate) end: AnnouncementTime,

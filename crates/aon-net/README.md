@@ -102,7 +102,9 @@ When admin security is enabled, open this address and enter the configured admin
 https://SERVER_ADDRESS/admin
 ```
 
-The interface changes the shop name, quest rotation, quest rewards, and quest bonuses. The Status page shows open matching queues and active gameplay relays. AON.Net pushes status changes to the page. The Logs page shows live server logs.
+The interface changes the shop name, quest rotation, quest rewards, quest bonuses, and Tower announcements. AON.Net stores these changes in its database. The Tower can keep at most 16 announcements. Announcement text can contain at most 428 bytes after CP932 encoding.
+
+The Status page shows open matching queues and active gameplay relays. AON.Net pushes status changes to the page. The Logs page shows live server logs.
 
 When admin security is enabled, AON.Net keeps authenticated sessions in memory. A server restart ends all sessions. The web app does not put the token in browser storage. The login field supports password managers.
 
@@ -119,6 +121,3 @@ When admin security is enabled, AON.Net keeps authenticated sessions in memory. 
 - `tower-connection-timeout-seconds` defaults to 30 seconds.
 - The region fields and `place-id` supply the cabinet location.
 - PowerOn text must be representable in Shift_JIS. It must not contain `&`, a null byte, or a line break.
-- AON.Net accepts at most 16 announcements.
-- Announcement times use `YYYY-MM-DD HH:MM`.
-- Announcement text can contain at most 428 bytes after CP932 encoding.

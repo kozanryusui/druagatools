@@ -99,7 +99,6 @@ pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(),
         storage,
         Arc::clone(&settings),
         Arc::clone(&online),
-        config.announcements,
     ));
     let power_on_app = power_on::router(config.power_on, Arc::clone(&settings));
     let http_request_timeout = config.server.http_request_timeout;

@@ -6,18 +6,22 @@ use thiserror::Error;
 
 use crate::logging::AdminHub;
 use crate::protocol::station::{ItemId, PresentChance, QuestModifier, StationProtocolError};
-use crate::protocol::tower::{PartyQuestId, SpecialQuestId, TowerProtocolError};
+use crate::protocol::tower::{
+    AnnouncementCursor, AnnouncementRecord, AnnouncementTime, PartyQuestId, SpecialQuestId,
+    TowerProtocolError,
+};
 use crate::server::quest_rotation::RandomQuestRotation;
 use crate::storage::{AdminSettingsRecord, Storage, StorageError};
 use aon_net_admin::contract::{
-    AdminEvent, AdminSnapshot, BonusSettings, FieldError, QuestMode, QuestOption, QuestSettings,
-    QuestTimetableEntry, RewardSettings, SettingsSnapshot,
+    AdminEvent, AdminSnapshot, AnnouncementSettings, BonusSettings, FieldError, QuestMode,
+    QuestOption, QuestSettings, QuestTimetableEntry, RewardSettings, SettingsSnapshot,
 };
 
 include!("quest_catalog.rs");
 
 const TIMETABLE_ENTRY_COUNT: usize = 12;
 const MAX_MODIFIERS: usize = 4;
+const MAX_ANNOUNCEMENTS: usize = 16;
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct EffectiveQuestRotation {
@@ -91,7 +95,7 @@ impl RuntimeSettings {
         let settings = self.current_record()?;
         Ok(AdminSnapshot {
             sequence: self.hub.sequence(),
-            settings: snapshot_from(&settings),
+            settings: self.settings_snapshot(&settings)?,
             party_quests: quest_options(10..=22),
             special_quests: quest_options((25..=74).chain(76..=89)),
             timetable: timetable_for(&settings)?,
@@ -114,6 +118,10 @@ impl RuntimeSettings {
 
     pub(crate) fn modifiers(&self) -> Result<[QuestModifier; MAX_MODIFIERS], SettingsError> {
         modifiers_for(&self.current_record()?)
+    }
+
+    pub(crate) fn announcements(&self) -> Result<Vec<AnnouncementRecord>, SettingsError> {
+        Ok(self.storage.announcements()?)
     }
 
     pub(crate) fn update_shop(&self, shop_name: String) -> Result<SettingsSnapshot, SettingsError> {
@@ -176,6 +184,20 @@ impl RuntimeSettings {
         )
     }
 
+    pub(crate) fn update_announcements(
+        &self,
+        announcements: Vec<AnnouncementSettings>,
+    ) -> Result<SettingsSnapshot, SettingsError> {
+        let announcements = validate_announcements(announcements)?;
+        let _guard = self.lock_updates();
+        self.storage.store_announcements(announcements)?;
+        self.settings_snapshot(&self.storage.admin_settings()?)
+            .inspect(|snapshot| {
+                self.hub
+                    .publish(AdminEvent::SettingsChanged(snapshot.clone()));
+            })
+    }
+
     fn update<F, R>(
         &self,
         change: F,
@@ -193,7 +215,7 @@ impl RuntimeSettings {
             .checked_add(1)
             .ok_or(SettingsError::Revision)?;
         self.storage.store_admin_settings(settings.clone())?;
-        let snapshot = snapshot_from(&settings);
+        let snapshot = self.settings_snapshot(&settings)?;
         self.hub
             .publish(AdminEvent::SettingsChanged(snapshot.clone()));
         if timetable_changed {
@@ -223,7 +245,7 @@ impl RuntimeSettings {
                 .checked_add(1)
                 .ok_or(SettingsError::Revision)?;
             self.storage.store_admin_settings(settings.clone())?;
-            let snapshot = snapshot_from(&settings);
+            let snapshot = self.settings_snapshot(&settings)?;
             self.hub.publish(AdminEvent::SettingsChanged(snapshot));
             self.hub
                 .publish(AdminEvent::TimetableChanged(timetable_for(&settings)?));
@@ -235,6 +257,13 @@ impl RuntimeSettings {
         self.update_lock
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    fn settings_snapshot(
+        &self,
+        settings: &AdminSettingsRecord,
+    ) -> Result<SettingsSnapshot, SettingsError> {
+        Ok(snapshot_from(settings, &self.storage.announcements()?))
     }
 }
 
@@ -254,7 +283,10 @@ impl IntoUpdateResult for Result<(), SettingsError> {
     }
 }
 
-fn snapshot_from(settings: &AdminSettingsRecord) -> SettingsSnapshot {
+fn snapshot_from(
+    settings: &AdminSettingsRecord,
+    announcements: &[AnnouncementRecord],
+) -> SettingsSnapshot {
     SettingsSnapshot {
         shop_name: settings.shop_name.clone(),
         quests: QuestSettings {
@@ -266,7 +298,101 @@ fn snapshot_from(settings: &AdminSettingsRecord) -> SettingsSnapshot {
         },
         rewards: settings.rewards.clone(),
         bonuses: settings.bonuses.clone(),
+        announcements: announcements
+            .iter()
+            .map(|announcement| AnnouncementSettings {
+                start: format_announcement_time(announcement.start.time),
+                end: format_announcement_time(announcement.end),
+                text: announcement.text.clone(),
+            })
+            .collect(),
     }
+}
+
+fn validate_announcements(
+    announcements: Vec<AnnouncementSettings>,
+) -> Result<Vec<AnnouncementRecord>, SettingsError> {
+    if announcements.len() > MAX_ANNOUNCEMENTS {
+        return field("announcements", "Add no more than 16 announcements.");
+    }
+
+    let mut parsed = Vec::with_capacity(announcements.len());
+    for (index, announcement) in announcements.into_iter().enumerate() {
+        let start =
+            parse_announcement_time(&announcement.start).ok_or_else(|| SettingsError::Field {
+                field: "announcements",
+                message: format!("Announcement {} has an invalid start time.", index + 1),
+            })?;
+        let end =
+            parse_announcement_time(&announcement.end).ok_or_else(|| SettingsError::Field {
+                field: "announcements",
+                message: format!("Announcement {} has an invalid end time.", index + 1),
+            })?;
+        if end < start {
+            return field(
+                "announcements",
+                format!("Announcement {} ends before it starts.", index + 1),
+            );
+        }
+        parsed.push((start, end, announcement.text));
+    }
+    parsed.sort_by_key(|(start, _, _)| *start);
+
+    let mut previous_start = None;
+    let mut sub_minute = 0_u8;
+    parsed
+        .into_iter()
+        .enumerate()
+        .map(|(index, (start, end, text))| {
+            if previous_start == Some(start) {
+                sub_minute += 1;
+            } else {
+                previous_start = Some(start);
+                sub_minute = 0;
+            }
+            if end == start && sub_minute != 0 {
+                return field(
+                    "announcements",
+                    format!(
+                        "Announcement {} must end after its shared start minute.",
+                        index + 1
+                    ),
+                );
+            }
+            let cursor = AnnouncementCursor::new(start, sub_minute).map_err(|error| {
+                SettingsError::Field {
+                    field: "announcements",
+                    message: format!("Announcement {} is invalid: {error}", index + 1),
+                }
+            })?;
+            AnnouncementRecord::new(cursor, end, text).map_err(|error| SettingsError::Field {
+                field: "announcements",
+                message: format!("Announcement {} is invalid: {error}", index + 1),
+            })
+        })
+        .collect()
+}
+
+fn parse_announcement_time(value: &str) -> Option<AnnouncementTime> {
+    let (date, time) = value.split_once('T')?;
+    let mut date = date.split('-');
+    let mut time = time.split(':');
+    let result = AnnouncementTime::new(
+        date.next()?.parse().ok()?,
+        date.next()?.parse().ok()?,
+        date.next()?.parse().ok()?,
+        time.next()?.parse().ok()?,
+        time.next()?.parse().ok()?,
+    )
+    .ok()?;
+    (date.next().is_none() && time.next().is_none()).then_some(result)
+}
+
+fn format_announcement_time(time: AnnouncementTime) -> String {
+    format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}",
+        time.year, time.month, time.day, time.hour, time.minute
+    )
 }
 
 fn validate_shop_name(shop_name: &str) -> Result<(), SettingsError> {
@@ -488,4 +614,40 @@ fn field<T>(field: &'static str, message: impl Into<String>) -> Result<T, Settin
         field,
         message: message.into(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{MAX_ANNOUNCEMENTS, validate_announcements};
+    use aon_net_admin::contract::AnnouncementSettings;
+
+    #[test]
+    fn announcements_with_one_start_minute_get_distinct_cursors()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let announcements = validate_announcements(vec![
+            announcement("2009-08-03T12:30", "First"),
+            announcement("2009-08-03T12:30", "Second"),
+        ])?;
+
+        assert_eq!(announcements[0].start.sub_minute, 0);
+        assert_eq!(announcements[1].start.sub_minute, 1);
+        Ok(())
+    }
+
+    #[test]
+    fn announcement_count_matches_the_tower_capacity() {
+        let announcements = (0..=MAX_ANNOUNCEMENTS)
+            .map(|index| announcement("2009-08-03T12:30", &index.to_string()))
+            .collect();
+
+        assert!(validate_announcements(announcements).is_err());
+    }
+
+    fn announcement(start: &str, text: &str) -> AnnouncementSettings {
+        AnnouncementSettings {
+            start: start.to_owned(),
+            end: "2009-08-04T12:30".to_owned(),
+            text: text.to_owned(),
+        }
+    }
 }

@@ -6,11 +6,12 @@ use native_model::{Model, native_model};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::protocol::tower::CardDataUpload;
+use crate::protocol::tower::{AnnouncementRecord, CardDataUpload};
 use aon_net_admin::contract::{BonusSettings, QuestMode, RewardSettings};
 
 const SERVER_STATE_KEY: u8 = 1;
 const ADMIN_SETTINGS_KEY: u8 = 1;
+const ANNOUNCEMENT_SETTINGS_KEY: u8 = 1;
 const DEFAULT_RANK_LIMIT: u8 = 31;
 const DEFAULT_MONEY_LIMIT: u32 = 99_999_999;
 
@@ -146,6 +147,24 @@ impl AdminSettingsRecord {
     }
 }
 
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[native_model(id = 4, version = 1)]
+#[native_db::native_db]
+pub(crate) struct AnnouncementSettingsRecord {
+    #[primary_key]
+    id: u8,
+    pub(crate) announcements: Vec<AnnouncementRecord>,
+}
+
+impl Default for AnnouncementSettingsRecord {
+    fn default() -> Self {
+        Self {
+            id: ANNOUNCEMENT_SETTINGS_KEY,
+            announcements: Vec::new(),
+        }
+    }
+}
+
 #[derive(Debug, Error)]
 pub enum StorageError {
     #[error("cannot define the AON.Net database models: {0}")]
@@ -181,6 +200,7 @@ impl Storage {
         };
         let storage = Self { database };
         storage.initialize_server_state()?;
+        storage.initialize_announcement_settings()?;
         Ok(storage)
     }
 
@@ -237,6 +257,30 @@ impl Storage {
         Ok(())
     }
 
+    pub(crate) fn announcements(&self) -> Result<Vec<AnnouncementRecord>, StorageError> {
+        let transaction = self.database.r_transaction()?;
+        transaction
+            .get()
+            .primary::<AnnouncementSettingsRecord>(ANNOUNCEMENT_SETTINGS_KEY)?
+            .map(|record| record.announcements)
+            .ok_or_else(|| {
+                StorageError::ModelDefinition("announcement settings are missing".to_owned())
+            })
+    }
+
+    pub(crate) fn store_announcements(
+        &self,
+        announcements: Vec<AnnouncementRecord>,
+    ) -> Result<(), StorageError> {
+        let transaction = self.database.rw_transaction()?;
+        transaction.upsert(AnnouncementSettingsRecord {
+            id: ANNOUNCEMENT_SETTINGS_KEY,
+            announcements,
+        })?;
+        transaction.commit()?;
+        Ok(())
+    }
+
     #[cfg(test)]
     fn card(&self, record_id: u32) -> Result<Option<CardRecord>, StorageError> {
         let transaction = self.database.r_transaction()?;
@@ -271,6 +315,22 @@ impl Storage {
         transaction.commit()?;
         Ok(())
     }
+
+    fn initialize_announcement_settings(&self) -> Result<(), StorageError> {
+        let transaction = self.database.r_transaction()?;
+        let settings = transaction
+            .get()
+            .primary::<AnnouncementSettingsRecord>(ANNOUNCEMENT_SETTINGS_KEY)?;
+        drop(transaction);
+        if settings.is_some() {
+            return Ok(());
+        }
+
+        let transaction = self.database.rw_transaction()?;
+        transaction.insert(AnnouncementSettingsRecord::default())?;
+        transaction.commit()?;
+        Ok(())
+    }
 }
 
 fn models() -> Result<&'static Models, StorageError> {
@@ -286,6 +346,9 @@ fn models() -> Result<&'static Models, StorageError> {
         models
             .define::<AdminSettingsRecord>()
             .map_err(|error| error.to_string())?;
+        models
+            .define::<AnnouncementSettingsRecord>()
+            .map_err(|error| error.to_string())?;
         Ok(models)
     });
     result
@@ -298,7 +361,10 @@ mod tests {
     use std::collections::HashSet;
 
     use super::{DEFAULT_MONEY_LIMIT, DEFAULT_RANK_LIMIT, Storage};
-    use crate::protocol::tower::{CardDataUpload, TowerRequest, deserialize_tower_request};
+    use crate::protocol::tower::{
+        AnnouncementCursor, AnnouncementRecord, AnnouncementTime, CardDataUpload, TowerRequest,
+        deserialize_tower_request,
+    };
 
     #[test]
     fn card_upload_survives_database_reopen() -> Result<(), Box<dyn std::error::Error>> {
@@ -320,6 +386,26 @@ mod tests {
         assert_eq!(record.card_data, [0xaa, 0xbb, 0xcc]);
         assert_eq!(&record.shop_name[..4], b"SHOP");
         assert_eq!(&record.region_names[0][..3], b"R0\0");
+        Ok(())
+    }
+
+    #[test]
+    fn announcements_survive_database_reopen() -> Result<(), Box<dyn std::error::Error>> {
+        let directory = tempfile::tempdir()?;
+        let database_path = directory.path().join("aon-net.db");
+        let announcement = AnnouncementRecord::new(
+            AnnouncementCursor::new(AnnouncementTime::new(2009, 8, 3, 12, 30)?, 0)?,
+            AnnouncementTime::new(2009, 8, 4, 12, 30)?,
+            "Test".to_owned(),
+        )?;
+
+        {
+            let storage = Storage::open(&database_path)?;
+            storage.store_announcements(vec![announcement.clone()])?;
+        }
+
+        let storage = Storage::open(&database_path)?;
+        assert_eq!(storage.announcements()?, [announcement]);
         Ok(())
     }
 

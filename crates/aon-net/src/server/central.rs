@@ -6,9 +6,9 @@ use tracing::{debug, info};
 use crate::online::{OnlineError, OnlineState, ServiceCounts};
 use crate::protocol::station::{MatchingActivationConfiguration, QuestEventConfiguration};
 use crate::protocol::tower::{
-    AnnouncementCursor, AnnouncementRecord, AnnouncementTime, DatabaseStatus, DiskCapacity,
-    MatchingConfiguration, PartyQuestSchedule, PartyQuestScheduleEntry, RelayStatus, ServiceTime,
-    TowerProtocolError, TowerRequest, TowerResponse,
+    AnnouncementCursor, AnnouncementTime, DatabaseStatus, DiskCapacity, MatchingConfiguration,
+    PartyQuestSchedule, PartyQuestScheduleEntry, RelayStatus, ServiceTime, TowerProtocolError,
+    TowerRequest, TowerResponse,
 };
 use crate::runtime_settings::{EffectiveQuestRotation, RuntimeSettings, SettingsError};
 use crate::storage::{ServerStateRecord, Storage, StorageError};
@@ -18,7 +18,6 @@ pub(super) struct CentralServices {
     storage: Arc<Storage>,
     settings: Arc<RuntimeSettings>,
     online: Arc<OnlineState>,
-    announcements: Vec<AnnouncementRecord>,
 }
 
 #[derive(Debug, Error)]
@@ -41,14 +40,12 @@ impl CentralServices {
         storage: Arc<Storage>,
         settings: Arc<RuntimeSettings>,
         online: Arc<OnlineState>,
-        announcements: Vec<AnnouncementRecord>,
     ) -> Self {
         Self {
             session_id,
             storage,
             settings,
             online,
-            announcements,
         }
     }
 
@@ -110,7 +107,8 @@ impl CentralServices {
                     },
                     sub_minute: cursor_sub_minute,
                 };
-                self.announcements
+                self.settings
+                    .announcements()?
                     .iter()
                     .find(|announcement| announcement.start > cursor)
                     .cloned()
@@ -245,7 +243,7 @@ mod tests {
     use super::*;
     use crate::protocol::frame::Frame;
     use crate::protocol::station::{EndpointHost, MatchingResponse};
-    use crate::protocol::tower::serialize_tower_response;
+    use crate::protocol::tower::{AnnouncementRecord, serialize_tower_response};
     use aon_net_admin::contract::{BonusSettings, RewardSettings};
 
     #[test]
@@ -258,7 +256,7 @@ mod tests {
             33442,
         ));
         let settings = RuntimeSettings::for_tests(Arc::clone(&storage))?;
-        let central = CentralServices::new(1, storage, settings, online, Vec::new());
+        let central = CentralServices::new(1, storage, settings, online);
 
         let response = central.respond(TowerRequest::ServiceRecordRequest {})?;
         let frame = serialize_tower_response(&response)?;
@@ -290,7 +288,7 @@ mod tests {
             money_percent: 100,
             item_drop_percent: 125,
         })?;
-        let central = CentralServices::new(1, storage, settings, online, Vec::new());
+        let central = CentralServices::new(1, storage, settings, online);
 
         let configuration = central.matching_activation_configuration()?;
         let bytes = MatchingResponse::ActivationConfiguration(configuration).serialize()?;
@@ -321,15 +319,19 @@ mod tests {
             33442,
         ));
         let start_time = AnnouncementTime::new(2009, 8, 3, 12, 30)?;
-        let start = AnnouncementCursor::new(start_time, 7)?;
+        let start = AnnouncementCursor::new(start_time, 0)?;
         let announcement = AnnouncementRecord::new(
             start,
             AnnouncementTime::new(2009, 8, 4, 23, 59)?,
             "Test".to_owned(),
         )?;
         let settings = RuntimeSettings::for_tests(Arc::clone(&storage))?;
-        let central =
-            CentralServices::new(1, storage, settings, online, vec![announcement.clone()]);
+        settings.update_announcements(vec![aon_net_admin::contract::AnnouncementSettings {
+            start: "2009-08-03T12:30".to_owned(),
+            end: "2009-08-04T23:59".to_owned(),
+            text: "Test".to_owned(),
+        }])?;
+        let central = CentralServices::new(1, storage, settings, online);
 
         let first = central.respond(TowerRequest::AnnouncementRequest {
             cursor_year: 2005,

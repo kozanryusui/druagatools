@@ -10,16 +10,12 @@ use subtle::ConstantTimeEq;
 use thiserror::Error;
 
 use crate::protocol::station::EndpointHost;
-use crate::protocol::tower::{
-    AnnouncementCursor, AnnouncementRecord, AnnouncementTime, TowerProtocolError,
-};
 
 #[derive(Debug)]
 pub struct AonNetConfig {
     pub(crate) server: ServerConfig,
     pub(crate) admin_security: AdminSecurity,
     pub(crate) power_on: PowerOnConfig,
-    pub(crate) announcements: Vec<AnnouncementRecord>,
 }
 
 #[derive(Debug)]
@@ -97,8 +93,6 @@ struct RawAonNetConfig {
     #[serde(default)]
     admin_security: RawAdminSecurity,
     power_on: RawPowerOnConfig,
-    #[serde(default)]
-    announcements: Vec<RawAnnouncement>,
 }
 
 #[derive(Default, Deserialize)]
@@ -156,16 +150,6 @@ struct RawPowerOnConfig {
     place_id: String,
 }
 
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "kebab-case")]
-struct RawAnnouncement {
-    start: String,
-    end: String,
-    #[serde(default)]
-    sub_minute: u8,
-    text: String,
-}
-
 #[derive(Debug, Error)]
 pub enum ConfigError {
     #[error("cannot read AON.Net configuration {path}: {source}")]
@@ -195,20 +179,6 @@ pub enum ConfigError {
     AdminTokenTooShort,
     #[error("admin security cannot use TCP port 443 because another service uses it")]
     AdminPortConflict,
-    #[error("announcement {index} has an invalid {field}; use YYYY-MM-DD HH:MM")]
-    AnnouncementTime { index: usize, field: &'static str },
-    #[error("announcement {index} is invalid: {source}")]
-    Announcement {
-        index: usize,
-        #[source]
-        source: TowerProtocolError,
-    },
-    #[error("announcement {index} ends before it starts")]
-    AnnouncementOrder { index: usize },
-    #[error("announcements must have different start cursors")]
-    AnnouncementCursorOrder,
-    #[error("at most 16 announcements can be configured")]
-    AnnouncementCount,
 }
 
 pub fn load_config(path: &Path) -> Result<AonNetConfig, ConfigError> {
@@ -229,7 +199,6 @@ impl RawAonNetConfig {
             .map_err(|_| ConfigError::GameplayHost)?;
         let gameplay_advertise_port = NonZeroU16::new(self.server.gameplay_advertise_port)
             .ok_or(ConfigError::GameplayPort)?;
-        let announcements = validate_announcements(self.announcements)?;
         Ok(AonNetConfig {
             admin_security,
             server: ServerConfig {
@@ -271,7 +240,6 @@ impl RawAonNetConfig {
                 region_name_3: self.power_on.region_name_3,
                 place_id: self.power_on.place_id,
             },
-            announcements,
         })
     }
 }
@@ -353,58 +321,6 @@ fn nonzero_usize(value: usize) -> NonZeroUsize {
 
 fn nonzero_u64(value: u64) -> NonZeroU64 {
     NonZeroU64::new(value).unwrap_or(NonZeroU64::MIN)
-}
-
-fn validate_announcements(
-    raw_announcements: Vec<RawAnnouncement>,
-) -> Result<Vec<AnnouncementRecord>, ConfigError> {
-    if raw_announcements.len() > 16 {
-        return Err(ConfigError::AnnouncementCount);
-    }
-    let mut announcements = Vec::with_capacity(raw_announcements.len());
-    for (index, raw) in raw_announcements.into_iter().enumerate() {
-        let start_time =
-            parse_announcement_time(&raw.start).ok_or(ConfigError::AnnouncementTime {
-                index,
-                field: "start",
-            })?;
-        let end = parse_announcement_time(&raw.end).ok_or(ConfigError::AnnouncementTime {
-            index,
-            field: "end",
-        })?;
-        if end < start_time || (end == start_time && raw.sub_minute != 0) {
-            return Err(ConfigError::AnnouncementOrder { index });
-        }
-        let start = AnnouncementCursor::new(start_time, raw.sub_minute)
-            .map_err(|source| ConfigError::Announcement { index, source })?;
-        announcements.push(
-            AnnouncementRecord::new(start, end, raw.text)
-                .map_err(|source| ConfigError::Announcement { index, source })?,
-        );
-    }
-    announcements.sort_by_key(|announcement| announcement.start);
-    if announcements
-        .windows(2)
-        .any(|pair| pair[0].start == pair[1].start)
-    {
-        return Err(ConfigError::AnnouncementCursorOrder);
-    }
-    Ok(announcements)
-}
-
-fn parse_announcement_time(value: &str) -> Option<AnnouncementTime> {
-    let (date, time) = value.split_once(' ')?;
-    let mut date = date.split('-');
-    let mut time = time.split(':');
-    let year = date.next()?.parse().ok()?;
-    let month = date.next()?.parse().ok()?;
-    let day = date.next()?.parse().ok()?;
-    let hour = time.next()?.parse().ok()?;
-    let minute = time.next()?.parse().ok()?;
-    if date.next().is_some() || time.next().is_some() {
-        return None;
-    }
-    AnnouncementTime::new(year, month, day, hour, minute).ok()
 }
 
 fn validate_power_on(power_on: &RawPowerOnConfig) -> Result<(), ConfigError> {

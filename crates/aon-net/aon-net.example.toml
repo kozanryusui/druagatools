@@ -57,12 +57,3 @@ region-name-1 = "Local"
 region-name-2 = "Local"
 region-name-3 = "Local"
 place-id = "AON0001"
-
-
-# AON.Net sends announcements in start-time order. Add at most 16 entries.
-# The Tower can show a future announcement early. Do not add it before its start.
-# [[announcements]]
-# start = "2009-08-03 12:30"
-# end = "2009-08-04 23:59"
-# sub-minute = 0
-# text = "Announcement text"

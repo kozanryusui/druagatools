@@ -8,9 +8,9 @@ use wasm_bindgen::{JsCast, closure::Closure};
 use web_sys::{EventSource, HashChangeEvent, HtmlSelectElement, MessageEvent};
 
 use super::contract::{
-    AdminError, AdminEvent, AdminEventEnvelope, AdminLogin, AdminSnapshot, BonusSettings, LogLevel,
-    OnlineStatus, QuestMode, QuestOption, QuestSettings, RelayPartyStatus, RewardSettings,
-    SettingsSnapshot, ShopUpdate,
+    AdminError, AdminEvent, AdminEventEnvelope, AdminLogin, AdminSnapshot, AnnouncementSettings,
+    BonusSettings, LogLevel, OnlineStatus, QuestMode, QuestOption, QuestSettings, RelayPartyStatus,
+    RewardSettings, SettingsSnapshot, ShopUpdate,
 };
 use super::routes;
 
@@ -256,16 +256,19 @@ fn ConfigurationPage(
     view! {
         <h1>"Configuration"</h1>
         {move || configuration.get().map(|data| view! {
-            <div class="grid two">
-                <div class="stack">
-                    <ShopPanel current=data.settings.shop_name snapshot error saving/>
-                    <RewardsPanel current=data.settings.rewards.clone() bonuses=data.settings.bonuses.clone() snapshot error saving/>
-                    <BonusesPanel current=data.settings.bonuses rewards=data.settings.rewards snapshot error saving/>
+            <div class="stack">
+                <div class="grid two">
+                    <div class="stack">
+                        <ShopPanel current=data.settings.shop_name snapshot error saving/>
+                        <RewardsPanel current=data.settings.rewards.clone() bonuses=data.settings.bonuses.clone() snapshot error saving/>
+                        <BonusesPanel current=data.settings.bonuses rewards=data.settings.rewards snapshot error saving/>
+                    </div>
+                    <div class="stack">
+                        <QuestPanel current=data.settings.quests party=data.party_quests special=data.special_quests snapshot error saving/>
+                        <TimetablePanel entries=data.timetable/>
+                    </div>
                 </div>
-                <div class="stack">
-                    <QuestPanel current=data.settings.quests party=data.party_quests special=data.special_quests snapshot error saving/>
-                    <TimetablePanel entries=data.timetable/>
-                </div>
+                <AnnouncementsPanel current=data.settings.announcements snapshot error saving/>
             </div>
         })}
     }
@@ -437,6 +440,62 @@ where
 #[component]
 fn TimetablePanel(entries: Vec<super::contract::QuestTimetableEntry>) -> impl IntoView {
     view! { <section class="panel"><h2>"Next random quests"</h2><table><thead><tr><th>"Time"</th><th>"Party A"</th><th>"Party B"</th><th>"Special"</th></tr></thead><tbody>{entries.into_iter().map(|entry| view! { <tr><td>{entry.starts_at}</td><td>{entry.party_quests[0].clone()}</td><td>{entry.party_quests[1].clone()}</td><td>{entry.special_quest}</td></tr> }).collect_view()}</tbody></table></section> }
+}
+
+#[component]
+fn AnnouncementsPanel(
+    current: Vec<AnnouncementSettings>,
+    snapshot: RwSignal<Option<AdminSnapshot>>,
+    error: RwSignal<Option<String>>,
+    saving: RwSignal<bool>,
+) -> impl IntoView {
+    let values = RwSignal::new(current);
+    view! {
+        <section class="panel">
+            <h2>"Announcements"</h2>
+            <p class="help">"The Tower can store 16 announcements. Times use the Tower's local time."</p>
+            <div class="announcement-list">
+                {move || values.get().into_iter().enumerate().map(|(index, announcement)| {
+                    let number = index + 1;
+                    view! {
+                        <div class="announcement-row">
+                            <div class="field">
+                                <label for=format!("announcement-{index}-start")>{format!("Announcement {number} start")}</label>
+                                <input id=format!("announcement-{index}-start") type="datetime-local" required
+                                    prop:value=announcement.start
+                                    on:input=move |event| values.update(|items| if let Some(item) = items.get_mut(index) { item.start = event_target_value(&event) })/>
+                            </div>
+                            <div class="field">
+                                <label for=format!("announcement-{index}-end")>{format!("Announcement {number} end")}</label>
+                                <input id=format!("announcement-{index}-end") type="datetime-local" required
+                                    prop:value=announcement.end
+                                    on:input=move |event| values.update(|items| if let Some(item) = items.get_mut(index) { item.end = event_target_value(&event) })/>
+                            </div>
+                            <div class="field announcement-text">
+                                <label for=format!("announcement-{index}-text")>{format!("Announcement {number} text")}</label>
+                                <textarea id=format!("announcement-{index}-text") rows="3"
+                                    prop:value=announcement.text
+                                    on:input=move |event| values.update(|items| if let Some(item) = items.get_mut(index) { item.text = event_target_value(&event) })></textarea>
+                            </div>
+                            <button class="secondary remove-announcement" type="button"
+                                on:click=move |_| values.update(|items| if index < items.len() { items.remove(index); })>"Remove"</button>
+                        </div>
+                    }
+                }).collect_view()}
+            </div>
+            <div class="actions">
+                <button class="secondary" type="button" disabled=move || { saving.get() || values.get().len() >= 16 }
+                    on:click=move |_| values.update(|items| items.push(AnnouncementSettings {
+                        start: String::new(),
+                        end: String::new(),
+                        text: String::new(),
+                    }))>"Add announcement"</button>
+                <button disabled=move || saving.get()
+                    on:click=move |_| save(routes::ANNOUNCEMENT_SETTINGS, values.get(), snapshot, error, saving)>"Save announcements"</button>
+                <Status error/>
+            </div>
+        </section>
+    }
 }
 
 #[component]

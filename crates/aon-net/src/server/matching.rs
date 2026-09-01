@@ -349,13 +349,7 @@ mod tests {
         ));
         let storage = Arc::new(Storage::open(&directory.path().join("aon-net.db"))?);
         let settings = crate::runtime_settings::RuntimeSettings::for_tests(Arc::clone(&storage))?;
-        let central = CentralServices::new(
-            session_id,
-            storage,
-            settings,
-            Arc::clone(&online),
-            Vec::new(),
-        );
+        let central = CentralServices::new(session_id, storage, settings, Arc::clone(&online));
 
         let result =
             handle_connection(server, peer, 1, &central, &online, Duration::from_secs(10)).await;
@@ -384,7 +378,6 @@ mod tests {
             Arc::clone(&storage),
             crate::runtime_settings::RuntimeSettings::for_tests(storage)?,
             Arc::clone(&online),
-            Vec::new(),
         ));
         let server_task = tokio::spawn({
             let central = Arc::clone(&central);

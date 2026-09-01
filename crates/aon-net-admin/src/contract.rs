@@ -53,6 +53,13 @@ pub struct BonusSettings {
     pub item_drop_percent: u32,
 }
 
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct AnnouncementSettings {
+    pub start: String,
+    pub end: String,
+    pub text: String,
+}
+
 impl BonusSettings {
     pub fn non_default_count(&self) -> usize {
         [
@@ -72,6 +79,7 @@ pub struct SettingsSnapshot {
     pub quests: QuestSettings,
     pub rewards: RewardSettings,
     pub bonuses: BonusSettings,
+    pub announcements: Vec<AnnouncementSettings>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]

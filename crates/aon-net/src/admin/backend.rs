@@ -21,8 +21,8 @@ use crate::logging::AdminHub;
 use crate::online::OnlineState;
 use crate::runtime_settings::{RuntimeSettings, SettingsError};
 use aon_net_admin::contract::{
-    AdminError, AdminLogin, BonusSettings, QuestSettings, RewardSettings, SettingsSnapshot,
-    ShopUpdate,
+    AdminError, AdminLogin, AnnouncementSettings, BonusSettings, QuestSettings, RewardSettings,
+    SettingsSnapshot, ShopUpdate,
 };
 use aon_net_admin::routes;
 
@@ -117,6 +117,7 @@ fn api_routes() -> Router<AdminState> {
         .route(routes::QUEST_SETTINGS, put(update_quests))
         .route(routes::REWARD_SETTINGS, put(update_rewards))
         .route(routes::BONUS_SETTINGS, put(update_bonuses))
+        .route(routes::ANNOUNCEMENT_SETTINGS, put(update_announcements))
 }
 
 async fn index() -> Response {
@@ -263,6 +264,17 @@ async fn update_bonuses(
         return authentication_error(StatusCode::FORBIDDEN);
     }
     update_response(state.settings.update_bonuses(update))
+}
+
+async fn update_announcements(
+    State(state): State<AdminState>,
+    headers: HeaderMap,
+    Json(update): Json<Vec<AnnouncementSettings>>,
+) -> Response {
+    if state.auth.is_some() && !has_same_https_origin(&headers) {
+        return authentication_error(StatusCode::FORBIDDEN);
+    }
+    update_response(state.settings.update_announcements(update))
 }
 
 fn update_response(result: Result<SettingsSnapshot, SettingsError>) -> Response {
