@@ -7,6 +7,7 @@ This repository does not contain the original game executables. You must supply 
 ## Start here
 
 - [Set up AON.Net](crates/aon-net/README.md) to run the local network services for Station versions 1.60 and 1.65 and Tower version 1.60.
+- Alternatively, use the public AON.Net server at 5.252.225.144. Use this IP for naominet.jp and gameservers.aonnet in PCSX2x6 and tower-hook.toml.
 - [Set up the Tower hook](crates/tower-hook/README.md) to run Tower version 1.60 on a current Windows or Wine system.
 
 Start AON.Net before you start the Tower or Station clients.
