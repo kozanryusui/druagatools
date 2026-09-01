@@ -6,7 +6,7 @@ use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 use axum::extract::{ConnectInfo, Request, State};
-use axum::http::{HeaderMap, HeaderValue, StatusCode, header};
+use axum::http::{HeaderMap, HeaderValue, StatusCode, Uri, header};
 use axum::middleware::{self, Next};
 use axum::response::sse::{Event, KeepAlive};
 use axum::response::{IntoResponse, Response, Sse};
@@ -158,9 +158,10 @@ async fn login(
     State(state): State<AdminState>,
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
     headers: HeaderMap,
+    uri: Uri,
     Json(login): Json<AdminLogin>,
 ) -> Response {
-    if !has_same_https_origin(&headers) {
+    if !has_same_https_origin(&headers, &uri) {
         return authentication_error(StatusCode::FORBIDDEN);
     }
     let Some(auth) = state.auth else {
@@ -185,8 +186,8 @@ async fn login(
     }
 }
 
-async fn logout(State(state): State<AdminState>, headers: HeaderMap) -> Response {
-    if !has_same_https_origin(&headers) {
+async fn logout(State(state): State<AdminState>, headers: HeaderMap, uri: Uri) -> Response {
+    if !has_same_https_origin(&headers, &uri) {
         return authentication_error(StatusCode::FORBIDDEN);
     }
     if let (Some(auth), Some(session)) = (state.auth, session_cookie(&headers)) {
@@ -225,9 +226,10 @@ async fn snapshot(State(state): State<AdminState>) -> Response {
 async fn update_shop(
     State(state): State<AdminState>,
     headers: HeaderMap,
+    uri: Uri,
     Json(update): Json<ShopUpdate>,
 ) -> Response {
-    if state.auth.is_some() && !has_same_https_origin(&headers) {
+    if state.auth.is_some() && !has_same_https_origin(&headers, &uri) {
         return authentication_error(StatusCode::FORBIDDEN);
     }
     update_response(state.settings.update_shop(update.shop_name))
@@ -236,9 +238,10 @@ async fn update_shop(
 async fn update_quests(
     State(state): State<AdminState>,
     headers: HeaderMap,
+    uri: Uri,
     Json(update): Json<QuestSettings>,
 ) -> Response {
-    if state.auth.is_some() && !has_same_https_origin(&headers) {
+    if state.auth.is_some() && !has_same_https_origin(&headers, &uri) {
         return authentication_error(StatusCode::FORBIDDEN);
     }
     update_response(state.settings.update_quests(update))
@@ -247,9 +250,10 @@ async fn update_quests(
 async fn update_rewards(
     State(state): State<AdminState>,
     headers: HeaderMap,
+    uri: Uri,
     Json(update): Json<RewardSettings>,
 ) -> Response {
-    if state.auth.is_some() && !has_same_https_origin(&headers) {
+    if state.auth.is_some() && !has_same_https_origin(&headers, &uri) {
         return authentication_error(StatusCode::FORBIDDEN);
     }
     update_response(state.settings.update_rewards(update))
@@ -258,9 +262,10 @@ async fn update_rewards(
 async fn update_bonuses(
     State(state): State<AdminState>,
     headers: HeaderMap,
+    uri: Uri,
     Json(update): Json<BonusSettings>,
 ) -> Response {
-    if state.auth.is_some() && !has_same_https_origin(&headers) {
+    if state.auth.is_some() && !has_same_https_origin(&headers, &uri) {
         return authentication_error(StatusCode::FORBIDDEN);
     }
     update_response(state.settings.update_bonuses(update))
@@ -269,9 +274,10 @@ async fn update_bonuses(
 async fn update_announcements(
     State(state): State<AdminState>,
     headers: HeaderMap,
+    uri: Uri,
     Json(update): Json<Vec<AnnouncementSettings>>,
 ) -> Response {
-    if state.auth.is_some() && !has_same_https_origin(&headers) {
+    if state.auth.is_some() && !has_same_https_origin(&headers, &uri) {
         return authentication_error(StatusCode::FORBIDDEN);
     }
     update_response(state.settings.update_announcements(update))
@@ -344,10 +350,15 @@ async fn security_headers(request: Request, next: Next) -> Response {
     response
 }
 
-fn has_same_https_origin(headers: &HeaderMap) -> bool {
-    let Some(host) = headers
-        .get(header::HOST)
-        .and_then(|value| value.to_str().ok())
+fn has_same_https_origin(headers: &HeaderMap, uri: &Uri) -> bool {
+    let Some(host) = uri
+        .authority()
+        .map(|authority| authority.as_str())
+        .or_else(|| {
+            headers
+                .get(header::HOST)
+                .and_then(|value| value.to_str().ok())
+        })
     else {
         return false;
     };
@@ -514,13 +525,26 @@ mod tests {
             HeaderValue::from_static("other=x; __Host-aon-net-admin=session-id"),
         );
 
-        assert!(has_same_https_origin(&headers));
+        let uri = Uri::from_static("https://admin.example:443/admin/api/login");
+        assert!(has_same_https_origin(&headers, &uri));
         assert_eq!(session_cookie(&headers), Some("session-id"));
 
         headers.insert(
             header::ORIGIN,
             HeaderValue::from_static("https://other.example"),
         );
-        assert!(!has_same_https_origin(&headers));
+        assert!(!has_same_https_origin(&headers, &uri));
+    }
+
+    #[test]
+    fn origin_check_uses_http2_authority_when_host_header_is_absent() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            header::ORIGIN,
+            HeaderValue::from_static("https://admin.example"),
+        );
+        let uri = Uri::from_static("https://admin.example/admin/api/login");
+
+        assert!(has_same_https_origin(&headers, &uri));
     }
 }
