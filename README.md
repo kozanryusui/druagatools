@@ -1,6 +1,6 @@
-# Druaga Tools
+# Druagatools
 
-Druaga Tools contains server and runtime compatibility software for Druaga Online. The project supports local installations on current Windows systems and on Linux systems with Wine.
+Druagatools contains server and runtime compatibility software for Druaga Online. The project supports local installations on current Windows systems and on Linux systems with Wine.
 
 This repository does not contain the original game executables. You must supply the required files from your own installation. For instructions how to start the actual game refer to [this issue](https://github.com/PS2Homebrew-arcade/pcsx2x6/issues/155).
 
