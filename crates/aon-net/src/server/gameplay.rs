@@ -14,7 +14,8 @@ use super::transport::read_frame;
 use super::{ServerError, SessionPhase};
 use crate::online::{OnlineError, OnlineState, RelayBinding, RelayEnvelope, relay_channels};
 use crate::protocol::station::{
-    GameplayRequest, GameplayResponse, StationProtocolError, deserialize_gameplay_request,
+    GameplayRequest, GameplayResponse, MAX_ENVELOPE_RECORDS, PlayerRecord, StationProtocolError,
+    deserialize_gameplay_request,
 };
 
 #[derive(Debug, Error)]
@@ -115,17 +116,6 @@ async fn handle_connection(
                     return Err(GameplayConnectionError::InactivityTimeout {
                         timeout: player_timeout,
                     });
-                }
-                Some(envelope) = relay_rx.envelope.recv(), if binding.is_some() => {
-                    debug!(
-                        connection_id,
-                        input_records = envelope.records.len(),
-                        flags = envelope.flags.bits(),
-                        "pushed gameplay records to Station"
-                    );
-                    if write_relay_envelope(&mut stream, envelope, player_timeout).await? {
-                        break;
-                    }
                 }
                 input = read_frame(&mut stream) => {
                     let Some(input) = input? else {
@@ -231,9 +221,10 @@ async fn handle_connection(
                         flags = outcome.response.flags.bits(),
                         "relayed gameplay record"
                     );
+                    let response = drain_relay_records(&mut relay_rx.record, outcome.response);
                     let has_sole_survivor = write_relay_envelope(
                         &mut stream,
-                        outcome.response,
+                        response,
                         player_timeout,
                     )
                     .await?;
@@ -301,6 +292,19 @@ async fn handle_connection(
     result
 }
 
+fn drain_relay_records(
+    receiver: &mut tokio::sync::mpsc::Receiver<PlayerRecord>,
+    mut response: RelayEnvelope,
+) -> RelayEnvelope {
+    while response.records.len() < MAX_ENVELOPE_RECORDS {
+        let Ok(record) = receiver.try_recv() else {
+            break;
+        };
+        response.records.push(record);
+    }
+    response
+}
+
 async fn write_relay_envelope(
     stream: &mut TcpStream,
     envelope: RelayEnvelope,
@@ -344,7 +348,37 @@ async fn write_frame<W: AsyncWrite + Unpin>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::protocol::station::EndpointHost;
+    use crate::protocol::station::{
+        EndpointHost, GameplayBlob, GameplayEnvelopeFlags, PartySlot, RosterReadiness,
+    };
+
+    #[test]
+    fn relay_records_wait_for_the_next_station_upload_response()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let (sender, mut receiver) = tokio::sync::mpsc::channel(7);
+        for value in 0..7 {
+            sender.try_send(PlayerRecord {
+                party_slot: PartySlot::new(2)?,
+                blob: GameplayBlob::new(vec![value])?,
+            })?;
+        }
+        let flags = GameplayEnvelopeFlags::from_active_slots(
+            [PartySlot::new(1)?, PartySlot::new(2)?],
+            RosterReadiness::Ready,
+        );
+
+        let response = drain_relay_records(
+            &mut receiver,
+            RelayEnvelope {
+                flags,
+                records: Vec::new(),
+            },
+        );
+
+        assert_eq!(response.records.len(), MAX_ENVELOPE_RECORDS);
+        assert_eq!(receiver.try_recv()?.blob.as_bytes(), &[6]);
+        Ok(())
+    }
 
     #[tokio::test]
     async fn gameplay_write_times_out_when_the_receiver_stalls() {

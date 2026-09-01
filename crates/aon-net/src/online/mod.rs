@@ -150,12 +150,12 @@ pub(crate) struct RelayEnvelope {
 
 #[derive(Clone)]
 pub(crate) struct RelaySenders {
-    envelope: mpsc::Sender<RelayEnvelope>,
+    record: mpsc::Sender<PlayerRecord>,
     disconnect: mpsc::Sender<RelayDisconnectReason>,
 }
 
 pub(crate) struct RelayReceivers {
-    pub envelope: mpsc::Receiver<RelayEnvelope>,
+    pub record: mpsc::Receiver<PlayerRecord>,
     pub disconnect: mpsc::Receiver<RelayDisconnectReason>,
 }
 
@@ -173,15 +173,15 @@ pub(crate) enum PartyAbortReason {
 }
 
 pub(crate) fn relay_channels(capacity: NonZeroUsize) -> (RelaySenders, RelayReceivers) {
-    let (envelope_tx, envelope_rx) = mpsc::channel(capacity.get());
+    let (record_tx, record_rx) = mpsc::channel(capacity.get());
     let (disconnect_tx, disconnect_rx) = mpsc::channel(1);
     (
         RelaySenders {
-            envelope: envelope_tx,
+            record: record_tx,
             disconnect: disconnect_tx,
         },
         RelayReceivers {
-            envelope: envelope_rx,
+            record: record_rx,
             disconnect: disconnect_rx,
         },
     )

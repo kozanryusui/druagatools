@@ -468,21 +468,21 @@ fn relay_pushes_to_peers_and_disconnects_a_full_destination()
     assert!(source.response.records.is_empty());
     assert!(source.response.flags.roster_ready());
     assert_eq!(source.response.flags.bits(), 0x07);
-    assert!(relay_rx_a.envelope.try_recv().is_err());
+    assert!(relay_rx_a.record.try_recv().is_err());
     let overflow = state.relay_blob(join_a.binding, GameplayBlob::new(vec![0x13, 3])?)?;
     assert_eq!(overflow.disconnected_players, 1);
     assert_eq!(
         relay_rx_b.disconnect.try_recv()?,
         RelayDisconnectReason::QueueFull
     );
-    let destination = relay_rx_b.envelope.try_recv()?;
-    assert_eq!(destination.records[0].party_slot, PartySlot::new(1)?);
-    assert_eq!(destination.records[0].blob.as_bytes(), &[0x13, 1]);
+    let destination = relay_rx_b.record.try_recv()?;
+    assert_eq!(destination.party_slot, PartySlot::new(1)?);
+    assert_eq!(destination.blob.as_bytes(), &[0x13, 1]);
     let response = state.relay_blob(join_b.binding, GameplayBlob::new(vec![0x13, 2])?)?;
     assert!(response.response.records.is_empty());
-    let destination = relay_rx_a.envelope.try_recv()?;
-    assert_eq!(destination.records[0].party_slot, PartySlot::new(2)?);
-    assert_eq!(destination.records[0].blob.as_bytes(), &[0x13, 2]);
+    let destination = relay_rx_a.record.try_recv()?;
+    assert_eq!(destination.party_slot, PartySlot::new(2)?);
+    assert_eq!(destination.blob.as_bytes(), &[0x13, 2]);
     state.leave_relay(join_a.binding)?;
     state.leave_relay(join_b.binding)?;
     assert_eq!(

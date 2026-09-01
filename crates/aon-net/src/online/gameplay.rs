@@ -104,11 +104,8 @@ impl OnlineState {
         };
         let disconnected_players = destinations
             .into_iter()
-            .filter(|destination| {
-                match destination.envelope.try_send(RelayEnvelope {
-                    flags,
-                    records: vec![record.clone()],
-                }) {
+            .filter(
+                |destination| match destination.record.try_send(record.clone()) {
                     Ok(()) | Err(mpsc::error::TrySendError::Closed(_)) => false,
                     Err(mpsc::error::TrySendError::Full(_)) => {
                         let _ = destination
@@ -116,8 +113,8 @@ impl OnlineState {
                             .try_send(RelayDisconnectReason::QueueFull);
                         true
                     }
-                }
-            })
+                },
+            )
             .count();
         Ok(RelayOutcome {
             response: RelayEnvelope {
