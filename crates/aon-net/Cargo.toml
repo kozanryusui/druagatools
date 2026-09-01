@@ -1,13 +1,13 @@
 [package]
 name = "aon-net"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 license = "AGPL-3.0-only"
 
 [dependencies]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-aon-net-admin = { version = "=0.2.0", path = "../aon-net-admin" }
+aon-net-admin = { version = "=0.3.0", path = "../aon-net-admin" }
 axum = "=0.8.9"
 axum-server = { version = "=0.8.0", features = ["tls-rustls"] }
 base64 = "=0.23.1"

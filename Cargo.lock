@@ -54,7 +54,7 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "aon-net"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "aon-net-admin",
  "axum",
@@ -83,7 +83,7 @@ dependencies = [
 
 [[package]]
 name = "aon-net-admin"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "gloo-net 0.7.0",
  "leptos",
