@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::Duration;
 use thiserror::Error;
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpListener, TcpStream};
@@ -7,10 +8,13 @@ use tokio::sync::mpsc;
 use tracing::{debug, info, warn};
 
 use super::central::{CentralServiceError, CentralServices};
+use super::limits::ConnectionGate;
 use super::next_connection_id;
 use super::transport::read_frame;
 use super::{ServerError, SessionPhase};
-use crate::online::{MatchOutcome, OnlineError, OnlineState};
+use crate::online::{
+    MatchOutcome, OnlineError, OnlineState, ParticipantExchange, matching_cancellation_channel,
+};
 use crate::protocol::station::{
     LobbyRegistration, MatchingRequest, MatchingResponse, StationProtocolError,
     deserialize_matching_request,
@@ -36,25 +40,38 @@ enum MatchingConnectionError {
     },
     #[error("Station sent lobby lookup before lobby registration")]
     Registration,
+    #[error("Station matching connection made no progress within {timeout:?}")]
+    Timeout { timeout: Duration },
 }
 
 pub(super) async fn serve_connections(
     listener: TcpListener,
     central: Arc<CentralServices>,
     online: Arc<OnlineState>,
+    connections: ConnectionGate,
+    player_timeout: Duration,
 ) -> Result<(), ServerError> {
     loop {
-        let (stream, peer) = listener
-            .accept()
+        let accepted = connections
+            .accept(&listener)
             .await
             .map_err(ServerError::ConnectionAccept)?;
+        let (stream, peer, connection_permit) = accepted.into_parts();
         let connection_id = next_connection_id();
         info!(%peer, connection_id, service = "matching", "accepted matching connection");
         let central = Arc::clone(&central);
         let online = Arc::clone(&online);
         tokio::spawn(async move {
-            if let Err(error) =
-                handle_connection(stream, peer, connection_id, &central, &online).await
+            let _connection_permit = connection_permit;
+            if let Err(error) = handle_connection(
+                stream,
+                peer,
+                connection_id,
+                &central,
+                &online,
+                player_timeout,
+            )
+            .await
             {
                 warn!(%peer, connection_id, service = "matching", %error, "matching connection ended with an error");
             } else {
@@ -69,27 +86,46 @@ async fn handle_connection(
     peer: SocketAddr,
     connection_id: u64,
     central: &CentralServices,
-    online: &OnlineState,
+    online: &Arc<OnlineState>,
+    player_timeout: Duration,
 ) -> Result<(), MatchingConnectionError> {
     let (assignment_tx, mut assignment_rx) = mpsc::unbounded_channel();
+    let (cancellation_tx, mut cancellation_rx) = matching_cancellation_channel();
     let mut session_phase = SessionPhase::Identity;
     let mut registration: Option<LobbyRegistration> = None;
     let mut endpoint_assigned = false;
+    let inactivity = tokio::time::sleep(player_timeout);
+    tokio::pin!(inactivity);
     let result = async {
         loop {
             tokio::select! {
                 biased;
+                cancellation = cancellation_rx.recv() => {
+                    if let Some(reason) = cancellation {
+                        warn!(%peer, connection_id, ?reason, "matching party was cancelled");
+                        break;
+                    }
+                }
+                () = &mut inactivity => {
+                    return Err(MatchingConnectionError::Timeout { timeout: player_timeout });
+                }
                 assignment = assignment_rx.recv() => {
                     if let Some(assignment) = assignment {
-                        stream
-                            .write_all(&MatchingResponse::EndpointAssignment(assignment).serialize()?)
-                            .await?;
+                        write_response(
+                            &mut stream,
+                            MatchingResponse::EndpointAssignment(assignment),
+                            player_timeout,
+                        )
+                        .await?;
                         info!(%peer, connection_id, "sent Station gameplay endpoint assignment");
                         endpoint_assigned = true;
                     }
                 }
 				input = read_frame(&mut stream) => {
                     let Some(input) = input? else { break };
+                    inactivity
+                        .as_mut()
+                        .reset(tokio::time::Instant::now() + player_timeout);
 					let message_type = u16::from_be_bytes([input[0], input[1]]);
 					debug!(
 						%peer,
@@ -114,9 +150,12 @@ async fn handle_connection(
                                 _ => session_phase,
                             };
                             let response = central.respond(request)?;
-                            stream
-                                .write_all(&MatchingResponse::Central(response).serialize()?)
-                                .await?;
+                            write_response(
+                                &mut stream,
+                                MatchingResponse::Central(response),
+                                player_timeout,
+                            )
+                            .await?;
                             session_phase = next_phase;
                         }
                         MatchingRequest::Activation { reserved }
@@ -130,7 +169,7 @@ async fn handle_connection(
                             let response = MatchingResponse::ActivationConfiguration(
                                 central.matching_activation_configuration()?,
                             );
-                            stream.write_all(&response.serialize()?).await?;
+                            write_response(&mut stream, response, player_timeout).await?;
                             info!(%peer, connection_id, "sent Station matching activation configuration");
                         }
                         MatchingRequest::LobbyRegistration(lobby)
@@ -148,25 +187,42 @@ async fn handle_connection(
                                 "registered Station in global lobby"
                             );
                             registration = Some(lobby);
-                            stream
-                        .write_all(&MatchingResponse::LobbyPrompt {}.serialize()?)
-                                .await?;
+                            write_response(
+                                &mut stream,
+                                MatchingResponse::LobbyPrompt {},
+                                player_timeout,
+                            )
+                            .await?;
                         }
                         MatchingRequest::LobbyLookup(lookup)
                             if session_phase == SessionPhase::Confirmed =>
                         {
                             if endpoint_assigned {
                                 let marker = lookup.player_or_lobby_key.participant_marker();
-                                let assignment = online.exchange_participant_record(
+                                let ParticipantExchange {
+                                    assignment,
+                                    completion,
+                                } = online.exchange_participant_record(
                                     connection_id,
                                     lookup.player_or_lobby_key,
                                 )?;
-                                stream
-                                    .write_all(
-                                        &MatchingResponse::EndpointAssignment(assignment)
-                                            .serialize()?,
-                                    )
-                                    .await?;
+                                write_response(
+                                    &mut stream,
+                                    MatchingResponse::EndpointAssignment(assignment),
+                                    player_timeout,
+                                )
+                                .await?;
+                                if let Some(completion) = completion
+                                    && online.confirm_matching_complete(completion)?
+                                {
+                                    let online = Arc::downgrade(online);
+                                    tokio::spawn(async move {
+                                        tokio::time::sleep(player_timeout).await;
+                                        if let Some(online) = online.upgrade() {
+                                            let _ = online.expire_gameplay_handoff(connection_id);
+                                        }
+                                    });
+                                }
                                 debug!(
                                     %peer,
                                     connection_id,
@@ -176,11 +232,12 @@ async fn handle_connection(
                                 continue;
                             }
                             let registration = registration.clone().ok_or(MatchingConnectionError::Registration)?;
-                            let outcome = online.queue_match(
+                            let outcome = online.queue_match_with_cancellation(
                                 connection_id,
                                 registration,
                                 lookup.clone(),
                                 assignment_tx.clone(),
+                                cancellation_tx.clone(),
                             )?;
                             match outcome {
                                 MatchOutcome::Assembling {
@@ -188,12 +245,12 @@ async fn handle_connection(
                                     waiting_count,
                                 } => {
                                     let player_count = assignment.participants.as_slice().len();
-                                    stream
-                                        .write_all(
-                                            &MatchingResponse::EndpointAssignment(assignment)
-                                                .serialize()?,
-                                        )
-                                        .await?;
+                                    write_response(
+                                        &mut stream,
+                                        MatchingResponse::EndpointAssignment(assignment),
+                                        player_timeout,
+                                    )
+                                    .await?;
                                     info!(
                                         %peer,
                                         connection_id,
@@ -229,8 +286,22 @@ async fn handle_connection(
         Ok(())
     }
     .await;
-    online.remove_waiter(connection_id)?;
+    online.leave_matching(connection_id)?;
     result
+}
+
+async fn write_response(
+    stream: &mut TcpStream,
+    response: MatchingResponse,
+    player_timeout: Duration,
+) -> Result<(), MatchingConnectionError> {
+    let frame = response.serialize()?;
+    tokio::time::timeout(player_timeout, stream.write_all(&frame))
+        .await
+        .map_err(|_| MatchingConnectionError::Timeout {
+            timeout: player_timeout,
+        })??;
+    Ok(())
 }
 
 fn hex_payload(payload: &[u8]) -> String {
@@ -286,7 +357,8 @@ mod tests {
             Vec::new(),
         );
 
-        let result = handle_connection(server, peer, 1, &central, &online).await;
+        let result =
+            handle_connection(server, peer, 1, &central, &online, Duration::from_secs(10)).await;
 
         assert!(result.is_err());
         Ok(())
@@ -317,7 +389,9 @@ mod tests {
         let server_task = tokio::spawn({
             let central = Arc::clone(&central);
             let online = Arc::clone(&online);
-            async move { handle_connection(server, peer, 1, &central, &online).await }
+            async move {
+                handle_connection(server, peer, 1, &central, &online, Duration::from_secs(10)).await
+            }
         });
 
         client

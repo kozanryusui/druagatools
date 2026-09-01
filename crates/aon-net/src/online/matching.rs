@@ -1,13 +1,14 @@
-use super::gameplay::purge_expired_parties;
+use super::lifecycle::{purge_expired_parties, remove_party_for_abort};
 use super::*;
 
 impl OnlineState {
-    pub(crate) fn queue_match(
+    pub(crate) fn queue_match_with_cancellation(
         &self,
         connection_id: u64,
         registration: LobbyRegistration,
         lookup: LobbyLookup,
         assignment_tx: mpsc::UnboundedSender<EndpointAssignment>,
+        cancellation_tx: mpsc::Sender<PartyAbortReason>,
     ) -> Result<MatchOutcome, OnlineError> {
         if assignment_tx.is_closed() {
             return Err(OnlineError::AssignmentClosed { connection_id });
@@ -30,6 +31,7 @@ impl OnlineState {
             let member = &mut inner.assembling[party_index].members[member_index];
             member.registration = registration;
             member.assignment_tx = assignment_tx;
+            member.cancellation_tx = cancellation_tx;
             (party_index, member_index)
         } else if let Some(index) = inner.assembling.iter().position(|party| {
             party.members.len() < MAX_PARTY_PLAYERS
@@ -40,6 +42,7 @@ impl OnlineState {
                 connection_id,
                 registration,
                 assignment_tx,
+                cancellation_tx,
             });
             (index, member_index)
         } else {
@@ -50,6 +53,7 @@ impl OnlineState {
                     connection_id,
                     registration,
                     assignment_tx,
+                    cancellation_tx,
                 }],
             });
             (inner.assembling.len() - 1, 0)
@@ -133,13 +137,14 @@ impl OnlineState {
             .map(|(index, member)| RelayMember {
                 record_id: member.registration.record_id,
                 matching_connection_id: member.connection_id,
+                matching_complete: false,
+                matching_cancellation_tx: member.cancellation_tx.clone(),
                 matching_record: ParticipantRecord::from_player_identity(
                     PartySlot::ALL[index],
                     member.registration.player_identity,
                 ),
                 matching_queues: std::array::from_fn(|_| VecDeque::new()),
-                gameplay_connection_id: None,
-                gameplay_queue: VecDeque::new(),
+                gameplay_connection: None,
             })
             .collect();
         let player_count = party.members.len();
@@ -156,7 +161,17 @@ impl OnlineState {
 
         for (assignment_connection_id, assignment_tx, assignment) in assignments {
             if assignment_tx.send(assignment).is_err() {
-                self.lock()?.parties.remove(&owner_key);
+                let notifications = {
+                    let mut inner = self.lock()?;
+                    remove_party_for_abort(
+                        &mut inner,
+                        owner_key,
+                        PartyAbortReason::MatchingDisconnected,
+                    )
+                };
+                if let Some(notifications) = notifications {
+                    notifications.send();
+                }
                 return Err(OnlineError::AssignmentClosed {
                     connection_id: assignment_connection_id,
                 });
@@ -172,7 +187,7 @@ impl OnlineState {
         &self,
         connection_id: u64,
         player_record: PlayerIdentity,
-    ) -> Result<EndpointAssignment, OnlineError> {
+    ) -> Result<ParticipantExchange, OnlineError> {
         let mut inner = self.lock()?;
         let (owner_key, party) = inner
             .parties
@@ -220,27 +235,43 @@ impl OnlineState {
                 })
                 .collect(),
         )?;
+        let exchange_complete = player_record.participant_marker().is_exchange_complete()
+            && participants
+                .as_slice()
+                .iter()
+                .all(|participant| participant.participant_marker().is_exchange_complete());
+        let completion = (exchange_complete && !party.members[local_index].matching_complete)
+            .then_some(MatchingCompletion { connection_id });
         party.last_activity = Instant::now();
-        Ok(EndpointAssignment {
-            host: self.gameplay_host.clone(),
-            port: self.gameplay_port,
-            owner_key: *owner_key,
-            ready: true,
-            local_slot: PartySlot::ALL[local_index],
-            matching_quest_index: party.matching_quest_index,
-            participants,
+        Ok(ParticipantExchange {
+            assignment: EndpointAssignment {
+                host: self.gameplay_host.clone(),
+                port: self.gameplay_port,
+                owner_key: *owner_key,
+                ready: true,
+                local_slot: PartySlot::ALL[local_index],
+                matching_quest_index: party.matching_quest_index,
+                participants,
+            },
+            completion,
         })
     }
 
-    pub(crate) fn remove_waiter(&self, connection_id: u64) -> Result<(), OnlineError> {
+    pub(crate) fn confirm_matching_complete(
+        &self,
+        completion: MatchingCompletion,
+    ) -> Result<bool, OnlineError> {
+        let connection_id = completion.connection_id;
         let mut inner = self.lock()?;
-        for party in &mut inner.assembling {
-            party
-                .members
-                .retain(|member| member.connection_id != connection_id);
-        }
-        inner.assembling.retain(|party| !party.members.is_empty());
-        Ok(())
+        let member = inner
+            .parties
+            .values_mut()
+            .flat_map(|party| &mut party.members)
+            .find(|member| member.matching_connection_id == connection_id)
+            .ok_or(OnlineError::UnknownMatchingConnection { connection_id })?;
+        let newly_complete = !member.matching_complete;
+        member.matching_complete = true;
+        Ok(newly_complete)
     }
 }
 

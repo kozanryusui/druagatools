@@ -32,6 +32,10 @@ Edit `aon-net.toml` before you make the server available on a network.
 
 The `bind-ip` field selects the local Internet Protocol (IP) address for all services. The `http-port`, `game-port`, `matching-port`, `relay-ports`, and `gameplay-port` fields select their TCP ports. The `gameplay-advertise-host` and `gameplay-advertise-port` fields select the address that AON.Net sends to matched Stations. Stations must be able to resolve and reach this advertised address.
 
+`http-connection-limit` limits active connections on each HTTP listener. PowerOn and secure administration use separate limits when admin security is enabled. `game-connection-limit` limits the combined active connections on all Tower and Station TCP services. AON.Net stops accepting game connections when this limit is full.
+
+`http-request-timeout-seconds` limits HTTP request processing. It does not close an established administration event stream. `http-body-limit-bytes` limits PowerOn and administration request bodies. `tower-connection-timeout-seconds` limits Tower reads and writes.
+
 A relative `database-path` starts at the server working directory. AON.Net creates this database when it starts. The database stores card data backups, server settings, and changes from the administration interface.
 
 The `[admin-security]` section controls Transport Layer Security (TLS) and authentication for the administration interface. Keep `enabled = false` for local hosting. Set it to `true` before you make the administration interface available on the public Internet. The enabled mode requires `tls-public-cert`, `tls-private-key`, and `admin-token`. The token must contain at least 32 bytes.
@@ -61,6 +65,8 @@ target/release/aon-net aon-net.toml
 AON.Net uses the `INFO` log level by default. Set `RUST_LOG` to select a different log filter.
 
 AON.Net adds compatible Stations to a party until the party has four players. If the matching wait expires first, AON.Net starts the current partial party. A Station cannot join a party after it starts.
+
+AON.Net cancels a fixed-roster party if a Station disconnects before the final participant exchange or before all assigned Stations join gameplay. A normal matching close after the final exchange keeps the gameplay assignment valid.
 
 ## Configure client discovery
 
@@ -103,6 +109,14 @@ When admin security is enabled, AON.Net keeps authenticated sessions in memory. 
 ## Configuration notes
 
 - `uri` and `host` supply required PowerOn response fields.
+- `gameplay-relay-queue-capacity` limits queued gameplay records for each Station. The default is 4096. AON.Net disconnects a Station if its queue becomes full.
+- `gameplay-player-timeout-seconds` limits gameplay reads and writes. The default is 10 seconds. AON.Net disconnects a Station that stops sending data or does not accept a write before the timeout.
+- `matching-player-timeout-seconds` limits matching reads, matching writes, and the handoff to gameplay. The default is 10 seconds.
+- `http-connection-limit` defaults to 64 connections for each HTTP listener.
+- `game-connection-limit` defaults to 256 connections shared by all game TCP listeners.
+- `http-request-timeout-seconds` defaults to 10 seconds.
+- `http-body-limit-bytes` defaults to 65536 bytes.
+- `tower-connection-timeout-seconds` defaults to 30 seconds.
 - The region fields and `place-id` supply the cabinet location.
 - PowerOn text must be representable in Shift_JIS. It must not contain `&`, a null byte, or a line break.
 - AON.Net accepts at most 16 announcements.

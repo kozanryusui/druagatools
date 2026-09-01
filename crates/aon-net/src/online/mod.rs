@@ -1,4 +1,5 @@
 use std::collections::{HashMap, VecDeque};
+use std::num::NonZeroUsize;
 use std::sync::{Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
@@ -7,8 +8,8 @@ use tokio::sync::mpsc;
 
 use crate::protocol::station::{
     EndpointAssignment, EndpointHost, GameplayBlob, GameplayEnvelopeFlags, LobbyLookup,
-    LobbyRegistration, MAX_ENVELOPE_RECORDS, OwnerKey, ParticipantRecord, PartyRoster, PartySlot,
-    PlayerIdentity, PlayerRecord, RosterReadiness, StationProtocolError,
+    LobbyRegistration, OwnerKey, ParticipantRecord, PartyRoster, PartySlot, PlayerIdentity,
+    PlayerRecord, RosterReadiness, StationProtocolError,
 };
 
 const MAX_PLAYER_QUEUE: usize = 128;
@@ -44,6 +45,7 @@ struct AssemblingMember {
     connection_id: u64,
     registration: LobbyRegistration,
     assignment_tx: mpsc::UnboundedSender<EndpointAssignment>,
+    cancellation_tx: mpsc::Sender<PartyAbortReason>,
 }
 
 struct AssemblingParty {
@@ -61,10 +63,16 @@ struct RelayParty {
 struct RelayMember {
     record_id: u32,
     matching_connection_id: u64,
+    matching_complete: bool,
+    matching_cancellation_tx: mpsc::Sender<PartyAbortReason>,
     matching_record: ParticipantRecord,
     matching_queues: [VecDeque<ParticipantRecord>; MAX_PARTY_PLAYERS],
-    gameplay_connection_id: Option<u64>,
-    gameplay_queue: VecDeque<PlayerRecord>,
+    gameplay_connection: Option<GameplayConnection>,
+}
+
+struct GameplayConnection {
+    id: u64,
+    relay: RelaySenders,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -86,15 +94,20 @@ pub(crate) enum MatchOutcome {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct RelayEnvelope {
-    pub flags: GameplayEnvelopeFlags,
-    pub records: Vec<PlayerRecord>,
+pub(crate) struct RelayOutcome {
+    pub response: RelayEnvelope,
+    pub disconnected_players: usize,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct RelayOutcome {
-    pub response: RelayEnvelope,
-    pub dropped_records: usize,
+pub(crate) struct ParticipantExchange {
+    pub assignment: EndpointAssignment,
+    pub completion: Option<MatchingCompletion>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) struct MatchingCompletion {
+    connection_id: u64,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -118,6 +131,58 @@ impl RelayBinding {
 pub(crate) struct RelayJoin {
     pub binding: RelayBinding,
     pub flags: GameplayEnvelopeFlags,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct RelayEnvelope {
+    pub flags: GameplayEnvelopeFlags,
+    pub records: Vec<PlayerRecord>,
+}
+
+#[derive(Clone)]
+pub(crate) struct RelaySenders {
+    envelope: mpsc::Sender<RelayEnvelope>,
+    disconnect: mpsc::Sender<RelayDisconnectReason>,
+}
+
+pub(crate) struct RelayReceivers {
+    pub envelope: mpsc::Receiver<RelayEnvelope>,
+    pub disconnect: mpsc::Receiver<RelayDisconnectReason>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum RelayDisconnectReason {
+    QueueFull,
+    PartyAborted(PartyAbortReason),
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum PartyAbortReason {
+    MatchingDisconnected,
+    GameplayHandoffTimeout,
+    GameplayDisconnectedBeforeReady,
+}
+
+pub(crate) fn relay_channels(capacity: NonZeroUsize) -> (RelaySenders, RelayReceivers) {
+    let (envelope_tx, envelope_rx) = mpsc::channel(capacity.get());
+    let (disconnect_tx, disconnect_rx) = mpsc::channel(1);
+    (
+        RelaySenders {
+            envelope: envelope_tx,
+            disconnect: disconnect_tx,
+        },
+        RelayReceivers {
+            envelope: envelope_rx,
+            disconnect: disconnect_rx,
+        },
+    )
+}
+
+pub(crate) fn matching_cancellation_channel() -> (
+    mpsc::Sender<PartyAbortReason>,
+    mpsc::Receiver<PartyAbortReason>,
+) {
+    mpsc::channel(1)
 }
 
 #[derive(Debug, Error)]
@@ -149,6 +214,7 @@ pub(crate) enum OnlineError {
 }
 
 mod gameplay;
+mod lifecycle;
 mod matching;
 #[cfg(test)]
 mod tests;

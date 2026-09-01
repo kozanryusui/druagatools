@@ -13,6 +13,7 @@ use crate::storage::{Storage, StorageError};
 
 mod central;
 mod gameplay;
+mod limits;
 mod matching;
 mod power_on;
 pub(crate) mod quest_rotation;
@@ -100,33 +101,49 @@ pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(),
         config.announcements,
     ));
     let power_on_app = power_on::router(config.power_on, Arc::clone(&settings));
+    let http_request_timeout = config.server.http_request_timeout;
+    let http_body_limit = config.server.http_body_limit;
     let (http_app, secure_admin) = match secure_admin {
         None => (
-            power_on_app.merge(crate::admin::backend::unsecured_router(settings, admin_hub)),
+            limits::limit_http_requests(
+                power_on_app.merge(crate::admin::backend::unsecured_router(settings, admin_hub)),
+                http_request_timeout,
+                http_body_limit,
+            ),
             None,
         ),
         Some((address, tls, token)) => (
-            power_on_app,
+            limits::limit_http_requests(power_on_app, http_request_timeout, http_body_limit),
             Some((
                 address,
                 tls,
-                crate::admin::backend::secured_router(settings, admin_hub, token),
+                limits::limit_http_requests(
+                    crate::admin::backend::secured_router(settings, admin_hub, token),
+                    http_request_timeout,
+                    http_body_limit,
+                ),
             )),
         ),
     };
 
     let http_listener = bind_listener(http_address).await?;
+    let http_connections = limits::ConnectionGate::new(config.server.http_connection_limit);
     let secure_admin_server = if let Some((address, tls, app)) = secure_admin {
         let listener = bind_listener(address).await?;
         let listener = listener.into_std().map_err(|source| ServerError::Bind {
             address: address.to_string(),
             source,
         })?;
-        let server =
-            axum_server::from_tcp_rustls(listener, tls).map_err(|source| ServerError::Bind {
+        let acceptor = limits::LimitedAcceptor::new(
+            axum_server::tls_rustls::RustlsAcceptor::new(tls),
+            limits::ConnectionGate::new(config.server.http_connection_limit),
+        );
+        let server = axum_server::from_tcp(listener)
+            .map_err(|source| ServerError::Bind {
                 address: address.to_string(),
                 source,
-            })?;
+            })?
+            .acceptor(acceptor);
         info!(%address, "secure administration is enabled");
         Some((server, app))
     } else {
@@ -138,6 +155,7 @@ pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(),
     let relay_2_listener = bind_listener(relay_2_address).await?;
     let relay_3_listener = bind_listener(relay_3_address).await?;
     let gameplay_listener = bind_listener(gameplay_address).await?;
+    let game_connections = limits::ConnectionGate::new(config.server.game_connection_limit);
     info!(
         %http_address,
         %database_address,
@@ -152,9 +170,12 @@ pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(),
     );
 
     let http_server = async move {
-        axum::serve(http_listener, http_app)
-            .await
-            .map_err(ServerError::Serve)
+        axum::serve(
+            limits::LimitedListener::new(http_listener, http_connections),
+            http_app,
+        )
+        .await
+        .map_err(ServerError::Serve)
     };
     let secure_admin_server = async move {
         match secure_admin_server {
@@ -169,25 +190,45 @@ pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(),
         database_listener,
         tower::ServiceKind::Database,
         Arc::clone(&central),
+        game_connections.clone(),
+        config.server.tower_connection_timeout,
     );
-    let matching_server =
-        matching::serve_connections(matching_listener, Arc::clone(&central), Arc::clone(&online));
+    let matching_server = matching::serve_connections(
+        matching_listener,
+        Arc::clone(&central),
+        Arc::clone(&online),
+        game_connections.clone(),
+        config.server.matching_player_timeout,
+    );
     let relay_1_server = tower::serve_connections(
         relay_1_listener,
         tower::ServiceKind::RelayControl("relay-1"),
         Arc::clone(&central),
+        game_connections.clone(),
+        config.server.tower_connection_timeout,
     );
     let relay_2_server = tower::serve_connections(
         relay_2_listener,
         tower::ServiceKind::RelayControl("relay-2"),
         Arc::clone(&central),
+        game_connections.clone(),
+        config.server.tower_connection_timeout,
     );
     let relay_3_server = tower::serve_connections(
         relay_3_listener,
         tower::ServiceKind::RelayControl("relay-3"),
         central,
+        game_connections.clone(),
+        config.server.tower_connection_timeout,
     );
-    let gameplay_server = gameplay::serve_connections(gameplay_listener, GAME_SESSION_ID, online);
+    let gameplay_server = gameplay::serve_connections(
+        gameplay_listener,
+        GAME_SESSION_ID,
+        online,
+        game_connections,
+        config.server.gameplay_relay_queue_capacity,
+        config.server.gameplay_player_timeout,
+    );
     tokio::try_join!(
         http_server,
         secure_admin_server,

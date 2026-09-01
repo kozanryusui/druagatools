@@ -10,8 +10,8 @@ pub use matching::{MatchingRequest, MatchingResponse, deserialize_matching_reque
 pub(crate) use types::PlayerIdentity;
 pub use types::{
     EndpointAssignment, EndpointHost, GameplayBlob, GameplayEnvelopeFlags, LobbyLookup,
-    LobbyRegistration, MAX_ENVELOPE_RECORDS, OwnerKey, ParticipantRecord, PartyRoster, PartySlot,
-    PlayerRecord, RosterReadiness, StationProtocolError,
+    LobbyRegistration, OwnerKey, ParticipantRecord, PartyRoster, PartySlot, PlayerRecord,
+    RosterReadiness, StationProtocolError,
 };
 
 #[cfg(test)]

@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::Duration;
 
 use thiserror::Error;
 use tokio::io::AsyncWriteExt;
@@ -6,6 +7,7 @@ use tokio::net::{TcpListener, TcpStream};
 use tracing::{info, warn};
 
 use super::central::{CentralServiceError, CentralServices};
+use super::limits::ConnectionGate;
 use super::transport::read_frame;
 use super::{ServerError, SessionPhase};
 use crate::protocol::tower::{
@@ -67,23 +69,31 @@ pub(super) enum TowerConnectionError {
         request: TowerRequest,
         state: &'static str,
     },
+    #[error("Tower connection made no progress within {timeout:?}")]
+    Timeout { timeout: Duration },
 }
 
 pub(super) async fn serve_connections(
     listener: TcpListener,
     service: ServiceKind,
     central: Arc<CentralServices>,
+    connections: ConnectionGate,
+    connection_timeout: Duration,
 ) -> Result<(), ServerError> {
     loop {
-        let (stream, peer) = listener
-            .accept()
+        let accepted = connections
+            .accept(&listener)
             .await
             .map_err(ServerError::ConnectionAccept)?;
+        let (stream, peer, connection_permit) = accepted.into_parts();
         let service_name = service.name();
         info!(%peer, service = service_name, "accepted Tower service connection");
         let central = Arc::clone(&central);
         tokio::spawn(async move {
-            if let Err(error) = handle_connection(stream, service, &central).await {
+            let _connection_permit = connection_permit;
+            if let Err(error) =
+                handle_connection(stream, service, &central, connection_timeout).await
+            {
                 warn!(%peer, service = service_name, %error, "Tower service connection ended with an error");
             } else {
                 info!(%peer, service = service_name, "Tower service connection closed");
@@ -96,9 +106,15 @@ async fn handle_connection(
     mut stream: TcpStream,
     service: ServiceKind,
     central: &CentralServices,
+    connection_timeout: Duration,
 ) -> Result<(), TowerConnectionError> {
     let mut session_phase = SessionPhase::Identity;
-    while let Some(frame) = read_frame(&mut stream).await? {
+    while let Some(frame) = tokio::time::timeout(connection_timeout, read_frame(&mut stream))
+        .await
+        .map_err(|_| TowerConnectionError::Timeout {
+            timeout: connection_timeout,
+        })??
+    {
         let request = deserialize_tower_request(&frame)?;
         if !service.permits(&request) {
             return Err(TowerConnectionError::WrongService {
@@ -130,9 +146,14 @@ async fn handle_connection(
             _ => session_phase,
         };
         let response = central.respond(request)?;
-        stream
-            .write_all(&serialize_tower_response(&response)?)
-            .await?;
+        tokio::time::timeout(
+            connection_timeout,
+            stream.write_all(&serialize_tower_response(&response)?),
+        )
+        .await
+        .map_err(|_| TowerConnectionError::Timeout {
+            timeout: connection_timeout,
+        })??;
         session_phase = next_phase;
     }
     Ok(())

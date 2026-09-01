@@ -1,3 +1,4 @@
+use super::lifecycle::{purge_expired_parties, remove_party_for_abort};
 use super::*;
 
 impl OnlineState {
@@ -7,6 +8,7 @@ impl OnlineState {
         party_slot: PartySlot,
         record_id: u32,
         connection_id: u64,
+        relay: RelaySenders,
     ) -> Result<RelayJoin, OnlineError> {
         let slot = party_slot.index();
         let mut inner = self.lock()?;
@@ -28,15 +30,18 @@ impl OnlineState {
                 party_slot,
             });
         }
-        if member.gameplay_connection_id.is_some() {
+        if member.gameplay_connection.is_some() {
             return Err(OnlineError::SlotOccupied { party_slot });
         }
-        party.members[slot].gameplay_connection_id = Some(connection_id);
+        party.members[slot].gameplay_connection = Some(GameplayConnection {
+            id: connection_id,
+            relay,
+        });
         party.last_activity = Instant::now();
         if party
             .members
             .iter()
-            .all(|member| member.gameplay_connection_id.is_some())
+            .all(|member| member.gameplay_connection.is_some())
         {
             party.roster_readiness = RosterReadiness::Ready;
         }
@@ -56,98 +61,116 @@ impl OnlineState {
         blob: GameplayBlob,
     ) -> Result<RelayOutcome, OnlineError> {
         let source = binding.party_slot.index();
-        let mut inner = self.lock()?;
-        let party = inner
-            .parties
-            .get_mut(&binding.owner_key)
-            .ok_or(OnlineError::UnknownParty {
-                owner_key: binding.owner_key,
-            })?;
-        if party.members[source].gameplay_connection_id != Some(binding.connection_id) {
-            return Err(OnlineError::Connection);
-        }
-        party.last_activity = Instant::now();
+        let (flags, destinations) = {
+            let mut inner = self.lock()?;
+            let party =
+                inner
+                    .parties
+                    .get_mut(&binding.owner_key)
+                    .ok_or(OnlineError::UnknownParty {
+                        owner_key: binding.owner_key,
+                    })?;
+            if party.members[source]
+                .gameplay_connection
+                .as_ref()
+                .map(|connection| connection.id)
+                != Some(binding.connection_id)
+            {
+                return Err(OnlineError::Connection);
+            }
+            party.last_activity = Instant::now();
+            let flags = active_flags(party);
+            let destinations = party
+                .members
+                .iter()
+                .enumerate()
+                .filter(|(destination, _)| *destination != source)
+                .filter_map(|(_, member)| {
+                    member
+                        .gameplay_connection
+                        .as_ref()
+                        .map(|connection| connection.relay.clone())
+                })
+                .collect::<Vec<_>>();
+            (flags, destinations)
+        };
 
-        let mut dropped_records = 0;
-        for (destination_index, destination) in party.members.iter_mut().enumerate() {
-            if destination_index == source || destination.gameplay_connection_id.is_none() {
-                continue;
-            }
-            let queue = &mut destination.gameplay_queue;
-            if queue.len() == MAX_PLAYER_QUEUE {
-                queue.pop_front();
-                dropped_records += 1;
-            }
-            queue.push_back(PlayerRecord {
-                party_slot: binding.party_slot,
-                blob: blob.clone(),
-            });
-        }
-        let source_queue = &mut party.members[source].gameplay_queue;
-        let records = source_queue
-            .drain(..source_queue.len().min(MAX_ENVELOPE_RECORDS))
-            .collect();
+        let record = PlayerRecord {
+            party_slot: binding.party_slot,
+            blob,
+        };
+        let disconnected_players = destinations
+            .into_iter()
+            .filter(|destination| {
+                match destination.envelope.try_send(RelayEnvelope {
+                    flags,
+                    records: vec![record.clone()],
+                }) {
+                    Ok(()) | Err(mpsc::error::TrySendError::Closed(_)) => false,
+                    Err(mpsc::error::TrySendError::Full(_)) => {
+                        let _ = destination
+                            .disconnect
+                            .try_send(RelayDisconnectReason::QueueFull);
+                        true
+                    }
+                }
+            })
+            .count();
         Ok(RelayOutcome {
             response: RelayEnvelope {
-                flags: active_flags(party),
-                records,
+                flags,
+                records: Vec::new(),
             },
-            dropped_records,
+            disconnected_players,
         })
     }
 
     pub(crate) fn leave_relay(&self, binding: RelayBinding) -> Result<(), OnlineError> {
         let slot = binding.party_slot.index();
         let mut inner = self.lock()?;
-        let remove_party = if let Some(party) = inner.parties.get_mut(&binding.owner_key) {
-            if party.members[slot].gameplay_connection_id == Some(binding.connection_id) {
-                party.members[slot].gameplay_connection_id = None;
-                party.members[slot].gameplay_queue.clear();
-                party.last_activity = Instant::now();
-            }
-            party.roster_readiness == RosterReadiness::Ready
-                && party
-                    .members
-                    .iter()
-                    .all(|member| member.gameplay_connection_id.is_none())
-        } else {
-            false
-        };
-        if remove_party {
+        let (abort_party, remove_party) =
+            if let Some(party) = inner.parties.get_mut(&binding.owner_key) {
+                let connection_matches = party.members[slot]
+                    .gameplay_connection
+                    .as_ref()
+                    .map(|connection| connection.id)
+                    == Some(binding.connection_id);
+                let abort_party =
+                    connection_matches && party.roster_readiness == RosterReadiness::Waiting;
+                if connection_matches && !abort_party {
+                    party.members[slot].gameplay_connection = None;
+                    party.last_activity = Instant::now();
+                }
+                (
+                    abort_party,
+                    !abort_party
+                        && party.roster_readiness == RosterReadiness::Ready
+                        && party
+                            .members
+                            .iter()
+                            .all(|member| member.gameplay_connection.is_none()),
+                )
+            } else {
+                (false, false)
+            };
+        let notifications = if abort_party {
+            remove_party_for_abort(
+                &mut inner,
+                binding.owner_key,
+                PartyAbortReason::GameplayDisconnectedBeforeReady,
+            )
+        } else if remove_party {
             inner.parties.remove(&binding.owner_key);
+            None
+        } else {
+            None
+        };
+        drop(inner);
+        if let Some(notifications) = notifications {
+            notifications.send();
         }
         Ok(())
     }
-
-    pub(crate) fn service_counts(&self) -> Result<ServiceCounts, OnlineError> {
-        let mut inner = self.lock()?;
-        purge_expired_parties(&mut inner);
-        Ok(ServiceCounts {
-            party_count: inner.parties.len().min(u16::MAX as usize) as u16,
-            player_count: inner
-                .parties
-                .values()
-                .map(|party| {
-                    party
-                        .members
-                        .iter()
-                        .filter(|member| member.gameplay_connection_id.is_some())
-                        .count()
-                })
-                .sum::<usize>()
-                .min(u16::MAX as usize) as u16,
-        })
-    }
-}
-
-pub(super) fn purge_expired_parties(inner: &mut OnlineInner) {
-    inner.parties.retain(|_, party| {
-        party
-            .members
-            .iter()
-            .any(|member| member.gameplay_connection_id.is_some())
-            || party.last_activity.elapsed() < UNCLAIMED_PARTY_LIFETIME
-    });
 }
 
 fn active_flags(party: &RelayParty) -> GameplayEnvelopeFlags {
@@ -155,6 +178,6 @@ fn active_flags(party: &RelayParty) -> GameplayEnvelopeFlags {
         .members
         .iter()
         .zip(PartySlot::ALL)
-        .filter_map(|(member, slot)| member.gameplay_connection_id.map(|_| slot));
+        .filter_map(|(member, slot)| member.gameplay_connection.as_ref().map(|_| slot));
     GameplayEnvelopeFlags::from_active_slots(active_slots, party.roster_readiness)
 }

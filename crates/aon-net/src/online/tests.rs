@@ -5,6 +5,37 @@ use binrw::BinRead;
 use super::*;
 use crate::protocol::station::FixedText;
 
+type CancellationReceivers = [mpsc::Receiver<PartyAbortReason>; 2];
+
+trait TestOnlineState {
+    fn queue_match(
+        &self,
+        connection_id: u64,
+        registration: LobbyRegistration,
+        lookup: LobbyLookup,
+        assignment_tx: mpsc::UnboundedSender<EndpointAssignment>,
+    ) -> Result<MatchOutcome, OnlineError>;
+}
+
+impl TestOnlineState for OnlineState {
+    fn queue_match(
+        &self,
+        connection_id: u64,
+        registration: LobbyRegistration,
+        lookup: LobbyLookup,
+        assignment_tx: mpsc::UnboundedSender<EndpointAssignment>,
+    ) -> Result<MatchOutcome, OnlineError> {
+        let (cancellation_tx, _cancellation_rx) = matching_cancellation_channel();
+        self.queue_match_with_cancellation(
+            connection_id,
+            registration,
+            lookup,
+            assignment_tx,
+            cancellation_tx,
+        )
+    }
+}
+
 fn registration(record_id: u32, identity: u8) -> Result<LobbyRegistration, StationProtocolError> {
     Ok(LobbyRegistration {
         mode: 1,
@@ -37,6 +68,35 @@ fn participant_identity(marker: u8) -> PlayerIdentity {
     let mut bytes = [0; 32];
     bytes[1] = marker;
     PlayerIdentity::from_bytes(bytes)
+}
+
+fn finalized_two_player_party(
+    state: &OnlineState,
+) -> Result<(OwnerKey, CancellationReceivers), Box<dyn std::error::Error>> {
+    let (assignment_tx_a, _assignment_rx_a) = mpsc::unbounded_channel();
+    let (assignment_tx_b, _assignment_rx_b) = mpsc::unbounded_channel();
+    let (cancellation_tx_a, cancellation_rx_a) = matching_cancellation_channel();
+    let (cancellation_tx_b, cancellation_rx_b) = matching_cancellation_channel();
+    state.queue_match_with_cancellation(
+        1,
+        registration(100, 0x11)?,
+        lookup(),
+        assignment_tx_a,
+        cancellation_tx_a,
+    )?;
+    let mut expired = lookup();
+    expired.remaining_wait_seconds = 0;
+    let outcome = state.queue_match_with_cancellation(
+        2,
+        registration(200, 0x22)?,
+        expired,
+        assignment_tx_b,
+        cancellation_tx_b,
+    )?;
+    let MatchOutcome::PartyCreated { owner_key, .. } = outcome else {
+        return Err("party was not created".into());
+    };
+    Ok((owner_key, [cancellation_rx_a, cancellation_rx_b]))
 }
 
 #[test]
@@ -154,7 +214,9 @@ fn matching_relays_each_participant_record_in_order() -> Result<(), Box<dyn std:
     state.exchange_participant_record(1, participant_identity(0x10))?;
     let first = state.exchange_participant_record(2, participant_identity(0x13))?;
     assert_eq!(
-        first.participants.as_slice()[0].participant_marker().get(),
+        first.assignment.participants.as_slice()[0]
+            .participant_marker()
+            .get(),
         0x10
     );
 
@@ -163,15 +225,19 @@ fn matching_relays_each_participant_record_in_order() -> Result<(), Box<dyn std:
     let second = state.exchange_participant_record(2, participant_identity(0x1d))?;
     let third = state.exchange_participant_record(2, participant_identity(0x16))?;
     assert_eq!(
-        second.participants.as_slice()[0].participant_marker().get(),
+        second.assignment.participants.as_slice()[0]
+            .participant_marker()
+            .get(),
         0x11
     );
     assert_eq!(
-        third.participants.as_slice()[0].participant_marker().get(),
+        third.assignment.participants.as_slice()[0]
+            .participant_marker()
+            .get(),
         0x12
     );
-    assert_eq!(third.local_slot, PartySlot::new(2)?);
-    assert_eq!(third.matching_quest_index, 10);
+    assert_eq!(third.assignment.local_slot, PartySlot::new(2)?);
+    assert_eq!(third.assignment.matching_quest_index, 10);
     Ok(())
 }
 
@@ -200,6 +266,80 @@ fn matching_does_not_create_a_party_with_a_closed_assignment_receiver()
             player_count: 0,
         }
     );
+    Ok(())
+}
+
+#[test]
+fn premature_matching_disconnect_aborts_a_finalized_party() -> Result<(), Box<dyn std::error::Error>>
+{
+    let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
+    let (_, [mut cancellation_rx_a, mut cancellation_rx_b]) = finalized_two_player_party(&state)?;
+
+    state.leave_matching(1)?;
+
+    assert_eq!(
+        cancellation_rx_a.try_recv()?,
+        PartyAbortReason::MatchingDisconnected
+    );
+    assert_eq!(
+        cancellation_rx_b.try_recv()?,
+        PartyAbortReason::MatchingDisconnected
+    );
+    assert_eq!(state.service_counts()?.party_count, 0);
+    Ok(())
+}
+
+#[test]
+fn completed_matching_close_waits_for_gameplay_handoff() -> Result<(), Box<dyn std::error::Error>> {
+    let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
+    let (_, [mut cancellation_rx_a, mut cancellation_rx_b]) = finalized_two_player_party(&state)?;
+
+    state.exchange_participant_record(2, participant_identity(0x16))?;
+    let exchange = state.exchange_participant_record(1, participant_identity(0x16))?;
+    let Some(completion) = exchange.completion else {
+        return Err("participant exchange did not complete".into());
+    };
+    assert!(state.confirm_matching_complete(completion)?);
+    state.leave_matching(1)?;
+    assert_eq!(state.service_counts()?.party_count, 1);
+
+    state.expire_gameplay_handoff(1)?;
+    assert_eq!(
+        cancellation_rx_a.try_recv()?,
+        PartyAbortReason::GameplayHandoffTimeout
+    );
+    assert_eq!(
+        cancellation_rx_b.try_recv()?,
+        PartyAbortReason::GameplayHandoffTimeout
+    );
+    assert_eq!(state.service_counts()?.party_count, 0);
+    Ok(())
+}
+
+#[test]
+fn gameplay_disconnect_before_roster_ready_aborts_the_party()
+-> Result<(), Box<dyn std::error::Error>> {
+    let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
+    let (owner_key, [mut cancellation_rx_a, mut cancellation_rx_b]) =
+        finalized_two_player_party(&state)?;
+    let (relay, mut relay_rx) = relay_channels(NonZeroUsize::MIN);
+    let join = state.join_relay(owner_key, PartySlot::new(1)?, 100, 11, relay)?;
+
+    state.leave_relay(join.binding)?;
+
+    assert_eq!(
+        relay_rx.disconnect.try_recv()?,
+        RelayDisconnectReason::PartyAborted(PartyAbortReason::GameplayDisconnectedBeforeReady)
+    );
+    assert_eq!(
+        cancellation_rx_a.try_recv()?,
+        PartyAbortReason::GameplayDisconnectedBeforeReady
+    );
+    assert_eq!(
+        cancellation_rx_b.try_recv()?,
+        PartyAbortReason::GameplayDisconnectedBeforeReady
+    );
+    assert_eq!(state.service_counts()?.party_count, 0);
     Ok(())
 }
 
@@ -234,30 +374,33 @@ fn alternate_quest_mode_keeps_different_quests_apart() -> Result<(), Box<dyn std
 }
 
 #[test]
-fn relay_isolated_party_queues_and_does_not_echo() -> Result<(), Box<dyn std::error::Error>> {
+fn relay_pushes_to_peers_and_disconnects_a_full_destination()
+-> Result<(), Box<dyn std::error::Error>> {
     let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
-    let (tx_a, _rx_a) = mpsc::unbounded_channel();
-    let (tx_b, _rx_b) = mpsc::unbounded_channel();
-    state.queue_match(1, registration(100, 0x11)?, lookup(), tx_a)?;
-    let mut expired = lookup();
-    expired.elapsed_wait_seconds = 35;
-    expired.remaining_wait_seconds = 0;
-    let outcome = state.queue_match(2, registration(200, 0x22)?, expired, tx_b)?;
-    let MatchOutcome::PartyCreated { owner_key, .. } = outcome else {
-        return Err("party was not created".into());
-    };
-    let join_a = state.join_relay(owner_key, PartySlot::new(1)?, 100, 11)?;
-    let join_b = state.join_relay(owner_key, PartySlot::new(2)?, 200, 22)?;
+    let (owner_key, _) = finalized_two_player_party(&state)?;
+    let (relay_a, mut relay_rx_a) = relay_channels(NonZeroUsize::MIN);
+    let (relay_b, mut relay_rx_b) = relay_channels(NonZeroUsize::MIN);
+    let join_a = state.join_relay(owner_key, PartySlot::new(1)?, 100, 11, relay_a)?;
+    let join_b = state.join_relay(owner_key, PartySlot::new(2)?, 200, 22, relay_b)?;
     let source = state.relay_blob(join_a.binding, GameplayBlob::new(vec![0x13, 1])?)?;
     assert!(source.response.records.is_empty());
     assert!(source.response.flags.roster_ready());
     assert_eq!(source.response.flags.bits(), 0x07);
-    let destination = state.relay_blob(join_b.binding, GameplayBlob::new(vec![0x13, 2])?)?;
+    assert!(relay_rx_a.envelope.try_recv().is_err());
+    let overflow = state.relay_blob(join_a.binding, GameplayBlob::new(vec![0x13, 3])?)?;
+    assert_eq!(overflow.disconnected_players, 1);
     assert_eq!(
-        destination.response.records[0].party_slot,
-        PartySlot::new(1)?
+        relay_rx_b.disconnect.try_recv()?,
+        RelayDisconnectReason::QueueFull
     );
-    assert_eq!(destination.response.records[0].blob.as_bytes(), &[0x13, 1]);
+    let destination = relay_rx_b.envelope.try_recv()?;
+    assert_eq!(destination.records[0].party_slot, PartySlot::new(1)?);
+    assert_eq!(destination.records[0].blob.as_bytes(), &[0x13, 1]);
+    let response = state.relay_blob(join_b.binding, GameplayBlob::new(vec![0x13, 2])?)?;
+    assert!(response.response.records.is_empty());
+    let destination = relay_rx_a.envelope.try_recv()?;
+    assert_eq!(destination.records[0].party_slot, PartySlot::new(2)?);
+    assert_eq!(destination.records[0].blob.as_bytes(), &[0x13, 2]);
     state.leave_relay(join_a.binding)?;
     state.leave_relay(join_b.binding)?;
     assert_eq!(
@@ -286,9 +429,12 @@ fn relay_keeps_the_ready_flag_after_a_started_party_loses_a_player()
     let MatchOutcome::PartyCreated { owner_key, .. } = outcome else {
         return Err("party was not created".into());
     };
-    let join_a = state.join_relay(owner_key, PartySlot::new(1)?, 100, 11)?;
-    let join_b = state.join_relay(owner_key, PartySlot::new(2)?, 200, 22)?;
-    let join_c = state.join_relay(owner_key, PartySlot::new(3)?, 300, 33)?;
+    let (relay_a, _relay_rx_a) = relay_channels(NonZeroUsize::MIN);
+    let (relay_b, _relay_rx_b) = relay_channels(NonZeroUsize::MIN);
+    let (relay_c, _relay_rx_c) = relay_channels(NonZeroUsize::MIN);
+    let join_a = state.join_relay(owner_key, PartySlot::new(1)?, 100, 11, relay_a)?;
+    let join_b = state.join_relay(owner_key, PartySlot::new(2)?, 200, 22, relay_b)?;
+    let join_c = state.join_relay(owner_key, PartySlot::new(3)?, 300, 33, relay_c)?;
     state.leave_relay(join_c.binding)?;
 
     let outcome = state.relay_blob(join_a.binding, GameplayBlob::new(vec![0x13, 1])?)?;

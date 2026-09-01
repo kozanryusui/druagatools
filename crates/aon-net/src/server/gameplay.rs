@@ -1,15 +1,18 @@
 use std::net::SocketAddr;
+use std::num::NonZeroUsize;
 use std::sync::Arc;
+use std::time::Duration;
 
 use thiserror::Error;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncWrite, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tracing::{debug, info, warn};
 
+use super::limits::ConnectionGate;
 use super::next_connection_id;
 use super::transport::read_frame;
 use super::{ServerError, SessionPhase};
-use crate::online::{OnlineError, OnlineState};
+use crate::online::{OnlineError, OnlineState, RelayBinding, RelayEnvelope, relay_channels};
 use crate::protocol::station::{
     GameplayRequest, GameplayResponse, StationProtocolError, deserialize_gameplay_request,
 };
@@ -31,24 +34,41 @@ enum GameplayConnectionError {
     },
     #[error("Station sent a gameplay request before endpoint registration")]
     RegistrationRequired,
+    #[error("Station did not accept gameplay data within {timeout:?}")]
+    DeliveryTimeout { timeout: Duration },
+    #[error("Station sent no gameplay data for {timeout:?}")]
+    InactivityTimeout { timeout: Duration },
 }
 
 pub(super) async fn serve_connections(
     listener: TcpListener,
     session_id: u32,
     online: Arc<OnlineState>,
+    connections: ConnectionGate,
+    relay_queue_capacity: NonZeroUsize,
+    player_timeout: Duration,
 ) -> Result<(), ServerError> {
     loop {
-        let (stream, peer) = listener
-            .accept()
+        let accepted = connections
+            .accept(&listener)
             .await
             .map_err(ServerError::ConnectionAccept)?;
+        let (stream, peer, connection_permit) = accepted.into_parts();
         let connection_id = next_connection_id();
         info!(%peer, connection_id, service = "gameplay", "accepted Station connection");
         let online = Arc::clone(&online);
         tokio::spawn(async move {
-            if let Err(error) =
-                handle_connection(stream, peer, connection_id, session_id, &online).await
+            let _connection_permit = connection_permit;
+            if let Err(error) = handle_connection(
+                stream,
+                peer,
+                connection_id,
+                session_id,
+                relay_queue_capacity,
+                player_timeout,
+                &online,
+            )
+            .await
             {
                 warn!(%peer, connection_id, service = "gameplay", %error, "Station connection ended with an error");
             } else {
@@ -63,23 +83,71 @@ async fn handle_connection(
     peer: SocketAddr,
     connection_id: u64,
     configured_session_id: u32,
+    relay_queue_capacity: NonZeroUsize,
+    player_timeout: Duration,
     online: &OnlineState,
 ) -> Result<(), GameplayConnectionError> {
+    stream.set_nodelay(true)?;
     let mut session_phase = SessionPhase::Identity;
-    let mut binding = None;
+    let mut binding: Option<RelayBinding> = None;
+    let (relay, mut relay_rx) = relay_channels(relay_queue_capacity);
+    let inactivity = tokio::time::sleep(player_timeout);
+    tokio::pin!(inactivity);
     let result = async {
-        while let Some(input) = read_frame(&mut stream).await? {
-            let request = deserialize_gameplay_request(&input)?;
-            match request {
+        loop {
+            tokio::select! {
+                biased;
+
+                Some(reason) = relay_rx.disconnect.recv(), if binding.is_some() => {
+                    if let Some(binding) = binding {
+                        warn!(
+                            %peer,
+                            connection_id,
+                            owner_key = %binding.owner_key(),
+                            party_slot = %binding.party_slot(),
+                            ?reason,
+                            "disconnecting Station from gameplay relay"
+                        );
+                    }
+                    break;
+                }
+                () = &mut inactivity => {
+                    return Err(GameplayConnectionError::InactivityTimeout {
+                        timeout: player_timeout,
+                    });
+                }
+                Some(envelope) = relay_rx.envelope.recv(), if binding.is_some() => {
+                    debug!(
+                        connection_id,
+                        input_records = envelope.records.len(),
+                        flags = envelope.flags.bits(),
+                        "pushed gameplay records to Station"
+                    );
+                    if write_relay_envelope(&mut stream, envelope, player_timeout).await? {
+                        break;
+                    }
+                }
+                input = read_frame(&mut stream) => {
+                    let Some(input) = input? else {
+                        break;
+                    };
+                    inactivity
+                        .as_mut()
+                        .reset(tokio::time::Instant::now() + player_timeout);
+                    let request = deserialize_gameplay_request(&input)?;
+                    match request {
                 GameplayRequest::InitialIdentity { identity, reserved }
                     if session_phase == SessionPhase::Identity =>
                 {
                     info!(%peer, connection_id, ?identity, reserved, "accepted Station gameplay identity");
-                    stream
-                        .write_all(&GameplayResponse::InitialAccepted {
+                    write_response(
+                        &mut stream,
+                        GameplayResponse::InitialAccepted {
                             session_id: configured_session_id,
-                        }.serialize()?)
-                        .await?;
+                        },
+                        player_timeout,
+                    )
+                    .await?;
                     session_phase = SessionPhase::Confirmation;
                 }
                 GameplayRequest::SessionConfirm { session_id }
@@ -92,9 +160,12 @@ async fn handle_connection(
                         });
                     }
                     session_phase = SessionPhase::Confirmed;
-                    stream
-                        .write_all(&GameplayResponse::SessionConfirmed { status: 0 }.serialize()?)
-                        .await?;
+                    write_response(
+                        &mut stream,
+                        GameplayResponse::SessionConfirmed { status: 0 },
+                        player_timeout,
+                    )
+                    .await?;
                     debug!(%peer, connection_id, "confirmed Station gameplay session");
                 }
                 GameplayRequest::EndpointRegistration {
@@ -110,12 +181,16 @@ async fn handle_connection(
                         party_slot,
                         record_id,
                         connection_id,
+                        relay.clone(),
                     ) {
                         Ok(join) => {
                             binding = Some(join.binding);
-                            stream
-                                .write_all(&GameplayResponse::RegistrationResult { status: 0 }.serialize()?)
-                                .await?;
+                            write_response(
+                                &mut stream,
+                                GameplayResponse::RegistrationResult { status: 0 },
+                                player_timeout,
+                            )
+                            .await?;
                             info!(
                                 %peer,
                                 connection_id,
@@ -127,9 +202,12 @@ async fn handle_connection(
                             );
                         }
                         Err(error) => {
-                            stream
-                                .write_all(&GameplayResponse::RegistrationResult { status: 1 }.serialize()?)
-                                .await?;
+                            write_response(
+                                &mut stream,
+                                GameplayResponse::RegistrationResult { status: 1 },
+                                player_timeout,
+                            )
+                            .await?;
                             return Err(error.into());
                         }
                     }
@@ -137,12 +215,12 @@ async fn handle_connection(
                 GameplayRequest::GameplayBlob { blob } => {
                     let binding = binding.ok_or(GameplayConnectionError::RegistrationRequired)?;
                     let outcome = online.relay_blob(binding, blob.clone())?;
-                    if outcome.dropped_records != 0 {
+                    if outcome.disconnected_players != 0 {
                         warn!(
                             owner_key = %binding.owner_key(),
                             party_slot = %binding.party_slot(),
-                            dropped_records = outcome.dropped_records,
-                            "gameplay relay queue was full"
+                            disconnected_players = outcome.disconnected_players,
+                            "disconnecting Stations with full gameplay relay queues"
                         );
                     }
                     debug!(
@@ -153,16 +231,12 @@ async fn handle_connection(
                         flags = outcome.response.flags.bits(),
                         "relayed gameplay record"
                     );
-                    let has_sole_survivor = outcome.response.flags.has_sole_survivor();
-                    stream
-                        .write_all(
-                            &GameplayResponse::Envelope {
-                                flags: outcome.response.flags,
-                                records: outcome.response.records,
-                            }
-                            .serialize()?,
-                        )
-                        .await?;
+                    let has_sole_survivor = write_relay_envelope(
+                        &mut stream,
+                        outcome.response,
+                        player_timeout,
+                    )
+                    .await?;
                     if has_sole_survivor {
                         info!(
                             owner_key = %binding.owner_key(),
@@ -187,9 +261,12 @@ async fn handle_connection(
                         action_20 = value_20,
                         "accepted stand-alone Station action record"
                     );
-                    stream
-                .write_all(&GameplayResponse::ActionAccepted {}.serialize()?)
-                        .await?;
+                    write_response(
+                        &mut stream,
+                        GameplayResponse::ActionAccepted {},
+                        player_timeout,
+                    )
+                    .await?;
                 }
                 request => {
                     return Err(GameplayConnectionError::Unexpected {
@@ -202,6 +279,8 @@ async fn handle_connection(
                             "active"
                         },
                     });
+                }
+                    }
                 }
             }
         }
@@ -222,10 +301,62 @@ async fn handle_connection(
     result
 }
 
+async fn write_relay_envelope(
+    stream: &mut TcpStream,
+    envelope: RelayEnvelope,
+    player_timeout: Duration,
+) -> Result<bool, GameplayConnectionError> {
+    let has_sole_survivor = envelope.flags.has_sole_survivor();
+    write_response(
+        stream,
+        GameplayResponse::Envelope {
+            flags: envelope.flags,
+            records: envelope.records,
+        },
+        player_timeout,
+    )
+    .await?;
+    Ok(has_sole_survivor)
+}
+
+async fn write_response(
+    stream: &mut TcpStream,
+    response: GameplayResponse,
+    player_timeout: Duration,
+) -> Result<(), GameplayConnectionError> {
+    let frame = response.serialize()?;
+    write_frame(stream, &frame, player_timeout).await
+}
+
+async fn write_frame<W: AsyncWrite + Unpin>(
+    writer: &mut W,
+    frame: &[u8],
+    player_timeout: Duration,
+) -> Result<(), GameplayConnectionError> {
+    tokio::time::timeout(player_timeout, writer.write_all(frame))
+        .await
+        .map_err(|_| GameplayConnectionError::DeliveryTimeout {
+            timeout: player_timeout,
+        })??;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::protocol::station::EndpointHost;
+
+    #[tokio::test]
+    async fn gameplay_write_times_out_when_the_receiver_stalls() {
+        let (mut writer, _reader) = tokio::io::duplex(1);
+
+        let result = write_frame(&mut writer, &[0, 1], Duration::from_millis(10)).await;
+
+        assert!(matches!(
+            result,
+            Err(GameplayConnectionError::DeliveryTimeout { .. })
+        ));
+    }
 
     #[tokio::test]
     async fn session_confirmation_requires_initial_identity()
@@ -242,7 +373,16 @@ mod tests {
         client.shutdown().await?;
         let online = OnlineState::new(EndpointHost::new("gameservers.aonnet".to_owned())?, 33442);
 
-        let result = handle_connection(server, peer, 1, session_id, &online).await;
+        let result = handle_connection(
+            server,
+            peer,
+            1,
+            session_id,
+            NonZeroUsize::MIN,
+            Duration::from_secs(10),
+            &online,
+        )
+        .await;
 
         assert!(matches!(
             result,

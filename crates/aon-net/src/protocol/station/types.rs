@@ -128,8 +128,14 @@ impl PlayerIdentity {
 pub(crate) struct ParticipantMarker(u8);
 
 impl ParticipantMarker {
+    pub(crate) const EXCHANGE_COMPLETE: Self = Self(0x16);
+
     pub(crate) const fn get(self) -> u8 {
         self.0
+    }
+
+    pub(crate) const fn is_exchange_complete(self) -> bool {
+        self.0 == Self::EXCHANGE_COMPLETE.0
     }
 }
 
@@ -150,7 +156,6 @@ impl ParticipantRecord {
         }
     }
 
-    #[cfg(test)]
     pub(crate) const fn participant_marker(self) -> ParticipantMarker {
         ParticipantMarker(self.identity[0])
     }

@@ -1,6 +1,7 @@
 use std::net::IpAddr;
-use std::num::NonZeroU16;
+use std::num::{NonZeroU16, NonZeroU64, NonZeroUsize};
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use encoding_rs::SHIFT_JIS;
 use serde::Deserialize;
@@ -58,6 +59,11 @@ impl AdminToken {
 pub(crate) struct ServerConfig {
     pub(crate) bind_ip: IpAddr,
     pub(crate) http_port: u16,
+    pub(crate) http_connection_limit: NonZeroUsize,
+    pub(crate) http_request_timeout: Duration,
+    pub(crate) http_body_limit: NonZeroUsize,
+    pub(crate) game_connection_limit: NonZeroUsize,
+    pub(crate) tower_connection_timeout: Duration,
     pub(crate) database_path: PathBuf,
     pub(crate) game_port: u16,
     pub(crate) matching_port: u16,
@@ -65,6 +71,9 @@ pub(crate) struct ServerConfig {
     pub(crate) gameplay_port: u16,
     pub(crate) gameplay_advertise_host: EndpointHost,
     pub(crate) gameplay_advertise_port: NonZeroU16,
+    pub(crate) gameplay_relay_queue_capacity: NonZeroUsize,
+    pub(crate) gameplay_player_timeout: Duration,
+    pub(crate) matching_player_timeout: Duration,
 }
 
 #[derive(Clone, Debug)]
@@ -107,6 +116,16 @@ struct RawAdminSecurity {
 struct RawServerConfig {
     bind_ip: IpAddr,
     http_port: u16,
+    #[serde(default = "default_http_connection_limit")]
+    http_connection_limit: NonZeroUsize,
+    #[serde(default = "default_http_request_timeout_seconds")]
+    http_request_timeout_seconds: NonZeroU64,
+    #[serde(default = "default_http_body_limit_bytes")]
+    http_body_limit_bytes: NonZeroUsize,
+    #[serde(default = "default_game_connection_limit")]
+    game_connection_limit: NonZeroUsize,
+    #[serde(default = "default_tower_connection_timeout_seconds")]
+    tower_connection_timeout_seconds: NonZeroU64,
     database_path: PathBuf,
     game_port: u16,
     matching_port: u16,
@@ -114,6 +133,12 @@ struct RawServerConfig {
     gameplay_port: u16,
     gameplay_advertise_host: String,
     gameplay_advertise_port: u16,
+    #[serde(default = "default_gameplay_relay_queue_capacity")]
+    gameplay_relay_queue_capacity: NonZeroUsize,
+    #[serde(default = "default_gameplay_player_timeout_seconds")]
+    gameplay_player_timeout_seconds: NonZeroU64,
+    #[serde(default = "default_matching_player_timeout_seconds")]
+    matching_player_timeout_seconds: NonZeroU64,
 }
 
 #[derive(Deserialize)]
@@ -210,6 +235,15 @@ impl RawAonNetConfig {
             server: ServerConfig {
                 bind_ip: self.server.bind_ip,
                 http_port: self.server.http_port,
+                http_connection_limit: self.server.http_connection_limit,
+                http_request_timeout: Duration::from_secs(
+                    self.server.http_request_timeout_seconds.get(),
+                ),
+                http_body_limit: self.server.http_body_limit_bytes,
+                game_connection_limit: self.server.game_connection_limit,
+                tower_connection_timeout: Duration::from_secs(
+                    self.server.tower_connection_timeout_seconds.get(),
+                ),
                 database_path: self.server.database_path,
                 game_port: self.server.game_port,
                 matching_port: self.server.matching_port,
@@ -217,6 +251,13 @@ impl RawAonNetConfig {
                 gameplay_port: self.server.gameplay_port,
                 gameplay_advertise_host,
                 gameplay_advertise_port,
+                gameplay_relay_queue_capacity: self.server.gameplay_relay_queue_capacity,
+                gameplay_player_timeout: Duration::from_secs(
+                    self.server.gameplay_player_timeout_seconds.get(),
+                ),
+                matching_player_timeout: Duration::from_secs(
+                    self.server.matching_player_timeout_seconds.get(),
+                ),
             },
             power_on: PowerOnConfig {
                 uri: self.power_on.uri,
@@ -273,6 +314,47 @@ fn required_path(path: Option<PathBuf>, field: &'static str) -> Result<PathBuf, 
     path.filter(|path| !path.as_os_str().is_empty())
         .ok_or(ConfigError::AdminSecurityRequired { field })
 }
+
+fn default_gameplay_relay_queue_capacity() -> NonZeroUsize {
+    nonzero_usize(4096)
+}
+
+fn default_http_connection_limit() -> NonZeroUsize {
+    nonzero_usize(64)
+}
+
+fn default_http_request_timeout_seconds() -> NonZeroU64 {
+    nonzero_u64(10)
+}
+
+fn default_http_body_limit_bytes() -> NonZeroUsize {
+    nonzero_usize(65_536)
+}
+
+fn default_game_connection_limit() -> NonZeroUsize {
+    nonzero_usize(256)
+}
+
+fn default_tower_connection_timeout_seconds() -> NonZeroU64 {
+    nonzero_u64(30)
+}
+
+fn default_gameplay_player_timeout_seconds() -> NonZeroU64 {
+    nonzero_u64(10)
+}
+
+fn default_matching_player_timeout_seconds() -> NonZeroU64 {
+    nonzero_u64(10)
+}
+
+fn nonzero_usize(value: usize) -> NonZeroUsize {
+    NonZeroUsize::new(value).unwrap_or(NonZeroUsize::MIN)
+}
+
+fn nonzero_u64(value: u64) -> NonZeroU64 {
+    NonZeroU64::new(value).unwrap_or(NonZeroU64::MIN)
+}
+
 fn validate_announcements(
     raw_announcements: Vec<RawAnnouncement>,
 ) -> Result<Vec<AnnouncementRecord>, ConfigError> {
@@ -367,6 +449,14 @@ mod tests {
         });
 
         assert_eq!(config.server.gameplay_advertise_port.get(), 33442);
+        assert_eq!(config.server.http_connection_limit.get(), 64);
+        assert_eq!(config.server.game_connection_limit.get(), 256);
+        assert_eq!(config.server.http_request_timeout, Duration::from_secs(10));
+        assert_eq!(config.server.http_body_limit.get(), 65_536);
+        assert_eq!(
+            config.server.tower_connection_timeout,
+            Duration::from_secs(30)
+        );
         assert_eq!(
             config.server.gameplay_advertise_host.to_string(),
             "gameservers.aonnet"
@@ -435,5 +525,39 @@ mod tests {
             raw.validate(),
             Err(ConfigError::AdminPortConflict)
         ));
+    }
+
+    #[test]
+    fn connection_limits_have_backward_compatible_defaults() {
+        let text = include_str!("../aon-net.example.toml")
+            .lines()
+            .filter(|line| {
+                ![
+                    "http-connection-limit",
+                    "http-request-timeout-seconds",
+                    "http-body-limit-bytes",
+                    "game-connection-limit",
+                    "tower-connection-timeout-seconds",
+                ]
+                .iter()
+                .any(|field| line.starts_with(field))
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        let raw: RawAonNetConfig = toml::from_str(&text).unwrap_or_else(|error| {
+            panic!("configuration with omitted limits must parse: {error}")
+        });
+        let config = raw.validate().unwrap_or_else(|error| {
+            panic!("configuration with omitted limits must validate: {error}")
+        });
+
+        assert_eq!(config.server.http_connection_limit.get(), 64);
+        assert_eq!(config.server.game_connection_limit.get(), 256);
+        assert_eq!(config.server.http_request_timeout, Duration::from_secs(10));
+        assert_eq!(config.server.http_body_limit.get(), 65_536);
+        assert_eq!(
+            config.server.tower_connection_timeout,
+            Duration::from_secs(30)
+        );
     }
 }

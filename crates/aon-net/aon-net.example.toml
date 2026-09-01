@@ -2,6 +2,16 @@
 # The Station uses TCP port 80 for PowerOn.
 bind-ip = "0.0.0.0"
 http-port = 80
+# PowerOn and secure administration each get this many connection slots.
+http-connection-limit = 64
+# AON.Net cancels an HTTP request that takes longer than this.
+http-request-timeout-seconds = 10
+# This limit applies before AON.Net parses a PowerOn or admin request body.
+http-body-limit-bytes = 65536
+# All Tower and Station TCP services share this connection limit.
+game-connection-limit = 256
+# AON.Net disconnects a Tower service connection if I/O stops for this long.
+tower-connection-timeout-seconds = 30
 database-path = "aon-net.db"
 
 # Tower and Station binary services.
@@ -14,6 +24,13 @@ relay-ports = [33439, 33440, 33441]
 gameplay-port = 33442
 gameplay-advertise-host = "gameservers.aonnet"
 gameplay-advertise-port = 33442
+# Each Station has one queue for gameplay records from the other players.
+# AON.Net disconnects the Station if this queue becomes full.
+gameplay-relay-queue-capacity = 4096
+# AON.Net disconnects a Station if gameplay I/O stops for this long.
+gameplay-player-timeout-seconds = 10
+# This limits matching I/O and the handoff from matching to gameplay.
+matching-player-timeout-seconds = 10
 
 [admin-security]
 # Keep this false for simple local hosting. The admin interface then uses HTTP.
