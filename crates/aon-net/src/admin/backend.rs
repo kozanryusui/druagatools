@@ -18,6 +18,7 @@ use tokio_stream::wrappers::BroadcastStream;
 
 use crate::config::AdminToken;
 use crate::logging::AdminHub;
+use crate::online::OnlineState;
 use crate::runtime_settings::{RuntimeSettings, SettingsError};
 use aon_net_admin::contract::{
     AdminError, AdminLogin, BonusSettings, QuestSettings, RewardSettings, SettingsSnapshot,
@@ -38,6 +39,7 @@ const MAX_LOGIN_SOURCES: usize = 4_096;
 #[derive(Clone)]
 struct AdminState {
     settings: Arc<RuntimeSettings>,
+    online: Arc<OnlineState>,
     hub: Arc<AdminHub>,
     auth: Option<AdminAuth>,
 }
@@ -58,9 +60,14 @@ struct FailedAttempts {
     count: u8,
 }
 
-pub(crate) fn unsecured_router(settings: Arc<RuntimeSettings>, hub: Arc<AdminHub>) -> Router {
+pub(crate) fn unsecured_router(
+    settings: Arc<RuntimeSettings>,
+    online: Arc<OnlineState>,
+    hub: Arc<AdminHub>,
+) -> Router {
     asset_routes().merge(api_routes()).with_state(AdminState {
         settings,
+        online,
         hub,
         auth: None,
     })
@@ -68,6 +75,7 @@ pub(crate) fn unsecured_router(settings: Arc<RuntimeSettings>, hub: Arc<AdminHub
 
 pub(crate) fn secured_router(
     settings: Arc<RuntimeSettings>,
+    online: Arc<OnlineState>,
     hub: Arc<AdminHub>,
     token: AdminToken,
 ) -> Router {
@@ -84,6 +92,7 @@ pub(crate) fn secured_router(
         .merge(protected)
         .with_state(AdminState {
             settings,
+            online,
             hub,
             auth: Some(auth),
         })
@@ -194,7 +203,11 @@ async fn logout(State(state): State<AdminState>, headers: HeaderMap) -> Response
 
 async fn snapshot(State(state): State<AdminState>) -> Response {
     match state.settings.snapshot() {
-        Ok(snapshot) => {
+        Ok(mut snapshot) => {
+            let Ok(online_status) = state.online.status() else {
+                return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+            };
+            snapshot.online_status = online_status;
             let mut response = Json(snapshot).into_response();
             if state.auth.is_some() {
                 response.headers_mut().insert(

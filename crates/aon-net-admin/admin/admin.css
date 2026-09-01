@@ -31,6 +31,12 @@ h2 { margin: 0 0 18px; color: #513b21; font-size: 20px; }
 .two { grid-template-columns: minmax(0, .9fr) minmax(520px, 1.55fr); align-items: start; }
 .panel { padding: 22px; background: linear-gradient(150deg, var(--paper-light), var(--paper)); border: 1px solid #c2a76d; border-radius: 4px; box-shadow: 0 9px 25px #0007, inset 0 0 22px #9c773126; }
 .stack { display: grid; gap: 20px; }
+.status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+.status-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.status-list li { display: grid; grid-template-columns: minmax(160px, 1fr) auto; gap: 5px 18px; padding: 12px 0; border-bottom: 1px solid #bca273; }
+.status-list li:last-child { border-bottom: 0; }
+.status-list-title { font-weight: 700; color: #513b21; }
+.status-list-id { color: var(--muted); font-size: 13px; }
 .field { display: grid; gap: 7px; }
 .field label, th { color: #604a2c; font-size: 13px; font-weight: 700; letter-spacing: .03em; }
 input[type=text], input[type=password], input[type=number], select { width: 100%; min-height: 39px; padding: 8px 10px; color: var(--ink); background: #fff8e5; border: 1px solid #9d7b45; border-radius: 2px; }
@@ -61,5 +67,5 @@ td select { min-width: 150px; }
 .login-panel p { margin: 0 0 20px; color: var(--muted); }
 .credential-username { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .logout { position: absolute; left: 28px; bottom: 24px; }
-@media (max-width: 980px) { .two { grid-template-columns: 1fr; } .shell { grid-template-columns: 170px minmax(0,1fr); } .rotation-fields { grid-template-columns: 1fr; } .rotation-fields .field:nth-child(3) { grid-column: auto; } }
-@media (max-width: 700px) { .shell { display: block; } .sidebar { min-height: auto; height: auto; position: static; padding: 16px; } .brand { margin: 0 0 14px; } .nav { grid-template-columns: 1fr 1fr; } .main { padding: 24px 14px 40px; } .mode-grid, .bonus-grid { grid-template-columns: 1fr; } .logs-toolbar { grid-template-columns: 1fr 1fr; } .log-line { grid-template-columns: 65px 60px minmax(0,1fr); } }
+@media (max-width: 980px) { .two, .status-grid { grid-template-columns: 1fr; } .shell { grid-template-columns: 170px minmax(0,1fr); } .rotation-fields { grid-template-columns: 1fr; } .rotation-fields .field:nth-child(3) { grid-column: auto; } }
+@media (max-width: 700px) { .shell { display: block; } .sidebar { min-height: auto; height: auto; position: static; padding: 16px; } .brand { margin: 0 0 14px; } .nav { grid-template-columns: repeat(3, 1fr); } .main { padding: 24px 14px 40px; } .mode-grid, .bonus-grid { grid-template-columns: 1fr; } .logs-toolbar { grid-template-columns: 1fr 1fr; } .log-line { grid-template-columns: 65px 60px minmax(0,1fr); } .status-list li { grid-template-columns: 1fr; } }

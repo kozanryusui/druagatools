@@ -89,9 +89,10 @@ pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(),
         Arc::clone(&admin_hub),
         config.power_on.shop_name.clone(),
     )?);
-    let online = Arc::new(crate::online::OnlineState::new(
+    let online = Arc::new(crate::online::OnlineState::with_admin_hub(
         config.server.gameplay_advertise_host.clone(),
         config.server.gameplay_advertise_port.get(),
+        Arc::clone(&admin_hub),
     ));
     let central = Arc::new(central::CentralServices::new(
         GAME_SESSION_ID,
@@ -106,7 +107,11 @@ pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(),
     let (http_app, secure_admin) = match secure_admin {
         None => (
             limits::limit_http_requests(
-                power_on_app.merge(crate::admin::backend::unsecured_router(settings, admin_hub)),
+                power_on_app.merge(crate::admin::backend::unsecured_router(
+                    settings,
+                    Arc::clone(&online),
+                    admin_hub,
+                )),
                 http_request_timeout,
                 http_body_limit,
             ),
@@ -118,7 +123,12 @@ pub async fn serve(config: AonNetConfig, admin_hub: Arc<AdminHub>) -> Result<(),
                 address,
                 tls,
                 limits::limit_http_requests(
-                    crate::admin::backend::secured_router(settings, admin_hub, token),
+                    crate::admin::backend::secured_router(
+                        settings,
+                        Arc::clone(&online),
+                        admin_hub,
+                        token,
+                    ),
                     http_request_timeout,
                     http_body_limit,
                 ),

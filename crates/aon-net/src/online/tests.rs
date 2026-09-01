@@ -100,6 +100,73 @@ fn finalized_two_player_party(
 }
 
 #[test]
+fn status_reports_matching_queues_and_relay_connections() -> Result<(), Box<dyn std::error::Error>>
+{
+    let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
+    assert_eq!(
+        state.status()?,
+        OnlineStatus {
+            matching_queues: Vec::new(),
+            relays: Vec::new(),
+        }
+    );
+
+    let (assignment_tx_a, _assignment_rx_a) = mpsc::unbounded_channel();
+    let (assignment_tx_b, _assignment_rx_b) = mpsc::unbounded_channel();
+    state.queue_match(1, registration(100, 0x11)?, lookup(), assignment_tx_a)?;
+    let waiting = state.status()?;
+    assert_eq!(waiting.matching_queues.len(), 1);
+    assert_eq!(waiting.matching_queues[0].map_id, 10);
+    assert_eq!(waiting.matching_queues[0].queued_players, 1);
+    assert_eq!(waiting.matching_queues[0].party_capacity, 4);
+    assert!(waiting.relays.is_empty());
+
+    let mut expired = lookup();
+    expired.remaining_wait_seconds = 0;
+    let outcome = state.queue_match(2, registration(200, 0x22)?, expired, assignment_tx_b)?;
+    let MatchOutcome::PartyCreated { owner_key, .. } = outcome else {
+        return Err("party was not created".into());
+    };
+    let connecting = state.status()?;
+    assert!(connecting.matching_queues.is_empty());
+    assert_eq!(connecting.relays.len(), 1);
+    assert_eq!(connecting.relays[0].map_id, 10);
+    assert_eq!(connecting.relays[0].party_players, 2);
+    assert_eq!(connecting.relays[0].connected_players, 0);
+    assert_eq!(connecting.relays[0].status, RelayPartyStatus::Connecting);
+
+    let (relay_a, _receivers_a) = relay_channels(NonZeroUsize::MIN);
+    let (relay_b, _receivers_b) = relay_channels(NonZeroUsize::MIN);
+    state.join_relay(owner_key, PartySlot::new(1)?, 100, 11, relay_a)?;
+    assert_eq!(state.status()?.relays[0].connected_players, 1);
+    state.join_relay(owner_key, PartySlot::new(2)?, 200, 22, relay_b)?;
+    let playing = state.status()?;
+    assert_eq!(playing.relays[0].connected_players, 2);
+    assert_eq!(playing.relays[0].status, RelayPartyStatus::Playing);
+    Ok(())
+}
+
+#[test]
+fn online_status_changes_are_pushed_once() -> Result<(), Box<dyn std::error::Error>> {
+    let hub = Arc::new(AdminHub::new(8));
+    let mut events = hub.subscribe();
+    let state =
+        OnlineState::with_admin_hub(EndpointHost::new("gameservers.aonnet".into())?, 33442, hub);
+    let (assignment_tx, _assignment_rx) = mpsc::unbounded_channel();
+    state.queue_match(1, registration(100, 0x11)?, lookup(), assignment_tx.clone())?;
+
+    let event = events.try_recv()?;
+    let AdminEvent::OnlineStatusChanged(status) = event.event else {
+        return Err("online state did not publish a status event".into());
+    };
+    assert_eq!(status.matching_queues[0].queued_players, 1);
+
+    state.queue_match(1, registration(100, 0x11)?, lookup(), assignment_tx)?;
+    assert!(events.try_recv().is_err());
+    Ok(())
+}
+
+#[test]
 fn matching_updates_partial_roster_until_the_party_is_full()
 -> Result<(), Box<dyn std::error::Error>> {
     let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
@@ -370,6 +437,15 @@ fn alternate_quest_mode_keeps_different_quests_apart() -> Result<(), Box<dyn std
         return Err("second quest did not start a separate assembling party".into());
     };
     assert_ne!(first_assignment.owner_key, second_assignment.owner_key);
+    let status = state.status()?;
+    assert_eq!(
+        status
+            .matching_queues
+            .iter()
+            .map(|queue| queue.map_id)
+            .collect::<Vec<_>>(),
+        [10, 11]
+    );
     Ok(())
 }
 

@@ -108,6 +108,37 @@ pub struct AdminSnapshot {
     pub special_quests: Vec<QuestOption>,
     pub timetable: Vec<QuestTimetableEntry>,
     pub logs: Vec<LogRecord>,
+    pub online_status: OnlineStatus,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+pub struct OnlineStatus {
+    pub matching_queues: Vec<MatchingQueueStatus>,
+    pub relays: Vec<RelayStatus>,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct MatchingQueueStatus {
+    pub party_id: u32,
+    pub map_id: u16,
+    pub queued_players: u8,
+    pub party_capacity: u8,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RelayPartyStatus {
+    Connecting,
+    Playing,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct RelayStatus {
+    pub party_id: u32,
+    pub map_id: u16,
+    pub party_players: u8,
+    pub connected_players: u8,
+    pub status: RelayPartyStatus,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -115,6 +146,7 @@ pub struct AdminSnapshot {
 pub enum AdminEvent {
     SettingsChanged(SettingsSnapshot),
     TimetableChanged(Vec<QuestTimetableEntry>),
+    OnlineStatusChanged(OnlineStatus),
     Log(LogRecord),
 }
 

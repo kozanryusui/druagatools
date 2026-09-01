@@ -9,7 +9,8 @@ use web_sys::{EventSource, HashChangeEvent, HtmlSelectElement, MessageEvent};
 
 use super::contract::{
     AdminError, AdminEvent, AdminEventEnvelope, AdminLogin, AdminSnapshot, BonusSettings, LogLevel,
-    QuestMode, QuestOption, QuestSettings, RewardSettings, SettingsSnapshot, ShopUpdate,
+    OnlineStatus, QuestMode, QuestOption, QuestSettings, RelayPartyStatus, RewardSettings,
+    SettingsSnapshot, ShopUpdate,
 };
 use super::routes;
 
@@ -61,6 +62,18 @@ pub fn App() -> impl IntoView {
             timetable: data.timetable,
         })
     });
+    let party_maps = Memo::new(move |_| {
+        snapshot
+            .get()
+            .map(|data| data.party_quests)
+            .unwrap_or_default()
+    });
+    let online_status = Memo::new(move |_| {
+        snapshot
+            .get()
+            .map(|data| data.online_status)
+            .unwrap_or_default()
+    });
 
     Effect::new(move |_| {
         let Some(window) = web_sys::window() else {
@@ -97,12 +110,16 @@ pub fn App() -> impl IntoView {
                     <aside class="sidebar">
                         <div class="brand">"AON.Net"</div>
                         <nav class="nav">
+                            <a href="#status" class:active=move || page.get() == "status">"Status"</a>
                             <a href="#configuration" class:active=move || page.get() == "configuration">"Configuration"</a>
                             <a href="#logs" class:active=move || page.get() == "logs">"Logs"</a>
                         </nav>
                         <button class="logout" hidden=move || !security_enabled.get() on:click=move |_| logout()>"Log out"</button>
                     </aside>
                     <main class="main">
+                        <div hidden=move || page.get() != "status">
+                            <OnlineStatusPage status=online_status maps=party_maps/>
+                        </div>
                         <div hidden=move || page.get() != "configuration">
                             <ConfigurationPage configuration snapshot error saving/>
                         </div>
@@ -113,6 +130,61 @@ pub fn App() -> impl IntoView {
                 </div>
             }.into_any(),
         }}
+    }
+}
+
+#[component]
+fn OnlineStatusPage(status: Memo<OnlineStatus>, maps: Memo<Vec<QuestOption>>) -> impl IntoView {
+    view! {
+        <h1>"Status"</h1>
+        <div class="grid status-grid">
+            <section class="panel">
+                <h2>"Matching queues"</h2>
+                {move || {
+                    let status = status.get();
+                    if status.matching_queues.is_empty() {
+                        view! { <p class="empty">"No open matching queues."</p> }.into_any()
+                    } else {
+                        let maps = maps.get();
+                        view! {
+                            <ul class="status-list">
+                                {status.matching_queues.into_iter().map(|queue| view! {
+                                    <li>
+                                        <span class="status-list-title">{map_label(queue.map_id, &maps)}</span>
+                                        <span>{format!("{} of {} players", queue.queued_players, queue.party_capacity)}</span>
+                                        <span>"Waiting for players"</span>
+                                        <span class="status-list-id">{format!("Party {}", queue.party_id)}</span>
+                                    </li>
+                                }).collect_view()}
+                            </ul>
+                        }.into_any()
+                    }
+                }}
+            </section>
+            <section class="panel">
+                <h2>"Relays"</h2>
+                {move || {
+                    let status = status.get();
+                    if status.relays.is_empty() {
+                        view! { <p class="empty">"No active relays."</p> }.into_any()
+                    } else {
+                        let maps = maps.get();
+                        view! {
+                            <ul class="status-list">
+                                {status.relays.into_iter().map(|relay| view! {
+                                    <li>
+                                        <span class="status-list-title">{map_label(relay.map_id, &maps)}</span>
+                                        <span>{format!("{} of {} players connected", relay.connected_players, relay.party_players)}</span>
+                                        <span>{relay_status_label(relay.status)}</span>
+                                        <span class="status-list-id">{format!("Party {}", relay.party_id)}</span>
+                                    </li>
+                                }).collect_view()}
+                            </ul>
+                        }.into_any()
+                    }
+                }}
+            </section>
+        </div>
     }
 }
 
@@ -545,6 +617,7 @@ fn connect_events(snapshot: RwSignal<Option<AdminSnapshot>>, error: RwSignal<Opt
                 match envelope.event {
                     AdminEvent::SettingsChanged(value) => state.settings = value,
                     AdminEvent::TimetableChanged(value) => state.timetable = value,
+                    AdminEvent::OnlineStatusChanged(value) => state.online_status = value,
                     AdminEvent::Log(value) => {
                         if state.logs.len() == MAX_BROWSER_LOGS {
                             state.logs.remove(0);
@@ -587,8 +660,27 @@ fn connect_events(snapshot: RwSignal<Option<AdminSnapshot>>, error: RwSignal<Opt
 fn current_page() -> String {
     web_sys::window()
         .and_then(|w| w.location().hash().ok())
-        .filter(|h| h == "#logs")
-        .map_or_else(|| "configuration".to_owned(), |_| "logs".to_owned())
+        .map(|hash| match hash.as_str() {
+            "#status" => "status",
+            "#logs" => "logs",
+            _ => "configuration",
+        })
+        .unwrap_or("configuration")
+        .to_owned()
+}
+
+fn map_label(map_id: u16, maps: &[QuestOption]) -> String {
+    maps.iter().find(|map| map.quest_id == map_id).map_or_else(
+        || format!("Map {map_id}"),
+        |map| format!("{} (map {})", map.name, map.quest_id),
+    )
+}
+
+const fn relay_status_label(status: RelayPartyStatus) -> &'static str {
+    match status {
+        RelayPartyStatus::Connecting => "Players connecting",
+        RelayPartyStatus::Playing => "Playing",
+    }
 }
 fn event_target_select_value(event: &leptos::ev::Event) -> String {
     event

@@ -102,7 +102,7 @@ When admin security is enabled, open this address and enter the configured admin
 https://SERVER_ADDRESS/admin
 ```
 
-The interface changes the shop name, quest rotation, quest rewards, and quest bonuses. Its Logs page shows live server logs.
+The interface changes the shop name, quest rotation, quest rewards, and quest bonuses. The Status page shows open matching queues and active gameplay relays. AON.Net pushes status changes to the page. The Logs page shows live server logs.
 
 When admin security is enabled, AON.Net keeps authenticated sessions in memory. A server restart ends all sessions. The web app does not put the token in browser storage. The login field supports password managers.
 

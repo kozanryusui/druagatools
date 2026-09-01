@@ -1,10 +1,16 @@
 use std::collections::{HashMap, VecDeque};
 use std::num::NonZeroUsize;
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
 use thiserror::Error;
 use tokio::sync::mpsc;
+
+use aon_net_admin::contract::{
+    AdminEvent, MatchingQueueStatus, OnlineStatus, RelayPartyStatus, RelayStatus,
+};
+
+use crate::logging::AdminHub;
 
 use crate::protocol::station::{
     EndpointAssignment, EndpointHost, GameplayBlob, GameplayEnvelopeFlags, LobbyLookup,
@@ -22,6 +28,8 @@ const ALTERNATE_QUEST_INDEX_MODE: u16 = 9;
 pub(crate) struct OnlineState {
     gameplay_host: EndpointHost,
     gameplay_port: u16,
+    admin_hub: Option<Arc<AdminHub>>,
+    last_published_status: Mutex<OnlineStatus>,
     inner: Mutex<OnlineInner>,
 }
 
@@ -56,6 +64,7 @@ struct AssemblingParty {
 struct RelayParty {
     members: Vec<RelayMember>,
     matching_quest_index: u16,
+    status_map_id: u16,
     roster_readiness: RosterReadiness,
     last_activity: Instant,
 }
@@ -220,15 +229,103 @@ mod matching;
 mod tests;
 
 impl OnlineState {
+    #[cfg(test)]
     pub(crate) fn new(gameplay_host: EndpointHost, gameplay_port: u16) -> Self {
         Self {
             gameplay_host,
             gameplay_port,
+            admin_hub: None,
+            last_published_status: Mutex::new(OnlineStatus::default()),
+            inner: Mutex::new(OnlineInner::default()),
+        }
+    }
+
+    pub(crate) fn with_admin_hub(
+        gameplay_host: EndpointHost,
+        gameplay_port: u16,
+        admin_hub: Arc<AdminHub>,
+    ) -> Self {
+        Self {
+            gameplay_host,
+            gameplay_port,
+            admin_hub: Some(admin_hub),
+            last_published_status: Mutex::new(OnlineStatus::default()),
             inner: Mutex::new(OnlineInner::default()),
         }
     }
 
     fn lock(&self) -> Result<MutexGuard<'_, OnlineInner>, OnlineError> {
         self.inner.lock().map_err(|_| OnlineError::Lock)
+    }
+
+    pub(crate) fn status(&self) -> Result<OnlineStatus, OnlineError> {
+        let mut inner = self.lock()?;
+        lifecycle::purge_expired_parties(&mut inner);
+        matching::purge_closed_assembling_members(&mut inner);
+
+        let matching_queues = inner
+            .assembling
+            .iter()
+            .map(|party| MatchingQueueStatus {
+                party_id: party.owner_key.get(),
+                map_id: status_map_id(&party.members[0].registration),
+                queued_players: bounded_player_count(party.members.len()),
+                party_capacity: MAX_PARTY_PLAYERS as u8,
+            })
+            .collect();
+        let mut relays = inner
+            .parties
+            .iter()
+            .map(|(owner_key, party)| RelayStatus {
+                party_id: owner_key.get(),
+                map_id: party.status_map_id,
+                party_players: bounded_player_count(party.members.len()),
+                connected_players: bounded_player_count(
+                    party
+                        .members
+                        .iter()
+                        .filter(|member| member.gameplay_connection.is_some())
+                        .count(),
+                ),
+                status: if party.roster_readiness == RosterReadiness::Ready {
+                    RelayPartyStatus::Playing
+                } else {
+                    RelayPartyStatus::Connecting
+                },
+            })
+            .collect::<Vec<_>>();
+        relays.sort_unstable_by_key(|relay| relay.party_id);
+
+        Ok(OnlineStatus {
+            matching_queues,
+            relays,
+        })
+    }
+
+    fn publish_status(&self) -> Result<(), OnlineError> {
+        if let Some(hub) = &self.admin_hub {
+            let status = self.status()?;
+            let mut previous = self
+                .last_published_status
+                .lock()
+                .map_err(|_| OnlineError::Lock)?;
+            if *previous != status {
+                *previous = status.clone();
+                hub.publish(AdminEvent::OnlineStatusChanged(status));
+            }
+        }
+        Ok(())
+    }
+}
+
+fn bounded_player_count(count: usize) -> u8 {
+    count.min(u8::MAX as usize) as u8
+}
+
+fn status_map_id(registration: &LobbyRegistration) -> u16 {
+    if registration.matching_quest_index == ALTERNATE_QUEST_INDEX_MODE {
+        registration.alternate_quest_index
+    } else {
+        registration.matching_quest_index
     }
 }

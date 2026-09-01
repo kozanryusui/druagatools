@@ -30,6 +30,7 @@ impl OnlineState {
         if let Some(notifications) = notifications {
             notifications.send();
         }
+        self.publish_status()?;
         Ok(())
     }
 
@@ -58,13 +59,14 @@ impl OnlineState {
         if let Some(notifications) = notifications {
             notifications.send();
         }
+        self.publish_status()?;
         Ok(())
     }
 
     pub(crate) fn service_counts(&self) -> Result<ServiceCounts, OnlineError> {
         let mut inner = self.lock()?;
-        purge_expired_parties(&mut inner);
-        Ok(ServiceCounts {
+        let status_changed = purge_expired_parties(&mut inner);
+        let counts = ServiceCounts {
             party_count: inner.parties.len().min(u16::MAX as usize) as u16,
             player_count: inner
                 .parties
@@ -78,7 +80,12 @@ impl OnlineState {
                 })
                 .sum::<usize>()
                 .min(u16::MAX as usize) as u16,
-        })
+        };
+        drop(inner);
+        if status_changed {
+            self.publish_status()?;
+        }
+        Ok(counts)
     }
 }
 
@@ -125,7 +132,8 @@ pub(super) fn remove_party_for_abort(
     })
 }
 
-pub(super) fn purge_expired_parties(inner: &mut OnlineInner) {
+pub(super) fn purge_expired_parties(inner: &mut OnlineInner) -> bool {
+    let previous_len = inner.parties.len();
     inner.parties.retain(|_, party| {
         party
             .members
@@ -133,4 +141,5 @@ pub(super) fn purge_expired_parties(inner: &mut OnlineInner) {
             .any(|member| member.gameplay_connection.is_some())
             || party.last_activity.elapsed() < UNCLAIMED_PARTY_LIFETIME
     });
+    inner.parties.len() != previous_len
 }

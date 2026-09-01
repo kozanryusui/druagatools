@@ -75,6 +75,8 @@ impl OnlineState {
             .iter()
             .map(|party| party.members.len())
             .sum();
+        drop(inner);
+        self.publish_status()?;
         Ok(MatchOutcome::Assembling {
             assignment,
             waiting_count,
@@ -153,6 +155,7 @@ impl OnlineState {
             RelayParty {
                 members,
                 matching_quest_index: party.members[0].registration.matching_quest_index,
+                status_map_id: status_map_id(&party.members[0].registration),
                 roster_readiness: RosterReadiness::Waiting,
                 last_activity: Instant::now(),
             },
@@ -172,11 +175,13 @@ impl OnlineState {
                 if let Some(notifications) = notifications {
                     notifications.send();
                 }
+                self.publish_status()?;
                 return Err(OnlineError::AssignmentClosed {
                     connection_id: assignment_connection_id,
                 });
             }
         }
+        self.publish_status()?;
         Ok(MatchOutcome::PartyCreated {
             owner_key,
             player_count,
@@ -291,7 +296,7 @@ fn allocate_owner_key(inner: &mut OnlineInner) -> Result<OwnerKey, StationProtoc
     }
 }
 
-fn purge_closed_assembling_members(inner: &mut OnlineInner) {
+pub(super) fn purge_closed_assembling_members(inner: &mut OnlineInner) {
     for party in &mut inner.assembling {
         party
             .members

@@ -96,6 +96,7 @@ impl RuntimeSettings {
             special_quests: quest_options((25..=74).chain(76..=89)),
             timetable: timetable_for(&settings)?,
             logs: self.hub.logs(),
+            online_status: Default::default(),
         })
     }
 

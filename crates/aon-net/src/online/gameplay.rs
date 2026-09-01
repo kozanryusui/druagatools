@@ -45,14 +45,17 @@ impl OnlineState {
         {
             party.roster_readiness = RosterReadiness::Ready;
         }
-        Ok(RelayJoin {
+        let join = RelayJoin {
             binding: RelayBinding {
                 owner_key,
                 party_slot,
                 connection_id,
             },
             flags: active_flags(party),
-        })
+        };
+        drop(inner);
+        self.publish_status()?;
+        Ok(join)
     }
 
     pub(crate) fn relay_blob(
@@ -169,6 +172,7 @@ impl OnlineState {
         if let Some(notifications) = notifications {
             notifications.send();
         }
+        self.publish_status()?;
         Ok(())
     }
 }
