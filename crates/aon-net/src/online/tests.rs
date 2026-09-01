@@ -337,22 +337,28 @@ fn matching_does_not_create_a_party_with_a_closed_assignment_receiver()
 }
 
 #[test]
-fn premature_matching_disconnect_aborts_a_finalized_party() -> Result<(), Box<dyn std::error::Error>>
-{
+fn post_assignment_matching_close_preserves_the_gameplay_handoff()
+-> Result<(), Box<dyn std::error::Error>> {
     let state = OnlineState::new(EndpointHost::new("gameservers.aonnet".into())?, 33442);
-    let (_, [mut cancellation_rx_a, mut cancellation_rx_b]) = finalized_two_player_party(&state)?;
+    let (owner_key, [mut cancellation_rx_a, mut cancellation_rx_b]) =
+        finalized_two_player_party(&state)?;
 
     state.leave_matching(1)?;
+    state.leave_matching(2)?;
+    let (relay_a, _relay_rx_a) = relay_channels(NonZeroUsize::MIN);
+    let (relay_b, _relay_rx_b) = relay_channels(NonZeroUsize::MIN);
+    state.join_relay(owner_key, PartySlot::new(1)?, 100, 11, relay_a)?;
+    let join_b = state.join_relay(owner_key, PartySlot::new(2)?, 200, 12, relay_b)?;
 
-    assert_eq!(
-        cancellation_rx_a.try_recv()?,
-        PartyAbortReason::MatchingDisconnected
-    );
-    assert_eq!(
-        cancellation_rx_b.try_recv()?,
-        PartyAbortReason::MatchingDisconnected
-    );
-    assert_eq!(state.service_counts()?.party_count, 0);
+    assert!(join_b.flags.roster_ready());
+    assert!(matches!(
+        cancellation_rx_a.try_recv(),
+        Err(mpsc::error::TryRecvError::Empty)
+    ));
+    assert!(matches!(
+        cancellation_rx_b.try_recv(),
+        Err(mpsc::error::TryRecvError::Empty)
+    ));
     Ok(())
 }
 

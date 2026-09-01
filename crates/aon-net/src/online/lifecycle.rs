@@ -1,7 +1,7 @@
 use super::*;
 
 impl OnlineState {
-    pub(crate) fn leave_matching(&self, connection_id: u64) -> Result<(), OnlineError> {
+    pub(crate) fn leave_matching(&self, connection_id: u64) -> Result<bool, OnlineError> {
         let mut inner = self.lock()?;
         for party in &mut inner.assembling {
             party
@@ -9,29 +9,25 @@ impl OnlineState {
                 .retain(|member| member.connection_id != connection_id);
         }
         inner.assembling.retain(|party| !party.members.is_empty());
-        let abort_owner_key = inner.parties.iter().find_map(|(owner_key, party)| {
-            party
+        let mut start_handoff_timeout = false;
+        for party in inner.parties.values_mut() {
+            let Some(member) = party
                 .members
-                .iter()
+                .iter_mut()
                 .find(|member| member.matching_connection_id == connection_id)
-                .filter(|member| {
-                    party.roster_readiness == RosterReadiness::Waiting && !member.matching_complete
-                })
-                .map(|_| *owner_key)
-        });
-        let notifications = abort_owner_key.and_then(|owner_key| {
-            remove_party_for_abort(
-                &mut inner,
-                owner_key,
-                PartyAbortReason::MatchingDisconnected,
-            )
-        });
-        drop(inner);
-        if let Some(notifications) = notifications {
-            notifications.send();
+            else {
+                continue;
+            };
+            if party.roster_readiness == RosterReadiness::Waiting {
+                member.matching_complete = true;
+                start_handoff_timeout = member.gameplay_connection.is_none();
+                party.last_activity = Instant::now();
+            }
+            break;
         }
+        drop(inner);
         self.publish_status()?;
-        Ok(())
+        Ok(start_handoff_timeout)
     }
 
     pub(crate) fn expire_gameplay_handoff(&self, connection_id: u64) -> Result<(), OnlineError> {

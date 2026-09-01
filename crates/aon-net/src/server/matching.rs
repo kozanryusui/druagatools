@@ -212,16 +212,8 @@ async fn handle_connection(
                                     player_timeout,
                                 )
                                 .await?;
-                                if let Some(completion) = completion
-                                    && online.confirm_matching_complete(completion)?
-                                {
-                                    let online = Arc::downgrade(online);
-                                    tokio::spawn(async move {
-                                        tokio::time::sleep(player_timeout).await;
-                                        if let Some(online) = online.upgrade() {
-                                            let _ = online.expire_gameplay_handoff(connection_id);
-                                        }
-                                    });
+                                if let Some(completion) = completion {
+                                    online.confirm_matching_complete(completion)?;
                                 }
                                 debug!(
                                     %peer,
@@ -286,8 +278,24 @@ async fn handle_connection(
         Ok(())
     }
     .await;
-    online.leave_matching(connection_id)?;
+    if online.leave_matching(connection_id)? {
+        schedule_gameplay_handoff_expiry(online, connection_id, player_timeout);
+    }
     result
+}
+
+fn schedule_gameplay_handoff_expiry(
+    online: &Arc<OnlineState>,
+    connection_id: u64,
+    player_timeout: Duration,
+) {
+    let online = Arc::downgrade(online);
+    tokio::spawn(async move {
+        tokio::time::sleep(player_timeout).await;
+        if let Some(online) = online.upgrade() {
+            let _ = online.expire_gameplay_handoff(connection_id);
+        }
+    });
 }
 
 async fn write_response(
