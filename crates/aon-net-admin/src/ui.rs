@@ -453,7 +453,6 @@ fn AnnouncementsPanel(
     view! {
         <section class="panel">
             <h2>"Announcements"</h2>
-            <p class="help">"The Tower can store 16 announcements. Times use the Tower's local time."</p>
             <div class="announcement-list">
                 {move || values.get().into_iter().enumerate().map(|(index, announcement)| {
                     let number = index + 1;

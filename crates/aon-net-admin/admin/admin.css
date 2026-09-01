@@ -54,11 +54,10 @@ table { width: 100%; border-collapse: collapse; }
 th, td { padding: 10px 9px; text-align: left; border-bottom: 1px solid #bca273; vertical-align: middle; }
 td select { min-width: 150px; }
 .bonus-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.help { margin: -7px 0 18px; color: var(--muted); }
 .announcement-list { display: grid; gap: 14px; }
-.announcement-row { display: grid; grid-template-columns: minmax(190px, .7fr) minmax(190px, .7fr) minmax(300px, 1.6fr) auto; gap: 14px; align-items: end; padding: 14px; border: 1px solid #a8874f; background: #e1cfa4; }
+.announcement-row { display: grid; grid-template-columns: minmax(190px, .7fr) minmax(190px, .7fr) minmax(300px, 1.6fr) auto; gap: 14px; align-items: start; padding: 14px; border: 1px solid #a8874f; background: #e1cfa4; }
 .announcement-text textarea { resize: vertical; }
-.remove-announcement { margin-bottom: 1px; }
+.remove-announcement { align-self: end; margin-bottom: 1px; }
 .status { min-height: 20px; margin-left: 4px; color: var(--green); font-size: 14px; }
 .status.error { color: var(--red); }
 .logs-toolbar { display: grid; grid-template-columns: 160px minmax(200px, 1fr) auto auto; gap: 10px; margin-bottom: 16px; }
