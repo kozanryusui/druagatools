@@ -558,16 +558,21 @@ fn network_check_gets_an_immediate_single_station_assignment()
         player_or_lobby_key: crate::protocol::station::PlayerIdentity::from_bytes([0; 32]),
     };
 
-    assert!(matches!(
-        state.queue_match(1, registration, lookup, assignment_tx)?,
-        MatchOutcome::PartyCreated {
-            player_count: 1,
-            ..
-        }
-    ));
+    let MatchOutcome::PartyCreated {
+        owner_key,
+        player_count: 1,
+    } = state.queue_match(1, registration, lookup, assignment_tx)?
+    else {
+        return Err("network check did not create a one-player party".into());
+    };
     let assignment = assignment_rx.try_recv()?;
     assert!(assignment.ready);
     assert_eq!(assignment.local_slot, PartySlot::new(1)?);
     assert_eq!(assignment.participants.as_slice().len(), 1);
+
+    state.leave_matching(1)?;
+    let (relay, _receivers) = relay_channels(NonZeroUsize::MIN);
+    let join = state.join_relay(owner_key, PartySlot::new(1)?, 0, 2, relay)?;
+    assert!(join.flags.roster_ready());
     Ok(())
 }

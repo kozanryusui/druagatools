@@ -59,14 +59,18 @@ impl OnlineState {
             (inner.assembling.len() - 1, 0)
         };
 
+        let network_check = {
+            let party = &inner.assembling[party_index];
+            is_network_check(&party.members[0].registration, &lookup)
+        };
         let should_finalize = {
             let party = &inner.assembling[party_index];
             party.members.len() == MAX_PARTY_PLAYERS
                 || lookup.remaining_wait_seconds == 0
-                || is_network_check(&party.members[0].registration, &lookup)
+                || network_check
         };
         if should_finalize {
-            return self.finalize_party(inner, party_index);
+            return self.finalize_party(inner, party_index, network_check);
         }
 
         let assignment = self.assignment_for(&inner.assembling[party_index], local_index, false)?;
@@ -117,6 +121,7 @@ impl OnlineState {
         &self,
         mut inner: MutexGuard<'_, OnlineInner>,
         party_index: usize,
+        matching_complete: bool,
     ) -> Result<MatchOutcome, OnlineError> {
         let party = inner.assembling.remove(party_index);
         let owner_key = party.owner_key;
@@ -139,7 +144,7 @@ impl OnlineState {
             .map(|(index, member)| RelayMember {
                 record_id: member.registration.record_id,
                 matching_connection_id: member.connection_id,
-                matching_complete: false,
+                matching_complete,
                 matching_cancellation_tx: member.cancellation_tx.clone(),
                 matching_record: ParticipantRecord::from_player_identity(
                     PartySlot::ALL[index],
