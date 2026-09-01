@@ -4,7 +4,8 @@ AON.Net replaces the retired Druaga Online network services. It supports the Tow
 
 | Service | Default endpoint |
 | --- | --- |
-| ALL.Net PowerOn and administration | TCP port 80 |
+| ALL.Net PowerOn | TCP port 80 |
+| Administration with optional security | TCP port 80 or HTTPS port 443 |
 | Database service | TCP port 33437 |
 | Matching service | TCP port 33438 |
 | Relay services | TCP ports 33439 through 33441 |
@@ -32,6 +33,10 @@ Edit `aon-net.toml` before you make the server available on a network.
 The `bind-ip` field selects the local Internet Protocol (IP) address for all services. The `http-port`, `game-port`, `matching-port`, `relay-ports`, and `gameplay-port` fields select their TCP ports. The `gameplay-advertise-host` and `gameplay-advertise-port` fields select the address that AON.Net sends to matched Stations. Stations must be able to resolve and reach this advertised address.
 
 A relative `database-path` starts at the server working directory. AON.Net creates this database when it starts. The database stores card data backups, server settings, and changes from the administration interface.
+
+The `[admin-security]` section controls Transport Layer Security (TLS) and authentication for the administration interface. Keep `enabled = false` for local hosting. Set it to `true` before you make the administration interface available on the public Internet. The enabled mode requires `tls-public-cert`, `tls-private-key`, and `admin-token`. The token must contain at least 32 bytes.
+
+`tls-public-cert` must point to a PEM certificate chain. `tls-private-key` must point to its PEM private key. Relative paths start at the server working directory. Restrict access to the configuration file and private key.
 
 ## Build and start AON.Net
 
@@ -75,19 +80,25 @@ Use `ip` instead of `domain` when the server has a fixed IPv4 address.
 
 The Station does not use the Tower hook. Add `naominet.jp` and `gameservers.aonnet` to the PCSX2 per-game DEV9 host list. Map both names to the AON.Net address. Set the first DEV9 DNS mode to `Internal`.
 
-Allow TCP ports 80 and 33437 through 33442 through the server firewall. Do not expose these services to the public Internet without an additional access-control layer.
+Allow TCP ports 80 and 33437 through 33442 through the server firewall. Also allow TCP port 443 when admin security is enabled. The game protocols do not support authentication. Use firewall rules and connection limits when you make the game services available on the public Internet.
 
 ## Use the administration interface
 
-Open this address after the server starts:
+When admin security is disabled, open this address after the server starts:
 
 ```text
 http://SERVER_ADDRESS/admin
 ```
 
+When admin security is enabled, open this address and enter the configured admin token:
+
+```text
+https://SERVER_ADDRESS/admin
+```
+
 The interface changes the shop name, quest rotation, quest rewards, and quest bonuses. Its Logs page shows live server logs.
 
-The administration interface has no login. Permit access only from a trusted network.
+When admin security is enabled, AON.Net keeps authenticated sessions in memory. A server restart ends all sessions. The web app does not put the token in browser storage. The login field supports password managers.
 
 ## Configuration notes
 

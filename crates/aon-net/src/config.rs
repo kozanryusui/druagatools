@@ -4,6 +4,8 @@ use std::path::{Path, PathBuf};
 
 use encoding_rs::SHIFT_JIS;
 use serde::Deserialize;
+use sha2::{Digest, Sha256};
+use subtle::ConstantTimeEq;
 use thiserror::Error;
 
 use crate::protocol::station::EndpointHost;
@@ -14,8 +16,42 @@ use crate::protocol::tower::{
 #[derive(Debug)]
 pub struct AonNetConfig {
     pub(crate) server: ServerConfig,
+    pub(crate) admin_security: AdminSecurity,
     pub(crate) power_on: PowerOnConfig,
     pub(crate) announcements: Vec<AnnouncementRecord>,
+}
+
+#[derive(Debug)]
+pub(crate) enum AdminSecurity {
+    Disabled,
+    Enabled(SecureAdminConfig),
+}
+
+#[derive(Debug)]
+pub(crate) struct SecureAdminConfig {
+    pub(crate) tls_public_cert: PathBuf,
+    pub(crate) tls_private_key: PathBuf,
+    pub(crate) admin_token: AdminToken,
+}
+
+#[derive(Clone)]
+pub(crate) struct AdminToken([u8; 32]);
+
+impl std::fmt::Debug for AdminToken {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str("AdminToken([redacted])")
+    }
+}
+
+impl AdminToken {
+    pub(crate) fn new(token: &str) -> Self {
+        Self(Sha256::digest(token.as_bytes()).into())
+    }
+
+    pub(crate) fn matches(&self, candidate: &str) -> bool {
+        let candidate: [u8; 32] = Sha256::digest(candidate.as_bytes()).into();
+        bool::from(self.0.ct_eq(&candidate))
+    }
 }
 
 #[derive(Debug)]
@@ -49,9 +85,21 @@ pub(crate) struct PowerOnConfig {
 #[serde(deny_unknown_fields, rename_all = "kebab-case")]
 struct RawAonNetConfig {
     server: RawServerConfig,
+    #[serde(default)]
+    admin_security: RawAdminSecurity,
     power_on: RawPowerOnConfig,
     #[serde(default)]
     announcements: Vec<RawAnnouncement>,
+}
+
+#[derive(Default, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "kebab-case")]
+struct RawAdminSecurity {
+    #[serde(default)]
+    enabled: bool,
+    tls_public_cert: Option<PathBuf>,
+    tls_private_key: Option<PathBuf>,
+    admin_token: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -116,6 +164,12 @@ pub enum ConfigError {
     GameplayHost,
     #[error("gameplay-advertise-port must not be zero")]
     GameplayPort,
+    #[error("admin-security field {field} is required when admin security is enabled")]
+    AdminSecurityRequired { field: &'static str },
+    #[error("admin-security field admin-token must contain at least 32 bytes")]
+    AdminTokenTooShort,
+    #[error("admin security cannot use TCP port 443 because another service uses it")]
+    AdminPortConflict,
     #[error("announcement {index} has an invalid {field}; use YYYY-MM-DD HH:MM")]
     AnnouncementTime { index: usize, field: &'static str },
     #[error("announcement {index} is invalid: {source}")]
@@ -145,12 +199,14 @@ pub fn load_config(path: &Path) -> Result<AonNetConfig, ConfigError> {
 impl RawAonNetConfig {
     fn validate(self) -> Result<AonNetConfig, ConfigError> {
         validate_power_on(&self.power_on)?;
+        let admin_security = self.admin_security.validate(&self.server)?;
         let gameplay_advertise_host = EndpointHost::new(self.server.gameplay_advertise_host)
             .map_err(|_| ConfigError::GameplayHost)?;
         let gameplay_advertise_port = NonZeroU16::new(self.server.gameplay_advertise_port)
             .ok_or(ConfigError::GameplayPort)?;
         let announcements = validate_announcements(self.announcements)?;
         Ok(AonNetConfig {
+            admin_security,
             server: ServerConfig {
                 bind_ip: self.server.bind_ip,
                 http_port: self.server.http_port,
@@ -179,6 +235,44 @@ impl RawAonNetConfig {
     }
 }
 
+impl RawAdminSecurity {
+    fn validate(self, server: &RawServerConfig) -> Result<AdminSecurity, ConfigError> {
+        if !self.enabled {
+            return Ok(AdminSecurity::Disabled);
+        }
+        if [
+            server.http_port,
+            server.game_port,
+            server.matching_port,
+            server.relay_ports[0],
+            server.relay_ports[1],
+            server.relay_ports[2],
+            server.gameplay_port,
+        ]
+        .contains(&443)
+        {
+            return Err(ConfigError::AdminPortConflict);
+        }
+        let tls_public_cert = required_path(self.tls_public_cert, "tls-public-cert")?;
+        let tls_private_key = required_path(self.tls_private_key, "tls-private-key")?;
+        let admin_token = self.admin_token.ok_or(ConfigError::AdminSecurityRequired {
+            field: "admin-token",
+        })?;
+        if admin_token.len() < 32 {
+            return Err(ConfigError::AdminTokenTooShort);
+        }
+        Ok(AdminSecurity::Enabled(SecureAdminConfig {
+            tls_public_cert,
+            tls_private_key,
+            admin_token: AdminToken::new(&admin_token),
+        }))
+    }
+}
+
+fn required_path(path: Option<PathBuf>, field: &'static str) -> Result<PathBuf, ConfigError> {
+    path.filter(|path| !path.as_os_str().is_empty())
+        .ok_or(ConfigError::AdminSecurityRequired { field })
+}
 fn validate_announcements(
     raw_announcements: Vec<RawAnnouncement>,
 ) -> Result<Vec<AnnouncementRecord>, ConfigError> {
@@ -288,5 +382,58 @@ mod tests {
         let mut raw = supplied_config();
         raw.server.gameplay_advertise_host = "not an endpoint host because it is too long".into();
         assert!(matches!(raw.validate(), Err(ConfigError::GameplayHost)));
+    }
+
+    #[test]
+    fn admin_security_is_optional_but_complete_when_enabled() {
+        let config = supplied_config()
+            .validate()
+            .unwrap_or_else(|error| panic!("disabled admin security must validate: {error}"));
+        assert!(matches!(config.admin_security, AdminSecurity::Disabled));
+
+        let mut raw = supplied_config();
+        raw.admin_security.enabled = true;
+        assert!(matches!(
+            raw.validate(),
+            Err(ConfigError::AdminSecurityRequired {
+                field: "tls-public-cert"
+            })
+        ));
+
+        let mut raw = supplied_config();
+        raw.admin_security.enabled = true;
+        raw.admin_security.tls_public_cert = Some("fullchain.pem".into());
+        raw.admin_security.tls_private_key = Some("private-key.pem".into());
+        raw.admin_security.admin_token = Some("too-short".into());
+        assert!(matches!(
+            raw.validate(),
+            Err(ConfigError::AdminTokenTooShort)
+        ));
+
+        let token = "a-random-admin-token-with-32-bytes";
+        let mut raw = supplied_config();
+        raw.admin_security.enabled = true;
+        raw.admin_security.tls_public_cert = Some("fullchain.pem".into());
+        raw.admin_security.tls_private_key = Some("private-key.pem".into());
+        raw.admin_security.admin_token = Some(token.into());
+        let config = raw
+            .validate()
+            .unwrap_or_else(|error| panic!("complete admin security must validate: {error}"));
+        let AdminSecurity::Enabled(admin) = config.admin_security else {
+            panic!("admin security must be enabled");
+        };
+        assert!(admin.admin_token.matches(token));
+        assert!(!admin.admin_token.matches("a-different-random-token-value"));
+    }
+
+    #[test]
+    fn secure_admin_port_must_be_available() {
+        let mut raw = supplied_config();
+        raw.server.game_port = 443;
+        raw.admin_security.enabled = true;
+        assert!(matches!(
+            raw.validate(),
+            Err(ConfigError::AdminPortConflict)
+        ));
     }
 }

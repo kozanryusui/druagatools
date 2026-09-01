@@ -8,8 +8,8 @@ use wasm_bindgen::{JsCast, closure::Closure};
 use web_sys::{EventSource, HashChangeEvent, HtmlSelectElement, MessageEvent};
 
 use super::contract::{
-    AdminError, AdminEvent, AdminEventEnvelope, AdminSnapshot, BonusSettings, LogLevel, QuestMode,
-    QuestOption, QuestSettings, RewardSettings, SettingsSnapshot, ShopUpdate,
+    AdminError, AdminEvent, AdminEventEnvelope, AdminLogin, AdminSnapshot, BonusSettings, LogLevel,
+    QuestMode, QuestOption, QuestSettings, RewardSettings, SettingsSnapshot, ShopUpdate,
 };
 use super::routes;
 
@@ -25,6 +25,23 @@ struct ConfigurationData {
     timetable: Vec<super::contract::QuestTimetableEntry>,
 }
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum AccessState {
+    Checking,
+    Login,
+    Admin,
+}
+
+struct SnapshotResponse {
+    snapshot: AdminSnapshot,
+    security_enabled: bool,
+}
+
+enum FetchError {
+    Unauthorized,
+    Message(String),
+}
+
 #[component]
 pub fn App() -> impl IntoView {
     let snapshot = RwSignal::new(None::<AdminSnapshot>);
@@ -34,6 +51,8 @@ pub fn App() -> impl IntoView {
     let paused_at = RwSignal::new(None::<u64>);
     let log_level = RwSignal::new("all".to_owned());
     let log_query = RwSignal::new(String::new());
+    let access = RwSignal::new(AccessState::Checking);
+    let security_enabled = RwSignal::new(false);
     let configuration = Memo::new(move |_| {
         snapshot.get().map(|data| ConfigurationData {
             settings: data.settings,
@@ -56,31 +75,102 @@ pub fn App() -> impl IntoView {
     leptos::task::spawn_local(async move {
         match fetch_snapshot().await {
             Ok(value) => {
-                snapshot.set(Some(value));
+                snapshot.set(Some(value.snapshot));
+                security_enabled.set(value.security_enabled);
+                access.set(AccessState::Admin);
                 connect_events(snapshot, error);
             }
-            Err(message) => error.set(Some(message)),
+            Err(FetchError::Unauthorized) => access.set(AccessState::Login),
+            Err(FetchError::Message(message)) => {
+                error.set(Some(message));
+                access.set(AccessState::Admin);
+            }
         }
     });
 
     view! {
-        <div class="shell">
-            <aside class="sidebar">
-                <div class="brand">"AON.Net"</div>
-                <nav class="nav">
-                    <a href="#configuration" class:active=move || page.get() == "configuration">"Configuration"</a>
-                    <a href="#logs" class:active=move || page.get() == "logs">"Logs"</a>
-                </nav>
-            </aside>
-            <main class="main">
-                <div hidden=move || page.get() != "configuration">
-                    <ConfigurationPage configuration snapshot error saving/>
+        {move || match access.get() {
+            AccessState::Checking => view! { <div class="access-page"><p>"Connecting to AON.Net..."</p></div> }.into_any(),
+            AccessState::Login => view! { <LoginPage access snapshot error security_enabled/> }.into_any(),
+            AccessState::Admin => view! {
+                <div class="shell">
+                    <aside class="sidebar">
+                        <div class="brand">"AON.Net"</div>
+                        <nav class="nav">
+                            <a href="#configuration" class:active=move || page.get() == "configuration">"Configuration"</a>
+                            <a href="#logs" class:active=move || page.get() == "logs">"Logs"</a>
+                        </nav>
+                        <button class="logout" hidden=move || !security_enabled.get() on:click=move |_| logout()>"Log out"</button>
+                    </aside>
+                    <main class="main">
+                        <div hidden=move || page.get() != "configuration">
+                            <ConfigurationPage configuration snapshot error saving/>
+                        </div>
+                        <div hidden=move || page.get() != "logs">
+                            <LogsPage snapshot paused_at log_level log_query/>
+                        </div>
+                    </main>
                 </div>
-                <div hidden=move || page.get() != "logs">
-                    <LogsPage snapshot paused_at log_level log_query/>
+            }.into_any(),
+        }}
+    }
+}
+
+#[component]
+fn LoginPage(
+    access: RwSignal<AccessState>,
+    snapshot: RwSignal<Option<AdminSnapshot>>,
+    error: RwSignal<Option<String>>,
+    security_enabled: RwSignal<bool>,
+) -> impl IntoView {
+    let token = RwSignal::new(String::new());
+    let submitting = RwSignal::new(false);
+    let login_error = RwSignal::new(None::<String>);
+    view! {
+        <main class="access-page">
+            <form class="panel login-panel" on:submit=move |event| {
+                event.prevent_default();
+                submitting.set(true);
+                login_error.set(None);
+                let submitted_token = token.get_untracked();
+                leptos::task::spawn_local(async move {
+                    match authenticate(submitted_token).await {
+                        Ok(()) => {
+                            token.set(String::new());
+                            match fetch_snapshot().await {
+                                Ok(value) => {
+                                snapshot.set(Some(value.snapshot));
+                                security_enabled.set(value.security_enabled);
+                                access.set(AccessState::Admin);
+                                connect_events(snapshot, error);
+                                }
+                                Err(FetchError::Unauthorized) => login_error.set(Some("Authentication failed.".to_owned())),
+                                Err(FetchError::Message(message)) => login_error.set(Some(message)),
+                            }
+                        }
+                        Err(message) => login_error.set(Some(message)),
+                    }
+                    submitting.set(false);
+                });
+            }>
+                <h1>"AON.Net administration"</h1>
+                <p>"Enter the admin token to continue."</p>
+                <div class="credential-username" aria-hidden="true">
+                    <label for="admin-username">"Username"</label>
+                    <input id="admin-username" type="text" name="username" autocomplete="username" value="admin" tabindex="-1"/>
                 </div>
-            </main>
-        </div>
+                <div class="field">
+                    <label for="admin-token">"Admin token"</label>
+                    <input id="admin-token" type="password" name="admin-token" autocomplete="current-password" required autofocus
+                        prop:value=move || token.get()
+                        on:input=move |event| token.set(event_target_value(&event))/>
+                </div>
+                <div class="actions">
+                    <button type="submit" disabled=move || submitting.get() || token.get().is_empty()>"Log in"</button>
+                    <Status error=login_error/>
+                </div>
+            </form>
+        </main>
     }
 }
 
@@ -344,6 +434,10 @@ fn save<T: Serialize + 'static>(
                 .json(&value)
                 .map_err(|e| e.to_string())?;
             let response = request.send().await.map_err(|e| e.to_string())?;
+            if response.status() == 401 {
+                reload_for_login();
+                return Err("The admin session ended. Log in again.".to_owned());
+            }
             if response.ok() {
                 response
                     .json::<SettingsSnapshot>()
@@ -372,14 +466,62 @@ fn save<T: Serialize + 'static>(
     });
 }
 
-async fn fetch_snapshot() -> Result<AdminSnapshot, String> {
-    Request::get(routes::SNAPSHOT)
+async fn authenticate(token: String) -> Result<(), String> {
+    let request = Request::post(routes::LOGIN)
+        .json(&AdminLogin { admin_token: token })
+        .map_err(|error| error.to_string())?;
+    let response = request.send().await.map_err(|error| error.to_string())?;
+    if response.ok() {
+        Ok(())
+    } else {
+        let status = response.status();
+        Err(response
+            .json::<AdminError>()
+            .await
+            .map(|error| error.message)
+            .unwrap_or_else(|_| format!("Login failed with status {status}.")))
+    }
+}
+
+fn logout() {
+    leptos::task::spawn_local(async move {
+        let _ = Request::post(routes::LOGOUT).send().await;
+        reload_for_login();
+    });
+}
+
+fn reload_for_login() {
+    if let Some(window) = web_sys::window() {
+        let _ = window.location().reload();
+    }
+}
+
+async fn fetch_snapshot() -> Result<SnapshotResponse, FetchError> {
+    let response = Request::get(routes::SNAPSHOT)
         .send()
         .await
-        .map_err(|e| e.to_string())?
+        .map_err(|error| FetchError::Message(error.to_string()))?;
+    if response.status() == 401 {
+        return Err(FetchError::Unauthorized);
+    }
+    if !response.ok() {
+        return Err(FetchError::Message(format!(
+            "Request failed with status {}.",
+            response.status()
+        )));
+    }
+    let security_enabled = response
+        .headers()
+        .get("x-aon-net-admin-security")
+        .is_some_and(|value| value == "enabled");
+    let snapshot = response
         .json()
         .await
-        .map_err(|e| e.to_string())
+        .map_err(|error| FetchError::Message(error.to_string()))?;
+    Ok(SnapshotResponse {
+        snapshot,
+        security_enabled,
+    })
 }
 
 fn connect_events(snapshot: RwSignal<Option<AdminSnapshot>>, error: RwSignal<Option<String>>) {
@@ -415,8 +557,9 @@ fn connect_events(snapshot: RwSignal<Option<AdminSnapshot>>, error: RwSignal<Opt
         if event_gap {
             leptos::task::spawn_local(async move {
                 match fetch_snapshot().await {
-                    Ok(value) => snapshot.set(Some(value)),
-                    Err(message) => error.set(Some(message)),
+                    Ok(value) => snapshot.set(Some(value.snapshot)),
+                    Err(FetchError::Unauthorized) => reload_for_login(),
+                    Err(FetchError::Message(message)) => error.set(Some(message)),
                 }
             });
         }
@@ -425,6 +568,19 @@ fn connect_events(snapshot: RwSignal<Option<AdminSnapshot>>, error: RwSignal<Opt
         event_source.set_onmessage(Some(listener.as_ref().unchecked_ref()));
     }
     listener.forget();
+    let error_listener = Closure::<dyn FnMut()>::new(move || {
+        leptos::task::spawn_local(async move {
+            match fetch_snapshot().await {
+                Ok(_) => {}
+                Err(FetchError::Unauthorized) => reload_for_login(),
+                Err(FetchError::Message(message)) => error.set(Some(message)),
+            }
+        });
+    });
+    if let Some(event_source) = source.borrow().as_ref() {
+        event_source.set_onerror(Some(error_listener.as_ref().unchecked_ref()));
+    }
+    error_listener.forget();
     std::mem::forget(source);
 }
 

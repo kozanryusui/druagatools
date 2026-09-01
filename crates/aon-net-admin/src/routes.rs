@@ -1,6 +1,8 @@
 pub const INDEX: &str = "/admin";
 pub const INDEX_SLASH: &str = "/admin/";
 pub const SNAPSHOT: &str = "/admin/api/snapshot";
+pub const LOGIN: &str = "/admin/api/login";
+pub const LOGOUT: &str = "/admin/api/logout";
 pub const EVENTS: &str = "/admin/api/events";
 pub const SHOP_SETTINGS: &str = "/admin/api/settings/shop";
 pub const QUEST_SETTINGS: &str = "/admin/api/settings/quests";

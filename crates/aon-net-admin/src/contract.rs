@@ -140,3 +140,8 @@ pub struct AdminError {
     pub message: String,
     pub fields: Vec<FieldError>,
 }
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct AdminLogin {
+    pub admin_token: String,
+}

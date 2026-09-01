@@ -9,16 +9,20 @@ license = "AGPL-3.0-only"
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 aon-net-admin = { version = "=0.2.0", path = "../aon-net-admin" }
 axum = "=0.8.9"
+axum-server = { version = "=0.8.0", features = ["tls-rustls"] }
 base64 = "=0.23.1"
 binrw = "=0.15.2"
 encoding_rs = "=0.8.35"
 fastrand = "=2.5.0"
+getrandom = "=0.4.3"
 flate2 = "=1.1.9"
 jiff = "=0.2.35"
 native_db = "=0.8.2"
 native_model = "=0.4.20"
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.149"
+sha2 = "=0.10.9"
+subtle = "=2.6.1"
 thiserror = "=2.0.20"
 tokio = { version = "=1.53.1", features = ["io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
 tokio-stream = { version = "=0.1.18", features = ["sync"] }

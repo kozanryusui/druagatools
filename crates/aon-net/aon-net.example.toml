@@ -15,6 +15,15 @@ gameplay-port = 33442
 gameplay-advertise-host = "gameservers.aonnet"
 gameplay-advertise-port = 33442
 
+[admin-security]
+# Keep this false for simple local hosting. The admin interface then uses HTTP.
+enabled = false
+# If enabled is true, AON.Net serves the admin interface on HTTPS port 443.
+# Use a PEM certificate chain and its private key. Relative paths start at the
+# server working directory. The token must contain at least 32 bytes.
+# tls-public-cert = "fullchain.pem"
+# tls-private-key = "private-key.pem"
+# admin-token = "replace-with-a-long-random-token"
 
 
 [power-on]
