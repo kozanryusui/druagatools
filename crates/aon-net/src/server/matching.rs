@@ -170,7 +170,7 @@ async fn handle_connection(
                                 debug!(
                                     %peer,
                                     connection_id,
-                                    marker = format_args!("0x{marker:02X}"),
+                                    marker = format_args!("0x{:02X}", marker.get()),
                                     "relayed Station participant exchange record"
                                 );
                                 continue;

@@ -105,8 +105,8 @@ pub struct PlayerIdentity {
 }
 
 impl PlayerIdentity {
-    pub(crate) const fn participant_marker(self) -> u8 {
-        self.identity[0]
+    pub(crate) const fn participant_marker(self) -> ParticipantMarker {
+        ParticipantMarker(self.identity[0])
     }
 
     #[cfg(test)]
@@ -121,6 +121,15 @@ impl PlayerIdentity {
             party_slot_placeholder: bytes[0],
             identity,
         }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) struct ParticipantMarker(u8);
+
+impl ParticipantMarker {
+    pub(crate) const fn get(self) -> u8 {
+        self.0
     }
 }
 
@@ -142,8 +151,8 @@ impl ParticipantRecord {
     }
 
     #[cfg(test)]
-    pub(crate) const fn participant_marker(self) -> u8 {
-        self.identity[0]
+    pub(crate) const fn participant_marker(self) -> ParticipantMarker {
+        ParticipantMarker(self.identity[0])
     }
 }
 

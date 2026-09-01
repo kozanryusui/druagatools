@@ -11,8 +11,7 @@ use super::transport::read_frame;
 use super::{ServerError, SessionPhase};
 use crate::online::{OnlineError, OnlineState};
 use crate::protocol::station::{
-    GameplayRequest, GameplayResponse, OwnerKey, PartySlot, StationProtocolError,
-    deserialize_gameplay_request,
+    GameplayRequest, GameplayResponse, StationProtocolError, deserialize_gameplay_request,
 };
 
 #[derive(Debug, Error)]
@@ -32,12 +31,6 @@ enum GameplayConnectionError {
     },
     #[error("Station sent a gameplay request before endpoint registration")]
     RegistrationRequired,
-}
-
-#[derive(Clone, Copy)]
-struct RelayBinding {
-    owner_key: OwnerKey,
-    party_slot: PartySlot,
 }
 
 pub(super) async fn serve_connections(
@@ -118,11 +111,8 @@ async fn handle_connection(
                         record_id,
                         connection_id,
                     ) {
-                        Ok(flags) => {
-                            binding = Some(RelayBinding {
-                                owner_key,
-                                party_slot,
-                            });
+                        Ok(join) => {
+                            binding = Some(join.binding);
                             stream
                                 .write_all(&GameplayResponse::RegistrationResult { status: 0 }.serialize()?)
                                 .await?;
@@ -132,7 +122,7 @@ async fn handle_connection(
                                 owner_key = %owner_key,
                                 party_slot = %party_slot,
                                 record_id,
-                                active_flags = flags.bits(),
+                                active_flags = join.flags.bits(),
                                 "Station joined gameplay party"
                             );
                         }
@@ -146,42 +136,37 @@ async fn handle_connection(
                 }
                 GameplayRequest::GameplayBlob { blob } => {
                     let binding = binding.ok_or(GameplayConnectionError::RegistrationRequired)?;
-                    let batch = online.relay_blob(
-                        binding.owner_key,
-                        binding.party_slot,
-                        connection_id,
-                        blob.clone(),
-                    )?;
-                    if batch.dropped_records != 0 {
+                    let outcome = online.relay_blob(binding, blob.clone())?;
+                    if outcome.dropped_records != 0 {
                         warn!(
-                            owner_key = %binding.owner_key,
-                            party_slot = %binding.party_slot,
-                            dropped_records = batch.dropped_records,
+                            owner_key = %binding.owner_key(),
+                            party_slot = %binding.party_slot(),
+                            dropped_records = outcome.dropped_records,
                             "gameplay relay queue was full"
                         );
                     }
                     debug!(
-                        owner_key = %binding.owner_key,
-                        party_slot = %binding.party_slot,
+                        owner_key = %binding.owner_key(),
+                        party_slot = %binding.party_slot(),
                         input_bytes = blob.as_bytes().len(),
-                        output_records = batch.records.len(),
-                        flags = batch.flags.bits(),
+                        output_records = outcome.response.records.len(),
+                        flags = outcome.response.flags.bits(),
                         "relayed gameplay record"
                     );
-                    let has_sole_survivor = batch.flags.has_sole_survivor();
+                    let has_sole_survivor = outcome.response.flags.has_sole_survivor();
                     stream
                         .write_all(
                             &GameplayResponse::Envelope {
-                                flags: batch.flags,
-                                records: batch.records,
+                                flags: outcome.response.flags,
+                                records: outcome.response.records,
                             }
                             .serialize()?,
                         )
                         .await?;
                     if has_sole_survivor {
                         info!(
-                            owner_key = %binding.owner_key,
-                            party_slot = %binding.party_slot,
+                            owner_key = %binding.owner_key(),
+                            party_slot = %binding.party_slot(),
                             "closing gameplay relay for sole surviving Station"
                         );
                         break;
@@ -195,8 +180,8 @@ async fn handle_connection(
                 } => {
                     let binding = binding.ok_or(GameplayConnectionError::RegistrationRequired)?;
                     debug!(
-                        owner_key = %binding.owner_key,
-                        party_slot = %binding.party_slot,
+                        owner_key = %binding.owner_key(),
+                        party_slot = %binding.party_slot(),
                         action_18 = value_18,
                         action_1c = value_1c,
                         action_20 = value_20,
@@ -225,12 +210,12 @@ async fn handle_connection(
     .await;
 
     if let Some(binding) = binding {
-        online.leave_relay(binding.owner_key, binding.party_slot, connection_id)?;
+        online.leave_relay(binding)?;
         info!(
             %peer,
             connection_id,
-            owner_key = %binding.owner_key,
-            party_slot = %binding.party_slot,
+            owner_key = %binding.owner_key(),
+            party_slot = %binding.party_slot(),
             "Station left gameplay party"
         );
     }
