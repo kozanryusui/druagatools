@@ -6,7 +6,7 @@ use axum::extract::State;
 use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use axum::routing::post;
-use tracing::{debug, info, warn};
+use tracing::{debug, info, trace, warn};
 
 use crate::config::PowerOnConfig;
 use crate::protocol::power_on::{
@@ -31,7 +31,7 @@ pub(super) fn router(config: PowerOnConfig, settings: Arc<RuntimeSettings>) -> R
 }
 
 async fn handle_power_on(State(state): State<AppState>, body: Bytes) -> Response {
-    debug!(body = %String::from_utf8_lossy(&body), "received encoded PowerOn body");
+    trace!(body = %String::from_utf8_lossy(&body), "received encoded PowerOn body");
     let request = match deserialize_power_on_request(&body) {
         Ok(request) => request,
         Err(error) => {
@@ -50,16 +50,19 @@ async fn handle_power_on(State(state): State<AppState>, body: Bytes) -> Response
         encoding,
     } = request;
     info!(
-        %game_id,
         %game_version,
         %serial,
         %address,
+        "accepted PowerOn request"
+    );
+    debug!(
+        %game_id,
         firmware_major = firmware_version.major,
         firmware_minor = firmware_version.minor,
         boot_major = boot_version.major,
         boot_minor = boot_version.minor,
         ?encoding,
-        "accepted PowerOn request"
+        "parsed PowerOn request details"
     );
     let shop_name = match state.settings.shop_name() {
         Ok(shop_name) => shop_name,

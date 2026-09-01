@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use thiserror::Error;
-use tracing::{debug, info};
+use tracing::debug;
 
 use crate::online::{OnlineError, OnlineState, ServiceCounts};
 use crate::protocol::station::{MatchingActivationConfiguration, QuestEventConfiguration};
@@ -55,7 +55,7 @@ impl CentralServices {
     ) -> Result<TowerResponse, CentralServiceError> {
         let response = match request {
             TowerRequest::InitialIdentity { identity, reserved } => {
-                info!(?identity, reserved, "accepted Tower service identity");
+                debug!(?identity, reserved, "accepted Tower service identity");
                 TowerResponse::InitialAccepted {
                     session_id: self.session_id,
                 }
@@ -67,11 +67,11 @@ impl CentralServices {
                         actual: session_id,
                     });
                 }
-                info!(session_id, "confirmed Tower service session");
+                debug!(session_id, "confirmed Tower service session");
                 TowerResponse::SessionConfirmed { reserved: 0 }
             }
             TowerRequest::ServiceRecordRequest {} => {
-                info!("accepted Tower service-record request");
+                debug!("accepted Tower service-record request");
                 let state = self.storage.server_state()?;
                 TowerResponse::ServiceRecord {
                     rank_limit: state.rank_limit,
@@ -88,7 +88,7 @@ impl CentralServices {
                 cursor_minute,
                 cursor_sub_minute,
             } => {
-                info!(
+                debug!(
                     cursor_year,
                     cursor_month,
                     cursor_day,
@@ -116,7 +116,7 @@ impl CentralServices {
                     .unwrap_or(TowerResponse::AnnouncementComplete)
             }
             TowerRequest::CardDataUpload { upload } => {
-                info!(
+                debug!(
                     record_id = upload.record_id,
                     location = upload.location,
                     data_length = upload.card_data.len(),

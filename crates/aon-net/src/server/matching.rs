@@ -5,7 +5,7 @@ use thiserror::Error;
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc;
-use tracing::{debug, info, warn};
+use tracing::{debug, info, trace, warn};
 
 use super::central::{CentralServiceError, CentralServices};
 use super::limits::ConnectionGate;
@@ -117,23 +117,23 @@ async fn handle_connection(
                             player_timeout,
                         )
                         .await?;
-                        info!(%peer, connection_id, "sent Station gameplay endpoint assignment");
+                        debug!(%peer, connection_id, "sent Station gameplay endpoint assignment");
                         endpoint_assigned = true;
                     }
                 }
-				input = read_frame(&mut stream) => {
+                input = read_frame(&mut stream) => {
                     let Some(input) = input? else { break };
                     inactivity
                         .as_mut()
                         .reset(tokio::time::Instant::now() + player_timeout);
-					let message_type = u16::from_be_bytes([input[0], input[1]]);
-					debug!(
-						%peer,
-						connection_id,
-						message_type = format_args!("0x{message_type:04X}"),
-						payload = %hex_payload(&input[4..]),
-						"received Station matching frame"
-					);
+                    let message_type = u16::from_be_bytes([input[0], input[1]]);
+                    trace!(
+                        %peer,
+                        connection_id,
+                        message_type = format_args!("0x{message_type:04X}"),
+                        payload = %hex_payload(&input[4..]),
+                        "received Station matching frame"
+                    );
                     let request = deserialize_matching_request(&input)?;
                     match request {
                         MatchingRequest::Central(request)
@@ -162,7 +162,7 @@ async fn handle_connection(
                             if session_phase == SessionPhase::Confirmed =>
                         {
                             if reserved == 0 {
-                                info!(%peer, connection_id, "activated Station matching session");
+                                debug!(%peer, connection_id, "activated Station matching session");
                             } else {
                                 warn!(%peer, connection_id, reserved, "Station matching activation has an unexpected reserved value");
                             }
@@ -170,7 +170,7 @@ async fn handle_connection(
                                 central.matching_activation_configuration()?,
                             );
                             write_response(&mut stream, response, player_timeout).await?;
-                            info!(%peer, connection_id, "sent Station matching activation configuration");
+                            debug!(%peer, connection_id, "sent Station matching activation configuration");
                         }
                         MatchingRequest::LobbyRegistration(lobby)
                             if session_phase == SessionPhase::Confirmed =>
@@ -178,13 +178,18 @@ async fn handle_connection(
                             info!(
                                 %peer,
                                 connection_id,
-                                mode = lobby.mode,
                                 record_id = lobby.record_id,
                                 matching_quest_index = lobby.matching_quest_index,
+                                "Station joined global matching queue"
+                            );
+                            debug!(
+                                %peer,
+                                connection_id,
+                                mode = lobby.mode,
                                 alternate_quest_index = lobby.alternate_quest_index,
                                 location = lobby.location,
                                 lobby_values = ?lobby.lobby_values,
-                                "registered Station in global lobby"
+                                "registered Station lobby details"
                             );
                             registration = Some(lobby);
                             write_response(
@@ -243,7 +248,7 @@ async fn handle_connection(
                                         player_timeout,
                                     )
                                     .await?;
-                                    info!(
+                                    debug!(
                                         %peer,
                                         connection_id,
                                         elapsed_wait_seconds = lookup.elapsed_wait_seconds,

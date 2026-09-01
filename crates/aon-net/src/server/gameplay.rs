@@ -6,7 +6,7 @@ use std::time::Duration;
 use thiserror::Error;
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
-use tracing::{debug, info, warn};
+use tracing::{debug, info, trace, warn};
 
 use super::limits::ConnectionGate;
 use super::next_connection_id;
@@ -129,7 +129,7 @@ async fn handle_connection(
                 GameplayRequest::InitialIdentity { identity, reserved }
                     if session_phase == SessionPhase::Identity =>
                 {
-                    info!(%peer, connection_id, ?identity, reserved, "accepted Station gameplay identity");
+                    debug!(%peer, connection_id, ?identity, reserved, "accepted Station gameplay identity");
                     write_response(
                         &mut stream,
                         GameplayResponse::InitialAccepted {
@@ -213,7 +213,7 @@ async fn handle_connection(
                             "disconnecting Stations with full gameplay relay queues"
                         );
                     }
-                    debug!(
+                    trace!(
                         owner_key = %binding.owner_key(),
                         party_slot = %binding.party_slot(),
                         input_bytes = blob.as_bytes().len(),
@@ -244,7 +244,7 @@ async fn handle_connection(
                     ..
                 } => {
                     let binding = binding.ok_or(GameplayConnectionError::RegistrationRequired)?;
-                    debug!(
+                    trace!(
                         owner_key = %binding.owner_key(),
                         party_slot = %binding.party_slot(),
                         action_18 = value_18,
