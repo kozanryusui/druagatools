@@ -56,15 +56,14 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 name = "aon-net"
 version = "0.2.0"
 dependencies = [
+ "aon-net-admin",
  "axum",
  "base64 0.23.1",
  "binrw",
  "encoding_rs",
  "fastrand",
  "flate2",
- "gloo-net 0.7.0",
  "jiff",
- "leptos",
  "native_db",
  "native_model",
  "serde",
@@ -76,6 +75,16 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "aon-net-admin"
+version = "0.2.0"
+dependencies = [
+ "gloo-net 0.7.0",
+ "leptos",
+ "serde",
+ "serde_json",
  "wasm-bindgen",
  "web-sys",
 ]

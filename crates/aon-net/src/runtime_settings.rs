@@ -4,15 +4,15 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use encoding_rs::SHIFT_JIS;
 use thiserror::Error;
 
-use crate::admin::contract::{
-    AdminEvent, AdminSnapshot, BonusSettings, FieldError, QuestMode, QuestOption, QuestSettings,
-    QuestTimetableEntry, RewardSettings, SettingsSnapshot,
-};
 use crate::logging::AdminHub;
 use crate::protocol::station::{ItemId, PresentChance, QuestModifier, StationProtocolError};
 use crate::protocol::tower::{PartyQuestId, SpecialQuestId, TowerProtocolError};
 use crate::server::quest_rotation::RandomQuestRotation;
 use crate::storage::{AdminSettingsRecord, Storage, StorageError};
+use aon_net_admin::contract::{
+    AdminEvent, AdminSnapshot, BonusSettings, FieldError, QuestMode, QuestOption, QuestSettings,
+    QuestTimetableEntry, RewardSettings, SettingsSnapshot,
+};
 
 include!("quest_catalog.rs");
 

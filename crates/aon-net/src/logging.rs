@@ -9,7 +9,7 @@ use tracing::{Event, Level, Subscriber};
 use tracing_subscriber::Layer;
 use tracing_subscriber::layer::Context;
 
-use crate::admin::contract::{AdminEvent, AdminEventEnvelope, LogLevel, LogRecord};
+use aon_net_admin::contract::{AdminEvent, AdminEventEnvelope, LogLevel, LogRecord};
 
 pub struct AdminHub {
     sequence: AtomicU64,

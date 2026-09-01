@@ -243,10 +243,10 @@ fn healthy_disk_capacity() -> Result<DiskCapacity, TowerProtocolError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::admin::contract::{BonusSettings, RewardSettings};
     use crate::protocol::frame::Frame;
     use crate::protocol::station::{EndpointHost, MatchingResponse};
     use crate::protocol::tower::serialize_tower_response;
+    use aon_net_admin::contract::{BonusSettings, RewardSettings};
 
     #[test]
     fn service_record_uses_the_station_character_limits() -> Result<(), Box<dyn std::error::Error>>

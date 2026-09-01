@@ -11,10 +11,12 @@ use axum::{Json, Router};
 use tokio_stream::StreamExt;
 use tokio_stream::wrappers::BroadcastStream;
 
-use super::contract::{AdminError, BonusSettings, QuestSettings, RewardSettings, ShopUpdate};
-use super::routes;
 use crate::logging::AdminHub;
 use crate::runtime_settings::{RuntimeSettings, SettingsError};
+use aon_net_admin::contract::{
+    AdminError, BonusSettings, QuestSettings, RewardSettings, SettingsSnapshot, ShopUpdate,
+};
+use aon_net_admin::routes;
 
 const INDEX: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/admin/index.html"));
 const CSS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/admin/admin.css"));
@@ -108,7 +110,7 @@ async fn update_bonuses(
     update_response(state.settings.update_bonuses(update))
 }
 
-fn update_response(result: Result<super::contract::SettingsSnapshot, SettingsError>) -> Response {
+fn update_response(result: Result<SettingsSnapshot, SettingsError>) -> Response {
     match result {
         Ok(settings) => Json(settings).into_response(),
         Err(error) => settings_error(error),

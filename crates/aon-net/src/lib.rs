@@ -1,7 +1,7 @@
 //! Local replacement for the retired Druaga Online network services.
 
-pub mod admin;
-
+#[cfg(not(target_arch = "wasm32"))]
+mod admin;
 #[cfg(not(target_arch = "wasm32"))]
 mod config;
 #[cfg(not(target_arch = "wasm32"))]

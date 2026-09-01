@@ -6,8 +6,8 @@ use native_model::{Model, native_model};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::admin::contract::{BonusSettings, QuestMode, RewardSettings};
 use crate::protocol::tower::CardDataUpload;
+use aon_net_admin::contract::{BonusSettings, QuestMode, RewardSettings};
 
 const SERVER_STATE_KEY: u8 = 1;
 const ADMIN_SETTINGS_KEY: u8 = 1;

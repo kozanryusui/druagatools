@@ -12,14 +12,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").ok_or("manifest path is missing")?);
     let output = PathBuf::from(env::var_os("OUT_DIR").ok_or("output path is missing")?);
 
-    if env::var("CARGO_CFG_TARGET_ARCH").as_deref() == Ok("wasm32") {
-        return Ok(());
-    }
     for input in [
-        "admin/index.html",
-        "admin/admin.css",
-        "admin/Trunk.toml",
-        "src/admin",
+        "../aon-net-admin/admin/index.html",
+        "../aon-net-admin/admin/admin.css",
+        "../aon-net-admin/admin/Trunk.toml",
+        "../aon-net-admin/src",
     ] {
         println!("cargo:rerun-if-changed={input}");
     }
@@ -27,10 +24,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         .parent()
         .and_then(|path| path.parent())
         .ok_or("workspace path is missing")?
-        .join("target/admin-ui");
+        .join("target/aon-net-admin");
     let status = Command::new("trunk")
         .arg("build")
-        .current_dir(manifest_dir.join("admin"))
+        .current_dir(manifest_dir.join("../aon-net-admin/admin"))
         .env("CARGO_TARGET_DIR", target_dir)
         .env_remove("CARGO_ENCODED_RUSTFLAGS")
         .env_remove("CLIPPY_ARGS")
@@ -45,7 +42,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let asset_output = output.join("admin");
     fs::create_dir_all(&asset_output)?;
-    let dist = manifest_dir.join("admin/dist");
+    let dist = manifest_dir.join("../aon-net-admin/admin/dist");
     for name in ["index.html", "admin.css", "aon-net-admin.js"] {
         let bytes = fs::read(dist.join(name))?;
         if bytes.is_empty() {
