@@ -65,12 +65,15 @@ pub(crate) fn unsecured_router(
     online: Arc<OnlineState>,
     hub: Arc<AdminHub>,
 ) -> Router {
-    asset_routes().merge(api_routes()).with_state(AdminState {
-        settings,
-        online,
-        hub,
-        auth: None,
-    })
+    asset_routes()
+        .merge(read_api_routes())
+        .merge(write_api_routes())
+        .with_state(AdminState {
+            settings,
+            online,
+            hub,
+            auth: None,
+        })
 }
 
 pub(crate) fn secured_router(
@@ -80,15 +83,21 @@ pub(crate) fn secured_router(
     token: AdminToken,
 ) -> Router {
     let auth = AdminAuth::new(token);
-    let protected = api_routes()
+    let protected_writes = write_api_routes()
         .route(routes::LOGOUT, post(logout))
+        .route_layer(middleware::from_fn(require_same_https_origin));
+    let protected = read_api_routes()
+        .merge(protected_writes)
         .route("/admin/api/{*path}", any(not_found))
         .route_layer(middleware::from_fn_with_state(
             auth.clone(),
             require_authentication,
         ));
-    asset_routes()
+    let login = Router::new()
         .route(routes::LOGIN, post(login))
+        .route_layer(middleware::from_fn(require_same_https_origin));
+    asset_routes()
+        .merge(login)
         .merge(protected)
         .with_state(AdminState {
             settings,
@@ -109,10 +118,14 @@ fn asset_routes() -> Router<AdminState> {
         .route(routes::FALLBACK, get(index))
 }
 
-fn api_routes() -> Router<AdminState> {
+fn read_api_routes() -> Router<AdminState> {
     Router::new()
         .route(routes::SNAPSHOT, get(snapshot))
         .route(routes::EVENTS, get(events))
+}
+
+fn write_api_routes() -> Router<AdminState> {
+    Router::new()
         .route(routes::SHOP_SETTINGS, put(update_shop))
         .route(routes::QUEST_SETTINGS, put(update_quests))
         .route(routes::REWARD_SETTINGS, put(update_rewards))
@@ -157,13 +170,8 @@ fn asset(bytes: &'static [u8], content_type: &'static str, gzip: bool) -> Respon
 async fn login(
     State(state): State<AdminState>,
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
-    headers: HeaderMap,
-    uri: Uri,
     Json(login): Json<AdminLogin>,
 ) -> Response {
-    if !has_same_https_origin(&headers, &uri) {
-        return authentication_error(StatusCode::FORBIDDEN);
-    }
     let Some(auth) = state.auth else {
         return StatusCode::NOT_FOUND.into_response();
     };
@@ -186,10 +194,7 @@ async fn login(
     }
 }
 
-async fn logout(State(state): State<AdminState>, headers: HeaderMap, uri: Uri) -> Response {
-    if !has_same_https_origin(&headers, &uri) {
-        return authentication_error(StatusCode::FORBIDDEN);
-    }
+async fn logout(State(state): State<AdminState>, headers: HeaderMap) -> Response {
     if let (Some(auth), Some(session)) = (state.auth, session_cookie(&headers)) {
         auth.remove_session(session);
     }
@@ -223,63 +228,35 @@ async fn snapshot(State(state): State<AdminState>) -> Response {
     }
 }
 
-async fn update_shop(
-    State(state): State<AdminState>,
-    headers: HeaderMap,
-    uri: Uri,
-    Json(update): Json<ShopUpdate>,
-) -> Response {
-    if state.auth.is_some() && !has_same_https_origin(&headers, &uri) {
-        return authentication_error(StatusCode::FORBIDDEN);
-    }
+async fn update_shop(State(state): State<AdminState>, Json(update): Json<ShopUpdate>) -> Response {
     update_response(state.settings.update_shop(update.shop_name))
 }
 
 async fn update_quests(
     State(state): State<AdminState>,
-    headers: HeaderMap,
-    uri: Uri,
     Json(update): Json<QuestSettings>,
 ) -> Response {
-    if state.auth.is_some() && !has_same_https_origin(&headers, &uri) {
-        return authentication_error(StatusCode::FORBIDDEN);
-    }
     update_response(state.settings.update_quests(update))
 }
 
 async fn update_rewards(
     State(state): State<AdminState>,
-    headers: HeaderMap,
-    uri: Uri,
     Json(update): Json<RewardSettings>,
 ) -> Response {
-    if state.auth.is_some() && !has_same_https_origin(&headers, &uri) {
-        return authentication_error(StatusCode::FORBIDDEN);
-    }
     update_response(state.settings.update_rewards(update))
 }
 
 async fn update_bonuses(
     State(state): State<AdminState>,
-    headers: HeaderMap,
-    uri: Uri,
     Json(update): Json<BonusSettings>,
 ) -> Response {
-    if state.auth.is_some() && !has_same_https_origin(&headers, &uri) {
-        return authentication_error(StatusCode::FORBIDDEN);
-    }
     update_response(state.settings.update_bonuses(update))
 }
 
 async fn update_announcements(
     State(state): State<AdminState>,
-    headers: HeaderMap,
-    uri: Uri,
     Json(update): Json<Vec<AnnouncementSettings>>,
 ) -> Response {
-    if state.auth.is_some() && !has_same_https_origin(&headers, &uri) {
-        return authentication_error(StatusCode::FORBIDDEN);
-    }
     update_response(state.settings.update_announcements(update))
 }
 
@@ -331,6 +308,14 @@ async fn require_authentication(
         next.run(request).await
     } else {
         authentication_error(StatusCode::UNAUTHORIZED)
+    }
+}
+
+async fn require_same_https_origin(request: Request, next: Next) -> Response {
+    if has_same_https_origin(request.headers(), request.uri()) {
+        next.run(request).await
+    } else {
+        authentication_error(StatusCode::FORBIDDEN)
     }
 }
 
