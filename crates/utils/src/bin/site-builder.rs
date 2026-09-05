@@ -1276,8 +1276,22 @@ fn obtainability(item: &ItemRecord, data: &SiteData) -> String {
     }
     for quest in &data.chests.quests {
         for chest in &quest.chests {
-            if chest.rewards.iter().any(|reward| matches!(reward.value, ChestRewardValue::Item { item_id, .. } if item_id == item.id)) {
-                sources.push(format!("<a href=\"index.html#quest-{}\">{} {} chest</a>", quest.id, escape(&quest.name), chest_tier_name(chest.tier)));
+            for reward in chest.rewards.iter().filter(|reward| {
+                matches!(reward.value, ChestRewardValue::Item { item_id, .. } if item_id == item.id)
+            }) {
+                let label = if reward.recipient.starts_with("Separate chest") {
+                    "separate"
+                } else {
+                    chest_tier_name(chest.tier)
+                };
+                let source = format!(
+                    "<a href=\"index.html#quest-{}\">{} {label} chest</a>",
+                    quest.id,
+                    escape(&quest.name)
+                );
+                if !sources.contains(&source) {
+                    sources.push(source);
+                }
             }
         }
     }
