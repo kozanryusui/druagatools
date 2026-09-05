@@ -11,8 +11,8 @@ use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use druaga_utils::atomic_output;
 use druaga_utils::item_database::{
-    AlchemyDatabase, AlchemyIngredientCategory, Character, EquipmentSlot, ItemCategory,
-    ItemDatabase, ItemEffect, ItemRecord, RuleBasedAlchemyRecipe,
+    AlchemyDatabase, AlchemyIngredientCategory, Character, Equipment, EquipmentSlot, ItemCategory,
+    ItemDatabase, ItemEffect, ItemRecord, RuleBasedAlchemyRecipe, WeaponBonus,
 };
 use druaga_utils::site_database::{
     ChestGuideDatabase, ChestRewardValue, ChestTier, EnemyDatabase, EnemyDrop, EnemyRecord,
@@ -728,6 +728,7 @@ fn write_item_pages(data: &SiteData, output: &Path) -> Result<(), Box<dyn Error>
     for (character, label, slug) in CHARACTERS {
         let file = format!("items-{slug}.html");
         let mut html = page_start(&format!("{label} equipment"), &file, data);
+        write!(html, "<p>{}</p>", escape(WeaponBonus::STATUS_NOTE))?;
         for slot in SLOTS {
             write_item_table(
                 &mut html,
@@ -792,7 +793,7 @@ fn write_item_table(
                 optional_number(equipment.attack),
                 optional_number(equipment.defense),
                 optional_number(equipment.weight),
-                effects_text(&equipment.effects)
+                effects_text(equipment)
             )?;
         } else {
             write!(html, "</td><td>{}", formatted_text(&item.description))?;
@@ -1762,13 +1763,15 @@ fn optional_number(value: Option<i16>) -> String {
     value.map_or_else(|| "—".to_owned(), |value| value.to_string())
 }
 
-fn effects_text(effects: &[ItemEffect]) -> String {
-    if effects.is_empty() {
+fn effects_text(equipment: &Equipment) -> String {
+    if equipment.effects.is_empty() && equipment.weapon_bonuses.is_empty() {
         return "—".to_owned();
     }
-    effects
+    equipment
+        .weapon_bonuses
         .iter()
-        .map(effect_text)
+        .map(|bonus| bonus.description(&equipment.weapon_bonuses).to_owned())
+        .chain(equipment.effects.iter().map(effect_text))
         .map(|value| escape(&value))
         .collect::<Vec<_>>()
         .join("<br>")

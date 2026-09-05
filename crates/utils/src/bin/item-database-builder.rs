@@ -15,7 +15,7 @@ use druaga_utils::item_catalog::{
 use druaga_utils::item_database::{
     AlchemyDatabase, AlchemyIngredientCategory, AlchemyRecipe, Character, Equipment, EquipmentSlot,
     IconReference, ItemCategory, ItemDatabase, ItemEffect, ItemRecord, Rank,
-    RuleBasedAlchemyRecipe,
+    RuleBasedAlchemyRecipe, WeaponBonus,
 };
 use encoding_rs::SHIFT_JIS;
 use zenravif::{Encoder, Img, RGBA8};
@@ -29,6 +29,9 @@ const FORCE_EFFECT_TABLES: u32 = 0x004f_b94c;
 const SPECIAL_EFFECT_TABLES: u32 = 0x004f_b95c;
 const ENEMY_FAMILY_NAMES: u32 = 0x004f_c208;
 const EFFECT_RECORD_SIZE: u32 = 0x1c;
+const WEAPON_BONUS_TABLE: u32 = 0x004f_c120;
+const WEAPON_BONUS_RECORD_SIZE: u32 = 12;
+const WEAPON_BONUS_RECORD_COUNT: u32 = 10;
 
 const ICON_SHEETS: [&str; 28] = [
     "c04b0000", "c04b0001", "c04b0002", "c04b0003", "c04b0004", "c04b0100", "c04b0101", "c04b0102",
@@ -67,6 +70,14 @@ enum Command {
 
 struct TowerMetadata<'a> {
     executable: &'a [u8],
+    weapon_bonus_rules: Vec<WeaponBonusRule>,
+}
+
+struct WeaponBonusRule {
+    flag_mask: u32,
+    item_id_bits: u16,
+    item_id_mask: u16,
+    bonus: WeaponBonus,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -287,7 +298,7 @@ fn build_item_database(
         });
     }
     Ok(ItemDatabase {
-        schema_version: 1,
+        schema_version: 2,
         game_version: "1.60".to_owned(),
         items: records,
     })
@@ -334,6 +345,7 @@ fn build_equipment(item: &Item, metadata: &TowerMetadata<'_>) -> Result<Equipmen
         defense: (item.flags & 0x200 != 0).then_some(item.attack_max_or_defense),
         weight: (item.flags & 0x100 != 0).then_some(item.attack_max_or_defense),
         effects,
+        weapon_bonuses: metadata.weapon_bonuses(item),
     })
 }
 
@@ -393,7 +405,66 @@ impl<'a> TowerMetadata<'a> {
         if executable.get(..2) != Some(b"MZ") {
             return Err("the Tower executable does not have an MZ header".into());
         }
-        Ok(Self { executable })
+        let mut metadata = Self {
+            executable,
+            weapon_bonus_rules: Vec::new(),
+        };
+        metadata.weapon_bonus_rules = metadata.read_weapon_bonus_rules()?;
+        Ok(metadata)
+    }
+
+    fn read_weapon_bonus_rules(&self) -> Result<Vec<WeaponBonusRule>, Box<dyn Error>> {
+        // Tower DrawItemCatalogDescription scans this table before the effect array.
+        // Station combat paths and table layout: druaga-weapon-bonus-audit-2026-09.md.
+        let mut rules: Vec<WeaponBonusRule> = Vec::new();
+        for index in 0..WEAPON_BONUS_RECORD_COUNT {
+            let address = WEAPON_BONUS_TABLE + index * WEAPON_BONUS_RECORD_SIZE;
+            let flag_mask = self.pointer_at(address)?;
+            let (bonus, expected_label) = match flag_mask {
+                0x0010_0000 => (WeaponBonus::FireDamage, "炎属性ダメージ"),
+                0x0020_0000 => (WeaponBonus::Freeze, "一定確率で敵を氷結"),
+                0x0080_0000 => (WeaponBonus::LightningDamage, "雷属性ダメージ"),
+                0x0100_0000 => (WeaponBonus::WindDamage, "風属性ダメージ"),
+                0x0200_0000 => (WeaponBonus::Sleep, "一定確率で敵を眠らせる"),
+                0x0400_0000 => (WeaponBonus::Stun, "一定確率で敵を気絶"),
+                0x0800_0000 => (WeaponBonus::Charm, "一定確率で敵を魅了"),
+                0x0001_0000 => (WeaponBonus::ThreeWayShot, "３方向攻撃"),
+                0x0002_0000 => (WeaponBonus::TwoShotBurst, "２連射攻撃"),
+                0x0004_0000 => (WeaponBonus::RearShot, "後方攻撃"),
+                _ => return Err(format!("unknown weapon bonus flag 0x{flag_mask:08x}").into()),
+            };
+            let label = self.string_at(self.pointer_at(address + 4)?)?;
+            if label != expected_label || rules.iter().any(|rule| rule.flag_mask == flag_mask) {
+                return Err(format!("invalid weapon bonus table entry at 0x{address:08x}").into());
+            }
+            let item_filter = self.pointer_at(address + 8)?;
+            rules.push(WeaponBonusRule {
+                flag_mask,
+                item_id_bits: item_filter as u16,
+                item_id_mask: (item_filter >> 16) as u16,
+                bonus,
+            });
+        }
+        let sentinel = WEAPON_BONUS_TABLE + WEAPON_BONUS_RECORD_COUNT * WEAPON_BONUS_RECORD_SIZE;
+        if self.pointer_at(sentinel)? != 0 {
+            return Err("weapon bonus table has no terminator after its ten known entries".into());
+        }
+        Ok(rules)
+    }
+
+    fn weapon_bonuses(&self, item: &Item) -> Vec<WeaponBonus> {
+        // BuildPlayerCombatAttributes merges flags only from weapon records.
+        if item.flags & 0x100 == 0 {
+            return Vec::new();
+        }
+        self.weapon_bonus_rules
+            .iter()
+            .filter(|rule| {
+                item.flags & rule.flag_mask != 0
+                    && (rule.item_id_mask == 0 || item.id & rule.item_id_mask == rule.item_id_bits)
+            })
+            .map(|rule| rule.bonus)
+            .collect()
     }
 
     fn rank_name(&self, rank: u8) -> Result<String, Box<dyn Error>> {
@@ -611,6 +682,7 @@ fn write_equipment_page(
     output: &Path,
 ) -> Result<(), Box<dyn Error>> {
     let mut html = page_start(&format!("{title} equipment"), file);
+    write!(html, "<p>{}</p>", escape(WeaponBonus::STATUS_NOTE))?;
     for slot in all_slots() {
         write!(
             html,
@@ -669,14 +741,20 @@ fn write_equipment_row(
         optional_number(equipment.defense),
         optional_number(equipment.weight)
     )?;
-    if equipment.effects.is_empty() {
+    let descriptions = equipment
+        .weapon_bonuses
+        .iter()
+        .map(|bonus| bonus.description(&equipment.weapon_bonuses).to_owned())
+        .chain(equipment.effects.iter().map(effect_text))
+        .collect::<Vec<_>>();
+    if descriptions.is_empty() {
         html.push('—');
     } else {
-        for (index, effect) in equipment.effects.iter().enumerate() {
+        for (index, description) in descriptions.iter().enumerate() {
             if index != 0 {
                 html.push_str("<br>");
             }
-            html.push_str(&escape(&effect_text(effect)));
+            html.push_str(&escape(description));
         }
     }
     write!(

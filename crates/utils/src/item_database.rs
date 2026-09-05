@@ -52,6 +52,46 @@ pub struct Equipment {
     pub defense: Option<i16>,
     pub weight: Option<i16>,
     pub effects: Vec<ItemEffect>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub weapon_bonuses: Vec<WeaponBonus>,
+}
+
+/// Bonuses from the Tower item flag-label table, not the counted effect array.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WeaponBonus {
+    FireDamage,
+    Freeze,
+    LightningDamage,
+    WindDamage,
+    Sleep,
+    Stun,
+    Charm,
+    ThreeWayShot,
+    TwoShotBurst,
+    RearShot,
+}
+
+impl WeaponBonus {
+    pub const STATUS_NOTE: &str = "When equipped weapons have more than one status effect, only the highest-priority effect can activate. Priority: stun, sleep, freeze, then charm. If the enemy is immune, no other weapon status effect activates.";
+
+    pub fn description(self, weapon_bonuses: &[Self]) -> &'static str {
+        match self {
+            Self::FireDamage => "Fire damage",
+            Self::Freeze => "Chance to freeze enemies",
+            Self::LightningDamage => "Lightning damage",
+            Self::WindDamage => "Wind damage",
+            Self::Sleep if weapon_bonuses.contains(&Self::Stun) => {
+                "Sleep does not activate; this weapon's stun effect takes priority."
+            }
+            Self::Sleep => "Chance to put enemies to sleep",
+            Self::Stun => "Chance to stun enemies",
+            Self::Charm => "Chance to charm enemies. Multiplayer conditions are not yet confirmed.",
+            Self::ThreeWayShot => "Normal attack: 3-way shot. Fires three arrows in a spread.",
+            Self::TwoShotBurst => "Normal attack fires two arrows in sequence.",
+            Self::RearShot => "Normal attack fires forward and backward.",
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
